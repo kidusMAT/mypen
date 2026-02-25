@@ -810,16 +810,18 @@ footer .lower p {
     flex-wrap: wrap;
     margin: 20px 0;
     align-items: center;
+    justify-content: center;
+    gap: 15px;
+    width: 100%;
 }
 
 .fourth .comps a {
-    padding: 12px;
+    padding: 12px 25px;
     border-radius: 5px;
     text-decoration: none;
     color: #fff;
     font-size: 16px;
     font-family: system-ui, sans-serif;
-    margin-right: 10px;
     font-weight: 500;
     border-color: #D48C11;
     background-color: #D48C11;
@@ -830,6 +832,8 @@ footer .lower p {
     font-size: smaller;
     font-family: system-ui, serif;
     font-weight: 500;
+    white-space: pre-wrap;
+    text-align: center;
 }
 
 /*stories*/
@@ -4771,11 +4775,21 @@ body.poem-mode .formcont {
         margin-right: 0;
         margin-bottom: 30px;
         text-align: center;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
     }
 
     footer .upper div .socials {
         margin: 20px auto;
-        width: 200px;
+        width: 100%;
+        max-width: 250px;
+        justify-content: center;
+    }
+
+    footer .lower {
+        text-align: center;
+        padding: 20px;
     }
 
     /* Search Bar */
@@ -4827,8 +4841,11 @@ body.poem-mode .formcont {
     }
 
     .statstics {
-        flex-direction: column;
-        gap: 30px;
+        flex-direction: row;
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 20px;
+        width: 100%;
     }
 
     .discover-hero h1 {
