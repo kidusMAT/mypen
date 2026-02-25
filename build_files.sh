@@ -1,10 +1,14 @@
 #!/bin/bash
 
+echo "Creating virtual environment..."
+python3 -m venv venv
+source venv/bin/activate
+
 echo "Installing dependencies..."
-python3 -m pip install -r requirements.txt --break-system-packages
+pip install -r requirements.txt
 
 echo "Collecting static files..."
-# Make sure the directory exists before collecting
+# Ensure staticfiles directory exists
 mkdir -p staticfiles
 python3 manage.py collectstatic --no-input
 
