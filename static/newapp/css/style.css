@@ -4783,8 +4783,13 @@ body.poem-mode .formcont {
     footer .upper div .socials {
         margin: 20px auto;
         width: 100%;
-        max-width: 250px;
+        max-width: 200px;
+        display: flex;
+        flex-direction: row;
         justify-content: center;
+        gap: 20px;
+        padding: 0;
+        list-style: none;
     }
 
     footer .lower {
