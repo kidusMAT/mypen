@@ -41,7 +41,7 @@
                     <li><a href="{% url 'dashboard' %}" class="username-link">{{ user.username }}</a></li>
                     <li><a href="{% url 'account_logout' %}" class="signin">Sign Out</a></li>
                     {% else %}
-                    <li><a href="{% provider_login_url 'google' %}" class="signin">Sign In</a></li>
+                    <li><a href="{% url 'account_login' %}" class="signin">Sign In</a></li>
                     {% endif %}
                     <li><a href="/write/new/" class="btn-start-writing"><i class="fa-solid fa-pen-nib"></i> Start
                             Writing</a></li>
@@ -74,7 +74,7 @@
                     <a href="{% url 'dashboard' %}" class="mobile-username">{{ user.username }}</a>
                     <a href="{% url 'account_logout' %}" class="mobile-signin">Sign Out</a>
                     {% else %}
-                    <a href="{% provider_login_url 'google' %}" class="mobile-signin">Sign In</a>
+                    <a href="{% url 'account_login' %}" class="mobile-signin">Sign In</a>
                     {% endif %}
                     <a href="/write/new/" class="mobile-btn-start">Start Writing</a>
                 </div>
