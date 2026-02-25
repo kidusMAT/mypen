@@ -1,0 +1,776 @@
+{% extends "newapp/_base.html" %}
+
+{% block title %}{{ script.title }} - Script Reader{% endblock %}
+
+{% block extra_head %}
+<link
+    href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Courier+Prime:wght@400;700&family=Noto+Sans+Ethiopic:wght@300;400;700&display=swap"
+    rel="stylesheet">
+<style>
+    :root {
+        --script-gold: #d4a017;
+        --toolbar-bg: #ffffff;
+        --page-bg: #f8f9fa;
+        --text-main: #1a1a1a;
+        --text-muted: #666666;
+    }
+
+    body {
+        background-color: var(--page-bg);
+        margin: 0 !important;
+        padding: 0 !important;
+        box-sizing: border-box;
+    }
+
+    * {
+        box-sizing: border-box;
+    }
+
+    /* Override base header for the reader experience */
+    .global-header {
+        display: none !important;
+    }
+
+    .reader-layout {
+        display: flex;
+        flex-direction: column;
+        min-height: 100vh;
+    }
+
+    /* Top Navigation Bar */
+    .reader-nav {
+        height: 64px;
+        background: var(--toolbar-bg);
+        border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+        display: flex;
+        align-items: center;
+        padding: 0 24px;
+        position: fixed;
+        top: 0;
+        width: 100%;
+        z-index: 1000;
+        justify-content: space-between;
+    }
+
+    .nav-left {
+        display: flex;
+        align-items: center;
+        gap: 20px;
+    }
+
+    .back-btn {
+        color: var(--text-main);
+        font-size: 20px;
+        text-decoration: none;
+        transition: transform 0.2s;
+    }
+
+    .back-btn:hover {
+        transform: translateX(-3px);
+    }
+
+    .nav-info {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .nav-title {
+        font-family: 'Playfair Display', serif;
+        font-size: 16px;
+        font-weight: 700;
+        margin: 0;
+    }
+
+    .nav-author {
+        font-size: 12px;
+        color: var(--text-muted);
+        margin: 0;
+    }
+
+    .nav-right {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+
+    .tool-group {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-right: 10px;
+        padding-right: 10px;
+        border-right: 1px solid #eee;
+    }
+
+    .tool-btn {
+        background: none !important;
+        border: none !important;
+        color: var(--text-muted);
+        font-size: 18px;
+        cursor: pointer;
+        padding: 4px;
+        transition: color 0.2s, background-color 0.2s;
+        border-radius: 4px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 32px;
+        height: 32px;
+        outline: none;
+        box-shadow: none;
+    }
+
+    .tool-btn:hover {
+        color: var(--text-main);
+        background-color: rgba(0, 0, 0, 0.05) !important;
+    }
+
+    .zoom-value {
+        font-size: 14px;
+        font-weight: 600;
+        color: var(--text-muted);
+        min-width: 25px;
+        text-align: center;
+    }
+
+    /* Main Reader Content */
+    .reader-main {
+        margin-top: 64px;
+        margin-bottom: 64px;
+        padding: 80px 20px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+    }
+
+    .script-hero {
+        text-align: center;
+        margin-bottom: 50px;
+    }
+
+    .script-type-badge {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        color: var(--script-gold);
+        font-weight: 700;
+        text-transform: uppercase;
+        font-size: 14px;
+        letter-spacing: 1.5px;
+        margin-bottom: 15px;
+    }
+
+    .script-hero-title {
+        font-family: 'Playfair Display', serif;
+        font-size: 52px;
+        font-weight: 700;
+        margin: 0 0 10px 0;
+        color: var(--text-main);
+    }
+
+    .script-hero-author {
+        font-family: 'Playfair Display', serif;
+        font-size: 22px;
+        color: var(--text-muted);
+        margin: 0;
+    }
+
+    /* A4 Page Styling */
+    .pages-container {
+        display: flex;
+        flex-direction: column;
+        gap: 0;
+        align-items: center;
+        width: 100%;
+        padding-bottom: 100px;
+    }
+
+    .script-page {
+        background: #ffffff;
+        width: 210mm;
+        height: 297mm;
+        box-shadow: 0 5px 30px rgba(0, 0, 0, 0.05);
+        position: relative;
+        padding: 20mm 25mm 20mm 35mm;
+        /* Standard screenplay margins */
+        overflow: hidden;
+        display: none;
+        /* Only show active page */
+        border: 1px solid rgba(0, 0, 0, 0.03);
+        border-radius: 6px;
+    }
+
+    /* Balanced Font Stack Strategy */
+    @font-face {
+        font-family: 'ScriptMixed';
+        src: local('Courier Prime'), local('Courier New');
+        unicode-range: U+0000-00FF;
+        /* Latin (English) */
+    }
+
+    @font-face {
+        font-family: 'ScriptMixed';
+        src: local('Noto Sans Ethiopic'), local('Nyala');
+        unicode-range: U+1200-137F, U+2D80-2DDF, U+AB00-AB2F;
+        /* Ethiopic */
+    }
+
+    .script-page.active {
+        display: block;
+    }
+
+    .script-content {
+        font-family: 'ScriptMixed', 'Courier Prime', 'Noto Sans Ethiopic', 'Courier New', Courier, monospace;
+        font-size: 16px;
+        line-height: 1.2;
+        color: #000;
+        white-space: pre-wrap;
+        height: 100%;
+        width: 100%;
+        overflow: hidden;
+        font-weight: 300 !important;
+        /* Thin for modern script look */
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+    }
+
+    /* Remove top margin from first element on a page to avoid jumpy gaps */
+    .script-content>*:first-child {
+        margin-top: 0 !important;
+    }
+
+    /* Standard block spacing for raw text */
+    .script-content>div:not([class]),
+    .script-content>p:not([class]) {
+        margin-bottom: 0.8em;
+        font-weight: 300 !important;
+        /* Thin action text */
+        color: #000;
+    }
+
+
+
+    /* Professional Internal Screenplay Classes - Optimized for readability and formatting */
+    .script-scene {
+        display: block;
+        text-align: left;
+        font-weight: bold;
+        text-transform: uppercase;
+        margin-top: 1.5em;
+        margin-bottom: 0.8em;
+        width: 100%;
+    }
+
+    .script-left {
+        display: block;
+        text-align: left;
+        margin-bottom: 1em;
+        width: 100%;
+        font-weight: 300 !important;
+        /* Thin action */
+        color: #000;
+    }
+
+    .script-character {
+        display: block;
+        text-align: center;
+        width: 100%;
+        margin-left: 0 !important;
+        margin-right: 0 !important;
+        font-weight: bold !important;
+        /* Bold to differentiate from dialogue */
+        text-transform: uppercase;
+        margin-top: 1.2em;
+        margin-bottom: 0.2em;
+    }
+
+    .script-dialogue {
+        display: block;
+        margin-left: 20%;
+        margin-right: 20%;
+        width: auto;
+        margin-bottom: 1em;
+        text-align: left;
+        font-weight: 300 !important;
+        /* Thin Amharic dialogue */
+        color: #000;
+    }
+
+    .script-parenthetical {
+        display: block;
+        text-align: center;
+        width: 100%;
+        margin-left: 0 !important;
+        margin-right: 0 !important;
+        font-style: italic;
+        margin-bottom: 0.2em;
+    }
+
+    .script-transition {
+        display: block;
+        text-align: right;
+        text-transform: uppercase;
+        margin-top: 1.5em;
+        margin-bottom: 1em;
+        font-weight: normal;
+        /* Standard transition is usually not bold */
+        width: 100%;
+    }
+
+    /* Page Numbering in reader */
+    .page-number-hint {
+        position: absolute;
+        bottom: 15mm;
+        right: 25mm;
+        font-family: 'Courier New', Courier, monospace;
+        font-size: 12px;
+        color: #666;
+    }
+
+    /* Footer Navigation */
+    .reader-footer {
+        height: 60px;
+        background: var(--toolbar-bg);
+        border-top: 1px solid rgba(0, 0, 0, 0.08);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0 40px;
+        position: fixed;
+        bottom: 0;
+        width: 100%;
+        z-index: 1000;
+    }
+
+    .footer-btn {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        color: var(--text-main);
+        text-decoration: none;
+        font-weight: 600;
+        font-size: 14px;
+        transition: opacity 0.2s;
+        cursor: pointer;
+        padding: 10px;
+    }
+
+    .footer-btn.disabled {
+        opacity: 0.3;
+        cursor: not-allowed;
+    }
+
+    .footer-btn:hover:not(.disabled) {
+        opacity: 0.7;
+    }
+
+    .page-indicator {
+        font-size: 14px;
+        color: var(--text-muted);
+        font-weight: 500;
+    }
+
+    @media (max-width: 800px) {
+        .reader-nav {
+            padding: 0 12px;
+        }
+
+        .nav-left {
+            gap: 10px;
+            min-width: 0;
+            overflow: hidden;
+        }
+
+        .nav-info {
+            min-width: 0;
+        }
+
+        .nav-title {
+            font-size: 13px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 120px;
+        }
+
+        .zoom-value {
+            display: none;
+        }
+
+        .tool-group {
+            gap: 6px;
+            margin-right: 6px;
+            padding-right: 6px;
+        }
+
+        .nav-right {
+            gap: 6px;
+            flex-shrink: 0;
+        }
+
+        .tool-btn {
+            font-size: 15px;
+            padding: 3px;
+        }
+
+        .script-page {
+            width: 95vw;
+            height: 135vw;
+            /* Fixed height for consistent pagination */
+            /* Proportially adjusted from A4 margins */
+            padding: 9vw 11vw 9vw 15vw;
+        }
+
+        .script-character,
+        .script-parenthetical {
+            margin-left: 0 !important;
+            margin-right: 0 !important;
+            text-align: center;
+            width: 100%;
+        }
+
+        .script-dialogue {
+            margin-left: 10%;
+            margin-right: 10%;
+        }
+
+        .script-hero-title {
+            font-size: 28px;
+        }
+
+        .reader-footer {
+            padding: 0 16px;
+        }
+
+        .footer-btn {
+            font-size: 12px;
+            gap: 4px;
+            padding: 8px 4px;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block footer %}{% endblock %}
+
+{% block content %}
+<div class="reader-layout">
+    <nav class="reader-nav">
+        <div class="nav-left">
+            <a href="/scripts/" class="back-btn"><i class="fa-solid fa-arrow-left"></i></a>
+            <div class="nav-info">
+                <h4 class="nav-title">{{ script.title }}</h4>
+                <p class="nav-author">by {{ script.author.username }}</p>
+            </div>
+        </div>
+
+        <div class="nav-right">
+            <div class="tool-group">
+                <button class="tool-btn" onclick="adjustZoom(-1)"><i
+                        class="fa-solid fa-magnifying-glass-minus"></i></button>
+                <span class="zoom-value" id="zoom-level">16</span>
+                <button class="tool-btn" onclick="adjustZoom(1)"><i
+                        class="fa-solid fa-magnifying-glass-plus"></i></button>
+            </div>
+
+            <button id="bookmark-btn" class="tool-btn {% if bookmarked %}active{% endif %}" title="Save Bookmark"
+                onclick="toggleScriptBookmark(null, '{{ script.id }}')">
+                <i class="{% if bookmarked %}fa-solid{% else %}fa-regular{% endif %} fa-bookmark" {% if bookmarked %}
+                    style="color: #D48C11;" {% endif %}></i>
+            </button>
+            <button id="like-btn" class="tool-btn {% if liked %}active{% endif %}" title="Like"
+                onclick="toggleScriptLike(null, '{{ script.id }}')">
+                <i class="{% if liked %}fa-solid{% else %}fa-regular{% endif %} fa-heart" {% if liked %}
+                    style="color: #ef4444;" {% endif %}></i>
+            </button>
+            <button class="tool-btn" title="Share" onclick="shareScript()">
+                <i class="fa-solid fa-share-nodes"></i>
+            </button>
+        </div>
+    </nav>
+
+    <main class="reader-main">
+        <div class="script-hero">
+            <div class="script-type-badge">
+                <i class="fa-solid fa-clapperboard" style="font-size: 1.1em;"></i>
+                <span>FEATURE • SCREENPLAY</span>
+            </div>
+            <h1 class="script-hero-title">{{ script.title }}</h1>
+            <p class="script-hero-author">by {{ script.author.username }}</p>
+        </div>
+
+        <div id="pages-container" class="pages-container">
+            <!-- Pages will be injected here by JS -->
+            <div class="script-page active" id="initial-load-indicator">
+                <div class="script-content"
+                    style="display:flex; align-items:center; justify-content:center; height:100%;">
+                    <p>Paginating script...</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Hidden source content -->
+        <div id="script-raw-content" style="display:none;">{{ script.content|safe }}</div>
+    </main>
+
+    <footer class="reader-footer">
+        <div class="footer-btn" id="prev-btn" onclick="changePage(-1)">
+            <i class="fa-solid fa-chevron-left"></i> Previous Page
+        </div>
+
+        <div class="page-indicator" id="page-indicator-text">
+            Page 1 of 1
+        </div>
+
+        <div class="footer-btn" id="next-btn" onclick="changePage(1)">
+            Next Page <i class="fa-solid fa-chevron-right"></i>
+        </div>
+    </footer>
+</div>
+
+<script>
+    let currentZoom = 16;
+    let currentPage = 1;
+    let totalPages = 1;
+    const rawContent = document.getElementById('script-raw-content').innerHTML;
+
+    function paginate() {
+        const container = document.getElementById('pages-container');
+        container.innerHTML = '';
+
+        const measurer = document.createElement('div');
+        measurer.className = 'script-page';
+        measurer.style.visibility = 'hidden';
+        measurer.style.position = 'absolute';
+        measurer.style.left = '-9999px';
+        measurer.style.display = 'block'; // Ensure it's active for measuring
+
+        const isMobile = window.innerWidth <= 800;
+        let h, p;
+        if (isMobile) {
+            measurer.style.width = '95vw';
+            measurer.style.height = '135vw';
+            measurer.style.padding = '9vw 11vw 9vw 15vw';
+            h = window.innerWidth * 1.35;
+            p = window.innerWidth * 0.18; // 9vw + 9vw
+        } else {
+            measurer.style.width = '210mm';
+            measurer.style.height = '297mm';
+            measurer.style.padding = '20mm 25mm 20mm 35mm';
+            h = 297 * 3.78; // 297mm to px
+            p = 40 * 3.78; // 20mm + 20mm to px
+        }
+        document.body.appendChild(measurer);
+
+        const contentDiv = document.createElement('div');
+        contentDiv.className = 'script-content';
+        contentDiv.style.fontSize = currentZoom + 'px';
+        // Enforce measurement rules for accurate offsetHeight
+        contentDiv.style.height = 'auto';
+        contentDiv.style.minHeight = '0';
+        contentDiv.style.overflow = 'visible';
+        measurer.appendChild(contentDiv);
+
+        const temp = document.createElement('div');
+        temp.innerHTML = rawContent;
+        const nodes = Array.from(temp.childNodes);
+
+        // Balanced buffer (10px) for Amharic descenders and layout stability
+        const maxHeight = h - p - 10;
+
+        let pIndex = 1;
+        let currentPageNodes = [];
+
+        function createPage(nodesForPage, pageNum) {
+            const pageDiv = document.createElement('div');
+            pageDiv.className = `script-page page-${pageNum}`;
+            if (pageNum === currentPage) pageDiv.classList.add('active');
+
+            const cont = document.createElement('div');
+            cont.className = 'script-content';
+            cont.style.fontSize = currentZoom + 'px';
+
+            nodesForPage.forEach(n => cont.appendChild(n));
+
+            const num = document.createElement('div');
+            num.className = 'page-number-hint';
+            num.innerText = pageNum + '.';
+
+            pageDiv.appendChild(cont);
+            pageDiv.appendChild(num);
+            container.appendChild(pageDiv);
+        }
+
+        contentDiv.innerHTML = '';
+        const remainingNodes = nodes.map(n => n.cloneNode(true));
+
+        while (remainingNodes.length > 0) {
+            const node = remainingNodes.shift();
+            contentDiv.appendChild(node);
+
+            // Use offsetHeight with enforced auto height for true precision
+            if (contentDiv.offsetHeight > maxHeight) {
+                if (currentPageNodes.length > 0) {
+                    contentDiv.removeChild(node);
+                    // Always try to fill the remaining space, no matter how small
+                    splitAndProcess(node);
+                } else {
+                    // Node is alone and still too big - must split it
+                    splitAndProcess(node);
+                }
+            } else {
+                currentPageNodes.push(node);
+            }
+        }
+
+        function splitAndProcess(node) {
+            // Only split text-based nodes
+            if (node.nodeType === 1 && (node.innerText || "").trim().length > 3) {
+                const words = node.innerHTML.split(' ');
+                let low = 0;
+                let high = words.length - 1;
+                let fitIdx = 0;
+
+                // CUMULATIVE MEASUREMENT: Reset content height for precision
+                contentDiv.style.height = 'auto';
+                contentDiv.style.minHeight = '0';
+                contentDiv.style.overflow = 'visible';
+                if (contentDiv.contains(node)) contentDiv.removeChild(node);
+
+                const partialNode = node.cloneNode(false);
+                contentDiv.appendChild(partialNode);
+
+                while (low <= high) {
+                    let mid = Math.floor((low + high) / 2);
+                    partialNode.innerHTML = words.slice(0, mid + 1).join(' ');
+
+                    if (contentDiv.offsetHeight <= maxHeight) {
+                        fitIdx = mid + 1;
+                        low = mid + 1;
+                    } else {
+                        high = mid - 1;
+                    }
+                }
+
+                if (fitIdx > 0) {
+                    const head = node.cloneNode(false);
+                    head.innerHTML = words.slice(0, fitIdx).join(' ');
+                    const tail = node.cloneNode(false);
+                    tail.innerHTML = words.slice(fitIdx).join(' ');
+
+                    createPage(currentPageNodes.concat([head]), pIndex++);
+                    // Only unshift if there's actual content left in the tail
+                    if (tail.innerText.trim().length > 0 || tail.querySelector('img')) {
+                        remainingNodes.unshift(tail);
+                    }
+                    currentPageNodes = [];
+                } else {
+                    // Fail-safe: If we are already alone on the page and STILL fit 0 words,
+                    // we MUST force at least one word to avoid an infinite loop.
+                    if (currentPageNodes.length === 0) {
+                        const head = node.cloneNode(false);
+                        head.innerHTML = words.slice(0, 1).join(' ');
+                        const tail = node.cloneNode(false);
+                        tail.innerHTML = words.slice(1).join(' ');
+
+                        createPage([head], pIndex++);
+                        if (words.length > 1) remainingNodes.unshift(tail);
+                    } else {
+                        // Not alone on page, move whole block to next page
+                        createPage(currentPageNodes, pIndex++);
+                        currentPageNodes = [];
+                        remainingNodes.unshift(node);
+                    }
+                }
+                contentDiv.innerHTML = '';
+            } else {
+                // Image or non-splittable content
+                if (currentPageNodes.length > 0) {
+                    createPage(currentPageNodes, pIndex++);
+                    currentPageNodes = [];
+                    remainingNodes.unshift(node);
+                } else {
+                    // Force it even if alone on page
+                    createPage([node], pIndex++);
+                }
+                contentDiv.innerHTML = '';
+            }
+        }
+
+        if (currentPageNodes.length > 0) {
+            createPage(currentPageNodes, pIndex++);
+        }
+
+        totalPages = pIndex - 1;
+        document.body.removeChild(measurer);
+        updateNavigation();
+    }
+
+    function changePage(delta) {
+        const newPage = currentPage + delta;
+        if (newPage >= 1 && newPage <= totalPages) {
+            document.querySelector(`.page-${currentPage}`)?.classList.remove('active');
+            currentPage = newPage;
+            document.querySelector(`.page-${currentPage}`)?.classList.add('active');
+            updateNavigation();
+
+            // Scroll to the top of the pages container instead of window top
+            const container = document.getElementById('pages-container');
+            const headerHeight = 80; // nav(64) + some buffer
+            const scrollPos = container.getBoundingClientRect().top + window.pageYOffset - headerHeight;
+
+            window.scrollTo({
+                top: scrollPos,
+                behavior: 'smooth'
+            });
+        }
+    }
+
+    function updateNavigation() {
+        document.getElementById('page-indicator-text').innerText = `Page ${currentPage} of ${totalPages}`;
+        document.getElementById('prev-btn').classList.toggle('disabled', currentPage === 1);
+        document.getElementById('next-btn').classList.toggle('disabled', currentPage === totalPages);
+    }
+
+    function adjustZoom(delta) {
+        currentZoom += delta;
+        if (currentZoom < 10) currentZoom = 10;
+        if (currentZoom > 36) currentZoom = 36;
+        document.getElementById('zoom-level').innerText = currentZoom;
+        // Re-paginate when zoom changes because content height changes
+        const oldPage = currentPage;
+        paginate();
+        // Try to stay on the same relative page if possible
+        if (currentPage > totalPages) currentPage = totalPages;
+        updateNavigation();
+    }
+
+    // Initial pagination
+    window.addEventListener('load', paginate);
+
+    // Interaction Functions
+    function shareScript() {
+        const url = window.location.href;
+        navigator.clipboard.writeText(url).then(() => {
+            showToast('Link copied to clipboard!', 'success');
+        }).catch(err => {
+            console.error('Could not copy text: ', err);
+        });
+    }
+</script>
+
+<style>
+    @keyframes slideIn {
+        from {
+            transform: translateX(100%);
+            opacity: 0;
+        }
+
+        to {
+            transform: translateX(0);
+            opacity: 1;
+        }
+    }
+</style>
+{% endblock %}

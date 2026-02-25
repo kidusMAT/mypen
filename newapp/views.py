@@ -1,0 +1,927 @@
+from django.shortcuts import render, get_object_or_404, redirect, HttpResponse
+from django.http import JsonResponse
+from django.contrib.auth.decorators import login_required
+from django.views.decorators.http import require_POST
+import json
+from django.core.paginator import Paginator
+from django.db.models import Count, Q, F
+from .models import Book, Chapter, Contest, Script, Poem, ContactMessage
+from .forms import ContactForm
+from django.contrib import messages
+from django.core.mail import send_mail
+from django.conf import settings
+
+def coming_soon(request):
+    feature = request.GET.get('feature', 'This feature')
+    return render(request, 'newapp/coming_soon.html', {'feature': feature})
+
+
+def create_content(request):
+    if request.method == 'POST':
+        print(f"DEBUG: create_content POST: {request.POST}")
+        contest_id = request.POST.get('contest_id')
+        content_type = request.POST.get('type')
+        
+        if content_type == 'script':
+            title = request.POST.get('Booktitle')
+            script_file = request.FILES.get('script_file')
+            
+            if not title and script_file:
+                title = script_file.name
+            
+            if not title:
+                title = 'Untitled Script'
+                
+            genre = request.POST.get('genre', '')
+            script = Script.objects.create(
+                title=title, 
+                author=request.user, 
+                status='PUBLISHED' if script_file else 'DRAFT',
+                script_file=script_file,
+                genre=genre
+            )
+            
+            if contest_id:
+                try:
+                    contest = Contest.objects.get(id=contest_id)
+                    contest.entry_scripts.add(script)
+                except Contest.DoesNotExist:
+                    pass
+                    
+            if script_file:
+                return redirect('dashboard')
+            return redirect('write_script', script_id=script.id)
+
+        if content_type == 'poem':
+            title = request.POST.get('Booktitle', 'Untitled Poem')
+            poem = Poem.objects.create(title=title, author=request.user, status='DRAFT')
+            
+            if contest_id:
+                try:
+                    contest = Contest.objects.get(id=contest_id)
+                    contest.entry_poems.add(poem)
+                except Contest.DoesNotExist:
+                    pass
+                    
+            return redirect('write_poem', poem_id=poem.id)
+
+        # Match names from write.html form for standard stories (Book/Chapter)
+        title = request.POST.get('Booktitle')
+        chapter_title = request.POST.get('chaptername')
+        content = request.POST.get('thestory')
+        genre_type = request.POST.get('type', 'story').capitalize()
+        
+        # Create Book first
+        genre = request.POST.get('genre') or genre_type
+        description = request.POST.get('description', '')
+        cover_image = request.FILES.get('cover_image')
+        
+        book = Book.objects.create(
+            title=title, 
+            author=request.user, 
+            genre=genre,
+            description=description,
+            cover_image=cover_image
+        )
+        
+        if contest_id:
+            try:
+                contest = Contest.objects.get(id=contest_id)
+                contest.entry_books.add(book)
+            except Contest.DoesNotExist:
+                pass
+        
+        # Create the first Chapter
+        if not chapter_title:
+            chapter_title = "Chapter 1"
+        
+        status = 'PUBLISHED' if 'publish' in request.POST else 'DRAFT'
+        
+        
+        chapter = Chapter.objects.create(
+            book=book,
+            title=chapter_title,
+            content=content,
+            status=status
+        )
+        
+        return redirect('write_chapter', chapter_id=chapter.id)
+
+    return render(request, 'newapp/write.html')
+
+
+@login_required
+@require_POST
+def delete_book_ajax(request, book_id):
+    try:
+        book = Book.objects.get(id=book_id, author=request.user)
+        book.delete()
+        return JsonResponse({'status': 'success', 'message': 'Story deleted successfully.'})
+    except Book.DoesNotExist:
+        return JsonResponse({'status': 'error', 'message': 'Story not found or access denied.'})
+
+
+
+
+def write_chapter(request, chapter_id):
+    chapter = get_object_or_404(Chapter, id=chapter_id, book__author=request.user)
+    
+    if request.method == 'POST':
+        print(f"DEBUG: write_chapter POST: {request.POST}")
+        # Match names from write.html form
+        book_title = request.POST.get('Booktitle')
+        chapter_title = request.POST.get('chaptername')
+        content = request.POST.get('thestory')
+
+        # Update fields
+        if book_title:
+            chapter.book.title = book_title
+            chapter.book.save()
+            
+        if chapter_title:
+            chapter.title = chapter_title
+            
+        if content is not None:
+             chapter.content = content
+        
+        if 'publish' in request.POST:
+            chapter.status = 'PUBLISHED'
+        elif 'save_draft' in request.POST or 'end_chapter' in request.POST or 'next_chapter' in request.POST:
+            chapter.status = 'DRAFT'
+            
+        chapter.save()
+        
+        if 'next_chapter' in request.POST:
+            return redirect('add_chapter', book_id=chapter.book.id)
+        
+        if 'end_chapter' in request.POST:
+            return redirect('manage_book', book_id=chapter.book.id)
+            
+        return redirect('write_chapter', chapter_id=chapter.id)
+
+    return render(request, 'newapp/write.html', {'chapter': chapter})
+
+def view_chapter(request, chapter_id):
+    chapter = get_object_or_404(Chapter, id=chapter_id)
+    
+    # Only count views for published content
+    if chapter.status == 'PUBLISHED':
+        chapter.views += 1
+        chapter.save()
+        
+    return render(request, 'newapp/view.html', {'chapter': chapter})
+# Create your views here.
+
+from django.contrib.auth.models import User
+from django.db.models import Sum
+
+def index(request):
+    handpicked_books = Book.objects.filter(handpicked=True).annotate(
+        total_likes=Count('likes'),
+        total_chapters=Count('chapters')
+    ).prefetch_related('likes', 'bookmarks').order_by('-created_at', '-id')[:8]
+    
+    # Calculate statistics
+    writers_count = User.objects.filter(
+        Q(book__isnull=False) | Q(script__isnull=False) | Q(poem__isnull=False)
+    ).distinct().count()
+    
+    books_count = Book.objects.filter(status__in=['PUBLISHED', 'FINISHED']).count()
+    scripts_count = Script.objects.filter(status='PUBLISHED').count()
+    poems_count = Poem.objects.filter(status__in=['PUBLISHED', 'FINISHED']).count()
+    stories_count = books_count + scripts_count + poems_count
+    
+    book_views = Book.objects.aggregate(Sum('views'))['views__sum'] or 0
+    script_views = Script.objects.aggregate(Sum('views'))['views__sum'] or 0
+    poem_views = Poem.objects.aggregate(Sum('views'))['views__sum'] or 0
+    readers_count = book_views + script_views + poem_views
+    
+    # Genre counts
+    genre_counts = {
+        'Fiction': Book.objects.filter(genre__iexact='Fiction', status__in=['PUBLISHED', 'FINISHED']).count(),
+        'Scripts': Script.objects.filter(status='PUBLISHED').count(),
+        'Poetry': Book.objects.filter(genre__iexact='Poetry', status__in=['PUBLISHED', 'FINISHED']).count() + \
+                  Poem.objects.filter(status__in=['PUBLISHED', 'FINISHED']).count(),
+        'Fantasy': Book.objects.filter(genre__iexact='Fantasy', status__in=['PUBLISHED', 'FINISHED']).count(),
+        'Romance': Book.objects.filter(genre__iexact='Romance', status__in=['PUBLISHED', 'FINISHED']).count(),
+        'Adventure': Book.objects.filter(genre__iexact='Adventure', status__in=['PUBLISHED', 'FINISHED']).count(),
+    }
+    
+    context = {
+        'handpicked_books': handpicked_books,
+        'writers_count': writers_count,
+        'stories_count': stories_count,
+        'readers_count': readers_count,
+        'genre_counts': genre_counts,
+    }
+    return render(request, 'newapp/index.html', context)
+
+from django.contrib.auth.decorators import login_required
+from django.db.models import Sum
+
+@login_required
+def dashboard(request):
+    user_books = Book.objects.filter(author=request.user).annotate(
+        total_likes=Count('likes'),
+        total_chapters=Count('chapters')
+    )
+    user_scripts = Script.objects.filter(author=request.user).annotate(
+        total_likes=Count('likes')
+    )
+    user_poems = Poem.objects.filter(author=request.user).annotate(
+        total_likes=Count('likes')
+    )
+    
+    # Calculate aggregate stats
+    book_views = user_books.aggregate(Sum('views'))['views__sum'] or 0
+    script_views = user_scripts.aggregate(Sum('views'))['views__sum'] or 0
+    poem_views = user_poems.aggregate(Sum('views'))['views__sum'] or 0
+    total_views = book_views + script_views + poem_views
+    
+    book_likes = sum(book.total_likes for book in user_books)
+    script_likes = sum(script.total_likes for script in user_scripts)
+    poem_likes = sum(poem.total_likes for poem in user_poems)
+    total_likes_sum = book_likes + script_likes + poem_likes
+    
+    total_stories = user_books.count() + user_scripts.count() + user_poems.count()
+    
+    context = {
+        'user_books': user_books,
+        'user_scripts': user_scripts,
+        'user_poems': user_poems,
+        'total_views': total_views,
+        'total_likes': total_likes_sum,
+        'total_stories': total_stories,
+    }
+    return render(request, 'newapp/dashboard.html', context)
+
+@login_required
+def manage_book(request, book_id):
+    book = get_object_or_404(Book, id=book_id, author=request.user)
+    chapters = book.chapters.all().order_by('order')
+    return render(request, 'newapp/manage_chapters.html', {'book': book, 'chapters': chapters})
+
+@login_required
+def add_chapter(request, book_id):
+    book = get_object_or_404(Book, id=book_id, author=request.user)
+    # Find the next order number
+    last_chapter = book.chapters.all().order_by('-order').first()
+    next_order = (last_chapter.order + 1) if last_chapter else 1
+    
+    new_chapter = Chapter.objects.create(
+        book=book,
+        title=f"Chapter {next_order}",
+        content="",
+        order=next_order,
+        status='DRAFT'
+    )
+    return redirect('write_chapter', chapter_id=new_chapter.id)
+
+from django.http import JsonResponse
+from django.views.decorators.http import require_POST
+import json
+
+@login_required
+@require_POST
+def save_chapter_ajax(request, chapter_id):
+    chapter = get_object_or_404(Chapter, id=chapter_id, book__author=request.user)
+    try:
+        data = json.loads(request.body)
+        content = data.get('content')
+        title = data.get('title')
+        status = data.get('status', 'DRAFT')
+        
+        if content is not None:
+            chapter.content = content
+        if title is not None:
+            chapter.title = title
+        chapter.status = status
+        chapter.save()
+        return JsonResponse({'status': 'success', 'message': 'Chapter saved'})
+    except Exception as e:
+        return JsonResponse({'status': 'error', 'message': str(e)}, status=400)
+
+@login_required
+@require_POST
+def add_chapter_ajax(request, book_id):
+    book = get_object_or_404(Book, id=book_id, author=request.user)
+    try:
+        last_chapter = book.chapters.all().order_by('-order').first()
+        next_order = (last_chapter.order + 1) if last_chapter else 1
+        
+        new_chapter = Chapter.objects.create(
+            book=book,
+            title=f"Chapter {next_order}",
+            content="",
+            order=next_order,
+            status='DRAFT'
+        )
+        return JsonResponse({
+            'status': 'success',
+            'chapter_id': new_chapter.id,
+            'title': new_chapter.title,
+            'order': new_chapter.order
+        })
+    except Exception as e:
+        return JsonResponse({'status': 'error', 'message': str(e)}, status=400)
+
+@login_required
+@require_POST
+def update_book_metadata_ajax(request, book_id):
+    book = get_object_or_404(Book, id=book_id, author=request.user)
+    try:
+        genre = request.POST.get('genre')
+        description = request.POST.get('description')
+        cover_image = request.FILES.get('cover_image')
+        status = request.POST.get('status')
+        
+        if genre:
+            book.genre = genre
+        if description:
+            book.description = description
+        if cover_image:
+            book.cover_image = cover_image
+        if status:
+            book.status = status
+            
+        book.save()
+        return JsonResponse({'status': 'success', 'message': 'Book details updated'})
+    except Exception as e:
+        return JsonResponse({'status': 'error', 'message': str(e)}, status=400)
+
+
+
+def poems(request):
+    page_number = request.GET.get('page', 1)
+    poems_list = Poem.objects.filter(status__in=['PUBLISHED', 'FINISHED']).order_by('-created_at', '-id')
+    
+    paginator = Paginator(poems_list, 6)
+    page_obj = paginator.get_page(page_number)
+    
+    if request.GET.get('ajax'):
+        if not page_obj.object_list:
+            return HttpResponse("", status=200)
+        response = render(request, 'newapp/partials/_poem_cards.html', {'poems': page_obj})
+        response['X-Has-Next'] = 'true' if page_obj.has_next() else 'false'
+        return response
+        
+    return render(request, 'newapp/poems.html', {
+        'poems': page_obj,
+        'has_next': page_obj.has_next(),
+    })
+
+def read_poem(request, poem_id):
+    poem = get_object_or_404(Poem, id=poem_id, status='PUBLISHED')
+    poem.views += 1
+    poem.save()
+    
+    context = {
+        'poem': poem,
+        'liked': request.user.is_authenticated and request.user in poem.likes.all(),
+        'bookmarked': request.user.is_authenticated and request.user in poem.bookmarks.all(),
+    }
+    return render(request, 'newapp/read_poem.html', context)
+
+def toggle_like_poem(request, poem_id):
+    if not request.user.is_authenticated:
+        return JsonResponse({'status': 'error', 'message': 'Log in required'}, status=403)
+    poem = get_object_or_404(Poem, id=poem_id)
+    if request.user in poem.likes.all():
+        poem.likes.remove(request.user)
+        liked = False
+    else:
+        poem.likes.add(request.user)
+        liked = True
+    return JsonResponse({'liked': liked, 'count': poem.likes.count()})
+
+def toggle_bookmark_poem(request, poem_id):
+    if not request.user.is_authenticated:
+        return JsonResponse({'status': 'error', 'message': 'Log in required'}, status=403)
+    poem = get_object_or_404(Poem, id=poem_id)
+    if request.user in poem.bookmarks.all():
+        poem.bookmarks.remove(request.user)
+        bookmarked = False
+    else:
+        poem.bookmarks.add(request.user)
+        bookmarked = True
+    return JsonResponse({'bookmarked': bookmarked})
+
+
+def scripts(request):
+    page_number = request.GET.get('page', 1)
+    
+    # Show ALL published scripts, prioritizing Handpicked.
+    scripts_list = Script.objects.filter(status='PUBLISHED').annotate(
+        total_likes=Count('likes')
+    ).order_by('-handpicked', '-created_at')
+        
+    paginator = Paginator(scripts_list, 6)
+    page_obj = paginator.get_page(page_number)
+    
+    if request.GET.get('ajax'):
+        if not page_obj.object_list:
+            return HttpResponse("", status=200)
+        # We reuse 'books' context variable for compatibility with partials/_script_cards.html
+        response = render(request, 'newapp/partials/_script_cards.html', {'books': page_obj})
+        response['X-Has-Next'] = 'true' if page_obj.has_next() else 'false'
+        return response
+        
+    return render(request, 'newapp/scripts.html', {
+        'books': page_obj,
+        'has_next': page_obj.has_next()
+    })
+
+def books(request):
+    active_genre = request.GET.get('genre')
+    page_number = request.GET.get('page', 1)
+    
+    # Filter for Published and Finished books (exclude Drafts)
+    base_query = Book.objects.filter(status__in=['PUBLISHED', 'FINISHED'])
+
+    if active_genre:
+        books_list = base_query.filter(genre__iexact=active_genre).annotate(
+            total_likes=Count('likes'),
+            total_chapters=Count('chapters')
+        ).prefetch_related('likes', 'bookmarks').order_by('-created_at', '-id')
+    else:
+        books_list = base_query.annotate(
+            total_likes=Count('likes'),
+            total_chapters=Count('chapters')
+        ).prefetch_related('likes', 'bookmarks').order_by('-created_at', '-id')
+        
+    paginator = Paginator(books_list, 6)
+    page_obj = paginator.get_page(page_number)
+    
+    if request.GET.get('ajax'):
+        if not page_obj.object_list:
+            return HttpResponse("", status=200)
+        response = render(request, 'newapp/partials/_book_cards.html', {'books': page_obj})
+        response['X-Has-Next'] = 'true' if page_obj.has_next() else 'false'
+        return response
+
+    new_releases = Book.objects.filter(status__in=['PUBLISHED', 'FINISHED']).distinct().annotate(
+        total_likes=Count('likes'),
+        total_chapters=Count('chapters')
+    ).prefetch_related('likes', 'bookmarks').order_by('-created_at')[:4]
+    
+    return render(request, 'newapp/books.html', {
+        'books': page_obj, 
+        'active_genre': active_genre,
+        'has_next': page_obj.has_next(),
+        'new_releases': new_releases,
+    })
+
+def write(request):
+    return  render(request,'newapp/write.html',{})
+
+def discover(request):
+    query = request.GET.get('q')
+    if query:
+        trending_books = Book.objects.filter(
+            Q(title__icontains=query) | 
+            Q(author__username__icontains=query) |
+            Q(genre__icontains=query)
+        ).annotate(total_likes=Count('likes')).order_by('-views', '-total_likes', '-id')
+    else:
+        # Get top 4 trending books
+        trending_books = Book.objects.annotate(
+            total_likes=Count('likes')
+        ).order_by('-views', '-total_likes', '-id')[:4]
+    
+    context = {
+        'trending_books': trending_books,
+        'search_query': query,
+    }
+    return render(request, 'newapp/discover.html', context)
+
+def view_book_public(request, book_id):
+    """Public view of a book showing all published chapters"""
+    book = get_object_or_404(Book, id=book_id)
+    
+    # Get only published chapters
+    published_chapters = book.chapters.filter(status='PUBLISHED').order_by('order')
+    
+    # Increment views count
+    book.views += 1
+    book.save()
+    
+    context = {
+        'book': book,
+        'chapters': published_chapters,
+        'total_likes': book.likes.count(),
+        'total_bookmarks': book.bookmarks.count(),
+    }
+    return render(request, 'newapp/book_view.html', context)
+
+@login_required
+@require_POST
+def delete_book(request, book_id):
+    """Delete a book (AJAX endpoint)"""
+    try:
+        book = get_object_or_404(Book, id=book_id, author=request.user)
+        book_title = book.title
+        book.delete()  # Cascades to chapters automatically
+        return JsonResponse({
+            'status': 'success',
+            'message': f'"{book_title}" has been deleted successfully.'
+        })
+    except Exception as e:
+        return JsonResponse({
+            'status': 'error',
+            'message': str(e)
+        }, status=400)
+
+def read_chapter(request, chapter_id):
+    """Public chapter reading view"""
+    chapter = get_object_or_404(Chapter, id=chapter_id)
+    
+    # Only show published chapters to public
+    if chapter.status != 'PUBLISHED':
+        # Allow author to preview their own drafts
+        if not request.user.is_authenticated or chapter.book.author != request.user:
+            return HttpResponse("This chapter is not published yet.", status=403)
+    
+    # Increment chapter views
+    chapter.views += 1
+    chapter.save()
+    
+    # Get all published chapters for navigation
+    all_chapters = chapter.book.chapters.filter(status='PUBLISHED').order_by('order')
+    
+    # Find current chapter index for prev/next
+    chapter_list = list(all_chapters)
+    try:
+        current_index = chapter_list.index(chapter)
+        prev_chapter = chapter_list[current_index - 1] if current_index > 0 else None
+        next_chapter = chapter_list[current_index + 1] if current_index < len(chapter_list) - 1 else None
+    except ValueError:
+        prev_chapter = None
+        next_chapter = None
+    
+    context = {
+        'chapter': chapter,
+        'book': chapter.book,
+        'prev_chapter': prev_chapter,
+        'next_chapter': next_chapter,
+        'all_chapters': all_chapters,
+        'current_sequence': current_index + 1,
+        'total_sequence': len(chapter_list),
+        'progress_percent': int(((current_index + 1) / len(chapter_list)) * 100) if len(chapter_list) > 0 else 0,
+        'liked': request.user.is_authenticated and request.user in chapter.likes.all(),
+        'bookmarked': request.user.is_authenticated and request.user in chapter.book.bookmarks.all(),
+    }
+    return render(request, 'newapp/chapter_read.html', context)
+
+
+# Static Pages
+def about(request):
+    """About page"""
+    return render(request, 'newapp/about.html')
+
+def contact(request):
+    """Contact page"""
+    if request.method == 'POST':
+        form = ContactForm(request.POST)
+        if form.is_valid():
+            form.save()
+            # Send email (console based on settings)
+            name = form.cleaned_data['name']
+            email = form.cleaned_data['email']
+            message_content = form.cleaned_data['message']
+            
+            try:
+                send_mail(
+                    f"New Contact Message from {name}",
+                    f"Name: {name}\nEmail: {email}\n\nMessage:\n{message_content}",
+                    settings.DEFAULT_FROM_EMAIL,
+                    ['kidusmezgebe2@gmail.com'],
+                    reply_to=[email],
+                    fail_silently=True,
+                )
+            except:
+                pass
+                
+            messages.success(request, "Message sent! We will get back to you soon.")
+            return redirect('contact')
+    else:
+        form = ContactForm()
+    
+    return render(request, 'newapp/contact.html', {'form': form})
+
+def privacy(request):
+    """Privacy Policy page"""
+    return render(request, 'newapp/privacy.html')
+
+def terms(request):
+    """Terms of Service page"""
+    return render(request, 'newapp/terms.html')
+
+def writing_tips(request):
+    return render(request, 'newapp/writing_tips.html')
+
+
+
+def contests(request):
+    return render(request, 'newapp/coming_soon.html', {'feature': 'Contests'})
+
+
+@login_required
+@require_POST
+def submit_contest_entry(request):
+    try:
+        data = json.loads(request.body)
+        contest_id = data.get('contest_id')
+        work_id = data.get('work_id')
+        work_type = data.get('work_type')
+        
+        # Check if user has phone number
+        from newapp.models import AuthorProfile
+        profile, created = AuthorProfile.objects.get_or_create(user=request.user)
+        
+        if not profile.phone_number:
+            return JsonResponse({
+                'status': 'error', 
+                'message': 'Phone number required', 
+                'phone_required': True
+            }, status=400)
+        
+        contest = get_object_or_404(Contest, id=contest_id)
+        
+        # Verify the work belongs to the user AND is published
+        if work_type == 'Book':
+            work = get_object_or_404(Book, id=work_id, author=request.user, status__in=['PUBLISHED', 'FINISHED'])
+            contest.entry_books.add(work)
+        elif work_type == 'Script':
+            work = get_object_or_404(Script, id=work_id, author=request.user, status='PUBLISHED')
+            contest.entry_scripts.add(work)
+        elif work_type == 'Poem':
+            work = get_object_or_404(Poem, id=work_id, author=request.user, status='PUBLISHED')
+            contest.entry_poems.add(work)
+        else:
+            return JsonResponse({'status': 'error', 'message': 'Invalid work type'}, status=400)
+            
+        return JsonResponse({'status': 'success', 'message': 'Entry submitted successfully!'})
+        
+    except Exception as e:
+        return JsonResponse({'status': 'error', 'message': str(e)}, status=400)
+
+@login_required
+@require_POST
+def update_phone_number(request):
+    try:
+        data = json.loads(request.body)
+        phone_number = data.get('phone_number', '').strip()
+        
+        if not phone_number:
+            return JsonResponse({'status': 'error', 'message': 'Phone number is required'}, status=400)
+        
+        # Validate phone number format
+        import re
+        if not re.match(r'^\+?1?\d{9,15}$', phone_number):
+            return JsonResponse({
+                'status': 'error',
+                'message': 'Invalid phone number format. Use format: +999999999 (9-15 digits)'
+            }, status=400)
+        
+        # Get or create profile
+        from newapp.models import AuthorProfile
+        profile, created = AuthorProfile.objects.get_or_create(user=request.user)
+        profile.phone_number = phone_number
+        profile.save()
+        
+        return JsonResponse({'status': 'success', 'message': 'Phone number saved successfully!'})
+        
+    except Exception as e:
+        return JsonResponse({'status': 'error', 'message': str(e)}, status=400)
+
+@login_required
+@require_POST
+def toggle_like_chapter(request, chapter_id):
+    chapter = get_object_or_404(Chapter, id=chapter_id)
+    if request.user in chapter.likes.all():
+        chapter.likes.remove(request.user)
+        liked = False
+    else:
+        chapter.likes.add(request.user)
+        liked = True
+    return JsonResponse({'liked': liked, 'count': chapter.likes.count()})
+
+@login_required
+@require_POST
+def toggle_bookmark_book(request, book_id):
+    book = get_object_or_404(Book, id=book_id)
+    if request.user in book.bookmarks.all():
+        book.bookmarks.remove(request.user)
+        bookmarked = False
+    else:
+        book.bookmarks.add(request.user)
+        bookmarked = True
+    return JsonResponse({'bookmarked': bookmarked, 'count': book.bookmarks.count()})
+
+@login_required
+@require_POST
+def toggle_like_book(request, book_id):
+    book = get_object_or_404(Book, id=book_id)
+    if request.user in book.likes.all():
+        book.likes.remove(request.user)
+        liked = False
+    else:
+        book.likes.add(request.user)
+        liked = True
+    return JsonResponse({'liked': liked, 'count': book.likes.count()})
+
+@login_required
+@require_POST
+def toggle_like_script(request, script_id):
+    script = get_object_or_404(Script, id=script_id)
+    if request.user in script.likes.all():
+        script.likes.remove(request.user)
+        liked = False
+    else:
+        script.likes.add(request.user)
+        liked = True
+    return JsonResponse({'liked': liked, 'count': script.likes.count()})
+
+@login_required
+@require_POST
+def toggle_bookmark_script(request, script_id):
+    script = get_object_or_404(Script, id=script_id)
+    if request.user in script.bookmarks.all():
+        script.bookmarks.remove(request.user)
+        bookmarked = False
+    else:
+        script.bookmarks.add(request.user)
+        bookmarked = True
+    return JsonResponse({'bookmarked': bookmarked, 'count': script.bookmarks.count()})
+
+@login_required
+def write_script(request, script_id):
+    script = get_object_or_404(Script, id=script_id, author=request.user)
+    return render(request, 'newapp/write.html', {'script': script})
+
+@login_required
+@require_POST
+def create_script_ajax(request):
+    try:
+        if request.content_type.split(';')[0] == 'application/json':
+            data = json.loads(request.body)
+            content = data.get('content', '')
+            title = data.get('title', 'Untitled Script')
+            status = data.get('status', 'DRAFT')
+            contest_id = data.get('contest_id')
+            
+            script = Script.objects.create(
+                author=request.user,
+                title=title,
+                content=content,
+                status=status
+            )
+            
+            if contest_id:
+                try:
+                    contest = Contest.objects.get(id=contest_id)
+                    contest.entry_scripts.add(script)
+                except Contest.DoesNotExist:
+                    pass
+
+            return JsonResponse({'status': 'success', 'script_id': script.id, 'message': 'Script created'})
+        
+        return JsonResponse({'status': 'error', 'message': 'Invalid content type'}, status=400)
+    except Exception as e:
+        return JsonResponse({'status': 'error', 'message': str(e)}, status=400)
+
+def read_script(request, script_id):
+    script = get_object_or_404(Script, id=script_id)
+    # Increment views
+    Script.objects.filter(id=script_id).update(views=F('views') + 1)
+    script.refresh_from_db()
+    
+    context = {
+        'script': script,
+        'liked': request.user.is_authenticated and request.user in script.likes.all(),
+        'bookmarked': request.user.is_authenticated and request.user in script.bookmarks.all(),
+    }
+    
+    return render(request, 'newapp/read_script.html', context)
+
+@login_required
+@require_POST
+def save_script_ajax(request, script_id):
+    script = get_object_or_404(Script, id=script_id, author=request.user)
+    try:
+        # Check if multipart form data (for cover image) or json
+        if request.content_type.split(';')[0] == 'application/json':
+            data = json.loads(request.body)
+            content = data.get('content')
+            page_count = data.get('page_count')
+            status = data.get('status') # DRAFT or PUBLISHED
+            title = data.get('title')
+            description = data.get('description')
+            
+            if content is not None:
+                script.content = content
+            if page_count is not None:
+                script.page_count = page_count
+            if status:
+                script.status = status
+            if title:
+                script.title = title
+            if description:
+                script.description = description
+                
+            script.save()
+            return JsonResponse({'status': 'success', 'message': 'Script saved'})
+        else:
+            # Multipart form (e.g. for cover image + data)
+            title = request.POST.get('title')
+            description = request.POST.get('description')
+            content = request.POST.get('content')
+            page_count = request.POST.get('page_count')
+            status = request.POST.get('status')
+            cover = request.FILES.get('cover_image')
+
+            if title: script.title = title
+            if description: script.description = description
+            if content: script.content = content
+            if page_count: script.page_count = page_count
+            if status: script.status = status
+            if cover: script.cover_image = cover
+            
+            script.save()
+            return JsonResponse({'status': 'success', 'message': 'Script published/updated'})
+
+    except Exception as e:
+        return JsonResponse({'status': 'error', 'message': str(e)}, status=400)
+@login_required
+def write_poem(request, poem_id):
+    poem = get_object_or_404(Poem, id=poem_id, author=request.user)
+    return render(request, 'newapp/write.html', {'poem': poem})
+
+@login_required
+@require_POST
+def create_poem_ajax(request):
+    try:
+        if request.content_type.split(';')[0] == 'application/json':
+            data = json.loads(request.body)
+            content = data.get('content', '')
+            title = data.get('title', 'Untitled Poem')
+            description = data.get('description', '')
+            contest_id = data.get('contest_id')
+            
+            status = data.get('status', 'DRAFT')
+            poem = Poem.objects.create(
+                author=request.user,
+                title=title,
+                content=content,
+                status=status,
+                description=description
+            )
+            
+            if contest_id:
+                try:
+                    contest = Contest.objects.get(id=contest_id)
+                    contest.entry_poems.add(poem)
+                except Contest.DoesNotExist:
+                    pass
+
+            return JsonResponse({'status': 'success', 'poem_id': poem.id, 'message': 'Poem created'})
+        return JsonResponse({'status': 'error', 'message': 'Invalid content type'}, status=400)
+    except Exception as e:
+        return JsonResponse({'status': 'error', 'message': str(e)}, status=400)
+
+@login_required
+@require_POST
+def save_poem_ajax(request, poem_id):
+    poem = get_object_or_404(Poem, id=poem_id, author=request.user)
+    try:
+        if request.content_type.split(';')[0] == 'application/json':
+            data = json.loads(request.body)
+            content = data.get('content')
+            status = data.get('status')
+            title = data.get('title')
+            description = data.get('description')
+            
+            if content is not None: poem.content = content
+            if status: poem.status = status
+            if title: poem.title = title
+            if description: poem.description = description
+                
+            poem.save()
+            return JsonResponse({'status': 'success', 'message': 'Poem saved'})
+        else:
+            title = request.POST.get('title')
+            description = request.POST.get('description')
+            content = request.POST.get('content')
+            status = request.POST.get('status')
+            cover = request.FILES.get('cover_image')
+
+            if title: poem.title = title
+            if description: poem.description = description
+            if content: poem.content = content
+            if status: poem.status = status
+            if cover: poem.cover_image = cover
+            
+            poem.save()
+            return JsonResponse({'status': 'success', 'message': 'Poem updated'})
+    except Exception as e:
+        return JsonResponse({'status': 'error', 'message': str(e)}, status=400)

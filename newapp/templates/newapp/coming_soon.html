@@ -1,0 +1,21 @@
+{% extends "newapp/_base.html" %}
+
+{% block title %} Coming Soon - Mypen {% endblock %}
+
+{% block content %}
+<div
+    style="background-color: #fdfaf7; min-height: 80vh; display: flex; align-items: center; justify-content: center; padding-top: 100px;">
+    <div
+        style="text-align: center; max-width: 600px; padding: 40px; background: #fff; border-radius: 30px; box-shadow: 0 4px 20px rgba(0,0,0,0.02);">
+        <i class="fa-solid fa-hourglass-half" style="font-size: 64px; color: #d4a017; margin-bottom: 30px;"></i>
+        <h1 style="font-family: 'Playfair Display', serif; font-size: 36px; color: #302419; margin-bottom: 20px;">
+            {{feature }} is Coming Soon</h1>
+        <p style="font-size: 18px; color: #7a736d; line-height: 1.6; margin-bottom: 40px;">
+            We're hard at work building this space for our community. We can't wait to share it with you!
+        </p>
+        <a href="/"
+            style="background: #302419; color: #fff; padding: 12px 30px; border-radius: 8px; text-decoration: none; font-weight: 600;">Back
+            to Home</a>
+    </div>
+</div>
+{% endblock %}

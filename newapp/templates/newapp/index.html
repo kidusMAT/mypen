@@ -1,0 +1,128 @@
+{% extends "newapp/_base.html" %}
+{% load app_filters %}
+
+{% block title%} Story Landing Pure CSS {% endblock %}
+
+{% block content %}
+<section class="first">
+    <div class="top">
+        <h1>Write Your Story,<span> Share Your World</span> </h1>
+    </div>
+    <div class="mid">
+        <p>A beautiful space for writers, storytellers, and dreamers. Create and publish stories, books, and scripts
+            that captivate readers worldwide.</p>
+    </div>
+    <div class="btns">
+        <a href="/write/new/" class="swf">Start Writing Free</a>
+        <a href="/discover/" class="es">Explore Stories</a>
+    </div>
+    <div class="statstics">
+        <div>
+            <p class="nums">{{ writers_count|default:"0"|format_stats }}</p>
+            <p class="labels">Writers</p>
+        </div>
+        <div>
+            <p class="nums">{{ stories_count|default:"0"|format_stats }}</p>
+            <p class="labels">Stories</p>
+        </div>
+        <div>
+            <p class="nums">{{ readers_count|default:"0"|format_stats }}</p>
+            <p class="labels">Readers</p>
+        </div>
+    </div>
+</section>
+<section class="second">
+
+    <h1>Explore by Genre</h1>
+    <p class="sy">Discover stories across every genre and style</p>
+    <div class="listed">
+        <div onclick="window.location.href='/books/?genre=Fiction';" style="cursor: pointer;">
+            <p class="icons"><i class="fa-solid fa-book-open" style="color: #8B5CF6;"></i></p>
+            <p class="titles">Fiction</p>
+            <p class="numbers">{{ genre_counts.Fiction|default:"15.2k" }} stories</p>
+        </div>
+        <div onclick="window.location.href='/scripts/';" style="cursor: pointer;">
+            <p class="icons"><i class="fa-solid fa-scroll" style="color: #d946ef;"></i></p>
+            <p class="titles">Scripts</p>
+            <p class="numbers">{{ genre_counts.Scripts|default:"8.4k" }} stories</p>
+        </div>
+        <div onclick="window.location.href='/books/?genre=Fantasy';" style="cursor: pointer;">
+            <p class="icons"><i class="fa-solid fa-wand-magic-sparkles" style="color: #3b82f6;"></i></p>
+            <p class="titles">Fantasy</p>
+            <p class="numbers">{{ genre_counts.Fantasy|default:"12.8k" }} stories</p>
+        </div>
+        <div onclick="window.location.href='/books/?genre=Romance';" style="cursor: pointer;">
+            <p class="icons"><i class="fa-solid fa-heart" style="color: #ef4444;"></i></p>
+            <p class="titles">Romance</p>
+            <p class="numbers">{{ genre_counts.Romance|default:"9.7k" }} stories</p>
+        </div>
+        <div onclick="window.location.href='/stories/?genre=Adventure';" style="cursor: pointer;">
+            <p class="icons"><i class="fa-solid fa-compass" style="color: #10b981;"></i></p>
+            <p class="titles">Adventure</p>
+            <p class="numbers">{{ genre_counts.Adventure|default:"7.3k" }} stories</p>
+        </div>
+
+    </div>
+</section>
+
+<section class="stories-box st">
+    <div class="head">
+        <h1>Featured Stories</h1>
+        <a href="/books/">View All Stories</a>
+    </div>
+
+    <div class="boxed">
+        {% for book in handpicked_books %}
+        <div class="premium-story-card" onclick="window.location.href='{% url 'view_book_public' book.id %}';">
+            {% if book.cover_image %}
+            <div class="card-header-vibrant"
+                style="background-image: url('{{ book.cover_image.url }}'); background-size: cover; background-position: center;">
+            </div>
+            {% else %}
+            <div class="card-header-vibrant {% cycle 'v-purple' 'v-pink' 'v-blue' %}">
+                <div class="card-icon-overlay">
+                    <i class="fa-solid fa-book"></i>
+                </div>
+            </div>
+            {% endif %}
+            <div class="card-body-content">
+                <div class="card-badge-pill">{{ book.genre|default:"Featured" }}</div>
+                <h3 class="card-story-title">{{ book.title }}</h3>
+                <p class="card-author-line">by {{ book.author.username }}</p>
+                <p class="card-preview-text">
+                    {% if book.description %}
+                    {{ book.description|truncatewords:15 }}
+                    {% else %}
+                    No description provided for this masterpiece yet.
+                    {% endif %}
+                </p>
+
+                <div class="card-metrics-footer">
+                    <div class="metric">
+                        <i class="fa-regular fa-clock"></i>
+                        <span>{{ book.read_time|default:"10 min" }}</span>
+                    </div>
+                    <div class="metric">
+                        <i class="fa-regular fa-eye"></i>
+                        <span>{{ book.views }}</span>
+                    </div>
+                    <div class="metric">
+                        <i class="fa-regular fa-heart"></i>
+                        <span>{{ book.like_count|default:0 }}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</section>
+<section class="fourth">
+    <h1>Ready To Share Your Story with the World?</h1>
+    <p class="saying">Whether it's a ashort story, a full novel, or a screenplay,your words deserve to be heard. Start
+        writing today.</p>
+    <div class="comps"><a href="/write/new/">Create Your First Story</a>
+        <pre>free forever. No credit card required.</pre>
+    </div>
+</section>
+
+{% endblock %}

@@ -1,0 +1,89 @@
+{% extends "newapp/_base.html" %}
+
+{% block title%} Story Landing Pure CSS {% endblock %}
+
+{% block content %}
+<section class="stories st">
+    <div class="stories-header-content">
+        <div class="stories-title-row">
+            <i class="fa-solid fa-book-open"></i>
+            <h1>Stories</h1>
+        </div>
+        <div class="stories-desc-row">
+            <p>Immerse yourself in tales crafted by passionate writers from around the world.</p>
+        </div>
+    </div>
+
+    <ul class="filters">
+        <li><a href="/stories/" class="{% if not active_genre %}active{% endif %}">All</a></li>
+        <li><a href="/stories/?genre=Fantasy" class="{% if active_genre == 'Fantasy' %}active{% endif %}">Fantasy</a>
+        </li>
+        <li><a href="/stories/?genre=Romance" class="{% if active_genre == 'Romance' %}active{% endif %}">Romance</a>
+        </li>
+        <li><a href="/stories/?genre=Sci-Fi" class="{% if active_genre == 'Sci-Fi' %}active{% endif %}">Sci-Fi</a>
+        </li>
+        <li><a href="/stories/?genre=Mystery" class="{% if active_genre == 'Mystery' %}active{% endif %}">Mystery</a>
+        </li>
+        <li><a href="/stories/?genre=Thriller" class="{% if active_genre == 'Thriller' %}active{% endif %}">Thriller</a>
+        </li>
+        <li><a href="/stories/?genre=Horror" class="{% if active_genre == 'Horror' %}active{% endif %}">Horror</a>
+        </li>
+        <li><a href="/stories/?genre=Literary" class="{% if active_genre == 'Literary' %}active{% endif %}">Literary</a>
+        </li>
+    </ul>
+</section>
+<hr>
+<section class="stories-box st">
+    <div class="boxed" id="story-container">
+        {% include "newapp/partials/_story_cards.html" %}
+    </div>
+    {% if has_next %}
+    <div class="below" id="load-more-container">
+        <a href="javascript:void(0);" id="load-more-btn" data-page="2" data-genre="{{ active_genre|default:'' }}">Load
+            More Stories</a>
+    </div>
+    {% endif %}
+</section>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const loadMoreBtn = document.getElementById('load-more-btn');
+        const container = document.getElementById('story-container');
+
+        if (loadMoreBtn) {
+            loadMoreBtn.addEventListener('click', function () {
+                const page = this.getAttribute('data-page');
+                const genre = this.getAttribute('data-genre');
+                let url = `?page=${page}&ajax=1`;
+                if (genre) url += `&genre=${genre}`;
+
+                loadMoreBtn.innerText = 'Loading...';
+
+                fetch(url)
+                    .then(response => {
+                        const hasNext = response.headers.get('X-Has-Next');
+                        if (hasNext === 'false') {
+                            loadMoreBtn.parentElement.style.display = 'none';
+                        }
+                        return response.text();
+                    })
+                    .then(html => {
+                        if (html.trim() === '') {
+                            loadMoreBtn.parentElement.style.display = 'none';
+                            return;
+                        }
+
+                        container.insertAdjacentHTML('beforeend', html);
+                        this.setAttribute('data-page', parseInt(page) + 1);
+                        loadMoreBtn.innerText = 'Load More Stories';
+                    })
+                    .catch(err => {
+                        console.error('Error loading more stories:', err);
+                        loadMoreBtn.innerText = 'Load More Stories';
+                    });
+            });
+        }
+    });
+</script>
+</section>
+{% endblock %}

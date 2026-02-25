@@ -1,0 +1,62 @@
+{% extends "newapp/_base.html" %}
+{% load static %}
+
+{% block title %} Writing Tips - Mypen {% endblock %}
+
+{% block content %}
+<main class="static-page">
+    <section class="static-header">
+        <div class="static-container">
+            <h1><i class="fa-solid fa-lightbulb"></i> Writing Tips</h1>
+            <p class="subtitle">Elevate your craft and tell stories that resonate.</p>
+        </div>
+    </section>
+
+    <section class="static-content">
+        <div class="static-container">
+            <div class="tips-grid">
+                <div class="tip-card">
+                    <div class="tip-icon"><i class="fa-solid fa-pen-nib"></i></div>
+                    <h3>Find Your Voice</h3>
+                    <p>Don't try to sound like someone else. Your unique perspective is your greatest asset as a writer.
+                    </p>
+                </div>
+                <div class="tip-card">
+                    <div class="tip-icon"><i class="fa-solid fa-user-group"></i></div>
+                    <h3>Character Depth</h3>
+                    <p>Give your characters flaws, desires, and secrets. Make them breathe on the page.</p>
+                </div>
+                <div class="tip-card">
+                    <div class="tip-icon"><i class="fa-solid fa-compass"></i></div>
+                    <h3>Show, Don't Tell</h3>
+                    <p>Instead of saying a character is sad, describe their trembling lip or the way they avoid eye
+                        contact.</p>
+                </div>
+                <div class="tip-card">
+                    <div class="tip-icon"><i class="fa-solid fa-hourglass-half"></i></div>
+                    <h3>Consistency is Key</h3>
+                    <p>Try to write something every day, even if it's just 200 words. Momentum builds greatness.</p>
+                </div>
+                <div class="tip-card">
+                    <div class="tip-icon"><i class="fa-solid fa-scissors"></i></div>
+                    <h3>The Art of Editing</h3>
+                    <p>The first draft is just you telling yourself the story. The real work happens in the rewrite.</p>
+                </div>
+                <div class="tip-card">
+                    <div class="tip-icon"><i class="fa-solid fa-comments"></i></div>
+                    <h3>Read Aloud</h3>
+                    <p>If you're stuck on a sentence, read it out loud. Your ears will often catch what your eyes
+                        missed.</p>
+                </div>
+            </div>
+
+            <div class="static-text-box" style="margin-top: 50px;">
+                <h2>Keep Dreaming, Keep Writing</h2>
+                <p>Every great author started where you are now. The difference between a writer and a dreamer is simply
+                    the act of putting words on the page. Use these tips as a guide, but remember that the best rules
+                    are sometimes the ones you break.</p>
+            </div>
+        </div>
+    </section>
+</main>
+{% endblock %}

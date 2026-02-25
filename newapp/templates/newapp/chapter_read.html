@@ -1,0 +1,159 @@
+{% extends "newapp/_base.html" %}
+{% load static %}
+
+{% block title %} {{ chapter.title }} - {{ book.title }} | Mypen {% endblock %}
+
+{% block header %}{% endblock %}
+{% block footer %}{% endblock %}
+
+{% block content %}
+<div class="reading-interface">
+    <!-- Fixed Reading Header -->
+    <header class="reading-header">
+        <div class="reading-container">
+            <div class="header-left">
+                <a href="{% url 'view_book_public' book.id %}" class="back-link">
+                    <i class="fa-solid fa-chevron-left"></i> Back to Books
+                </a>
+            </div>
+            <div class="header-right">
+                <div class="utility-icons">
+                    <button id="toc-toggle" title="Table of Contents"><i class="fa-solid fa-list-ul"></i></button>
+                    <button id="bookmark-btn" title="Bookmark" onclick="toggleBookBookmark(null, {{ book.id }})">
+                        <i class="{% if bookmarked %}fa-solid{% else %}fa-regular{% endif %} fa-bookmark" {% if bookmarked %}style="color: #D48C11;" {% endif %}></i>
+                    </button>
+                    <button id="like-btn" title="Like" onclick="toggleLike(null, 'chapter', {{ chapter.id }})">
+                        <i class="{% if liked %}fa-solid{% else %}fa-regular{% endif %} fa-heart" {% if liked %}style="color: #ef4444;" {% endif %}></i>
+                    </button>
+                    <button id="share-btn" title="Share"><i class="fa-solid fa-share-nodes"></i></button>
+                    <button id="settings-toggle" title="Reading Settings"><i class="fa-solid fa-gear"></i></button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Settings Menu (Hidden) -->
+    <div id="settings-menu" class="reading-sidebar settings-sidebar">
+        <div class="sidebar-header">
+            <h3>Reading Settings</h3>
+            <button id="settings-close"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <div class="sidebar-content">
+            <div class="setting-group">
+                <p>Font Size</p>
+                <div class="btn-group">
+                    <button onclick="changeFontSize(-2)">A-</button>
+                    <button onclick="changeFontSize(2)">A+</button>
+                </div>
+            </div>
+            <div class="setting-group">
+                <p>Theme</p>
+                <div class="theme-grid">
+                    <button onclick="setTheme('light')" class="theme-btn light">Light</button>
+                    <button onclick="setTheme('sepia')" class="theme-btn sepia">Sepia</button>
+                    <button onclick="setTheme('dark')" class="theme-btn dark">Dark</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Reading Content Area -->
+    <main class="reading-content" id="reading-content-main">
+        <div class="reading-container flex-col">
+            <div class="story-meta-top">
+                <div class="book-title-accent">
+                    <i class="fa-solid fa-book-open"></i> {{ book.title }}
+                </div>
+                <div class="author-attribution">by {{ book.author.username }}</div>
+            </div>
+
+            <h1 class="chapter-display-title">{{ chapter.title }}</h1>
+            <div class="chapter-sequence-muted">Chapter {{ current_sequence }} of {{ total_sequence }}</div>
+
+            <article class="chapter-body-text" id="chapter-text">
+                {{ chapter.content|safe }}
+            </article>
+
+            <div class="reading-end-nav">
+                {% if next_chapter %}
+                <a href="{% url 'read_chapter' next_chapter.id %}" class="btn-next-chapter">Next Chapter <i
+                        class="fa-solid fa-arrow-right"></i></a>
+                {% else %}
+                <p class="end-message">You've reached the end of the current published chapters.</p>
+                {% endif %}
+            </div>
+        </div>
+    </main>
+
+    <!-- Fixed Reading Footer (Progress Bar) -->
+    <footer class="reading-footer">
+        <div class="reading-container footer-layout">
+            <div class="progress-info-left">Chapter {{ current_sequence }} of {{ total_sequence }}</div>
+            <div class="progress-bar-container">
+                <div class="progress-bar-fill" style="width: {{ progress_percent }}%;"></div>
+            </div>
+            <div class="progress-info-right">{{ progress_percent }}%</div>
+        </div>
+    </footer>
+
+    <!-- TOC Sidebar -->
+    <div id="toc-sidebar" class="reading-sidebar">
+        <div class="sidebar-header">
+            <h3>Table of Contents</h3>
+            <button id="toc-close"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <div class="sidebar-content">
+            {% for chap in all_chapters %}
+            <a href="{% url 'read_chapter' chap.id %}" class="toc-item {% if chap.id == chapter.id %}active{% endif %}">
+                <span class="toc-order">{{ forloop.counter }}</span>
+                <span class="toc-title">{{ chap.title }}</span>
+            </a>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+
+
+<script>
+    function changeFontSize(delta) {
+        const text = document.getElementById('chapter-text');
+        const currentSize = parseInt(window.getComputedStyle(text).fontSize);
+        text.style.fontSize = (currentSize + delta) + 'px';
+    }
+
+    function setTheme(theme) {
+        const body = document.querySelector('.reading-interface');
+        body.classList.remove('theme-sepia', 'theme-dark');
+        if (theme === 'sepia') body.classList.add('theme-sepia');
+        if (theme === 'dark') body.classList.add('theme-dark');
+    }
+
+    document.addEventListener('DOMContentLoaded', function () {
+        // Drop cap logic
+        const article = document.querySelector('.chapter-body-text');
+        if (article) {
+            const firstP = article.querySelector('p');
+            if (firstP) firstP.classList.add('drop-cap-p');
+        }
+
+        // Toggles
+        const setupToggle = (btnId, sidebarId, closeId) => {
+            const btn = document.getElementById(btnId);
+            const sidebar = document.getElementById(sidebarId);
+            const close = document.getElementById(closeId);
+            if (btn && sidebar) btn.onclick = () => sidebar.classList.add('active');
+            if (close && sidebar) close.onclick = () => sidebar.classList.remove('active');
+        };
+
+        setupToggle('toc-toggle', 'toc-sidebar', 'toc-close');
+        setupToggle('settings-toggle', 'settings-menu', 'settings-close');
+
+        // Share Button
+        document.getElementById('share-btn').onclick = () => {
+            navigator.clipboard.writeText(window.location.href);
+            showToast('Link copied to clipboard!');
+        };
+
+    });
+</script>
+{% endblock %}

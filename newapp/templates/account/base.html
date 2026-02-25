@@ -1,0 +1,148 @@
+{% extends "newapp/_base.html" %}
+
+{% block content %}
+<div class="account-container">
+    <div class="account-card">
+        {% block account_content %}
+        {% endblock %}
+    </div>
+</div>
+
+<style>
+    .account-container {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        min-height: 80vh;
+        background: radial-gradient(circle at top right, #fdfbfb 0%, #ebedee 100%);
+        padding: 2rem;
+    }
+
+    .account-card {
+        background: rgba(255, 255, 255, 0.8);
+        backdrop-filter: blur(10px);
+        padding: 3rem;
+        border-radius: 20px;
+        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.05);
+        width: 100%;
+        max-width: 450px;
+        border: 1px solid rgba(255, 255, 255, 0.3);
+    }
+
+    .account-card h1 {
+        font-size: 2rem;
+        color: #302419;
+        margin-bottom: 1rem;
+        text-align: center;
+        font-weight: 700;
+    }
+
+    .account-card p {
+        color: #666;
+        text-align: center;
+        margin-bottom: 2rem;
+    }
+
+    .account-card form {
+        display: flex;
+        flex-direction: column;
+        gap: 1.5rem;
+    }
+
+    .account-card input[type="text"],
+    .account-card input[type="email"],
+    .account-card input[type="password"] {
+        padding: 12px 18px;
+        border: 1px solid rgba(0, 0, 0, 0.1);
+        border-radius: 8px;
+        font-size: 1rem;
+        transition: border-color 0.3s, box-shadow 0.3s;
+    }
+
+    .account-card input:focus {
+        outline: none;
+        border-color: #8B5CF6;
+        box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.1);
+    }
+
+    .account-card button {
+        padding: 14px;
+        background: linear-gradient(135deg, #8B5CF6 0%, #d946ef 100%);
+        color: white;
+        border: none;
+        border-radius: 8px;
+        font-size: 1rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: transform 0.2s, box-shadow 0.2s;
+    }
+
+    .account-card button:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(139, 92, 246, 0.3);
+    }
+
+    .account-links {
+        margin-top: 2rem;
+        text-align: center;
+        font-size: 0.9rem;
+        color: #777;
+    }
+
+    .account-links a {
+        color: #8B5CF6;
+        text-decoration: none;
+        font-weight: 600;
+    }
+
+    .account-links a:hover {
+        text-decoration: underline;
+    }
+
+    .socialaccount_ballot {
+        margin-bottom: 2rem;
+        position: relative;
+    }
+
+    .socialaccount_providers {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+    }
+
+    .socialaccount_providers li a {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+        padding: 12px;
+        border: 1px solid rgba(0, 0, 0, 0.1);
+        border-radius: 8px;
+        text-decoration: none;
+        color: #302419;
+        font-weight: 500;
+        transition: background 0.2s;
+    }
+
+    .socialaccount_providers li a:hover {
+        background: #f8f9fa;
+    }
+
+    .login-or {
+        display: flex;
+        align-items: center;
+        margin: 1.5rem 0;
+        color: #aaa;
+        font-size: 0.8rem;
+    }
+
+    .login-or::before,
+    .login-or::after {
+        content: "";
+        flex: 1;
+        height: 1px;
+        background: #eee;
+        margin: 0 10px;
+    }
+</style>
+{% endblock %}

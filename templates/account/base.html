@@ -1,0 +1,251 @@
+{% extends "newapp/_base.html" %}
+
+{% block content %}
+<div class="account_body_wrapper">
+    <div class="account-container">
+        <div class="account-card">
+            <div class="auth-header">
+                <i class="fa-solid fa-book-open"></i>
+                <span>Mypen</span>
+            </div>
+            {% block account_content %}
+            {% endblock %}
+        </div>
+    </div>
+</div>
+
+<style>
+    .account_body_wrapper {
+        background: radial-gradient(circle at top right, #fdfbfb 0%, #ebedee 100%);
+        min-height: 85vh;
+        /* Increased height */
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 40px 20px;
+    }
+
+    .account-container {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        width: 100%;
+        max-width: 500px;
+        /* Slightly wider */
+    }
+
+    .account-card {
+        background: #fff;
+        padding: 40px;
+        /* More padding */
+        border-radius: 24px;
+        /* Softer rounded corners */
+        box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.15);
+        /* More modern shadow */
+        width: 100%;
+        text-align: center;
+        border: 1px solid rgba(212, 140, 17, 0.1);
+        /* Subtle gold border */
+        position: relative;
+        overflow: hidden;
+    }
+
+    /* Top accent line */
+    .account-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 6px;
+        background: linear-gradient(90deg, #D48C11, #f3c677);
+    }
+
+    .auth-header {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 12px;
+        margin-bottom: 30px;
+        font-family: Georgia, serif;
+        font-size: 28px;
+        font-weight: 700;
+        color: #302419;
+    }
+
+    .auth-header i {
+        color: #D48C11;
+        font-size: 24px;
+    }
+
+    .account-card h1 {
+        font-family: Georgia, serif;
+        color: #302419;
+        font-size: 2rem;
+        margin-bottom: 0.75rem;
+        font-weight: 800;
+    }
+
+    .account-card p {
+        color: #7a736d;
+        margin-bottom: 2.5rem;
+        font-family: system-ui, sans-serif;
+        line-height: 1.5;
+    }
+
+    .account-card form {
+        display: flex;
+        flex-direction: column;
+        gap: 1.25rem;
+        text-align: left;
+    }
+
+    .account-card label {
+        font-family: system-ui, sans-serif;
+        font-weight: 600;
+        color: #302419;
+        font-size: 0.95rem;
+        display: block;
+        margin-bottom: 0.5rem;
+    }
+
+    .account-card input[type="text"],
+    .account-card input[type="password"],
+    .account-card input[type="email"],
+    .account-card input[type="url"] {
+        width: 100%;
+        padding: 14px 18px;
+        border-radius: 10px;
+        border: 2px solid #ebedee;
+        background: #fbf9f6;
+        font-family: system-ui, sans-serif;
+        font-size: 1rem;
+        transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .account-card input:focus {
+        outline: none;
+        border-color: #D48C11;
+        background: #fff;
+        box-shadow: 0 0 0 4px rgba(212, 140, 17, 0.1);
+    }
+
+    .account-card button,
+    .account-card input[type="submit"] {
+        background: #D48C11;
+        color: #fff;
+        padding: 16px;
+        border-radius: 10px;
+        border: none;
+        font-weight: 700;
+        font-size: 1.05rem;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        margin-top: 1.5rem;
+        width: 100%;
+        box-shadow: 0 4px 6px rgba(212, 140, 17, 0.2);
+    }
+
+    .account-card button:hover,
+    .account-card input[type="submit"]:hover {
+        background: #b87a0f;
+        transform: translateY(-2px);
+        box-shadow: 0 8px 15px rgba(212, 140, 17, 0.3);
+    }
+
+    .account-links {
+        margin-top: 2.5rem;
+        padding-top: 1.5rem;
+        border-top: 1px solid #ebedee;
+        font-family: system-ui, sans-serif;
+        font-size: 0.95rem;
+        color: #7a736d;
+    }
+
+    .account-links a {
+        color: #D48C11;
+        text-decoration: none;
+        font-weight: 700;
+        transition: color 0.2s;
+    }
+
+    .account-links a:hover {
+        color: #302419;
+        text-decoration: underline;
+    }
+
+    .errorlist {
+        background: #fce8e6;
+        color: #c5221f;
+        list-style: none;
+        padding: 10px 15px;
+        border-radius: 8px;
+        margin-bottom: 1rem;
+        font-size: 0.9rem;
+        border-left: 4px solid #c5221f;
+        text-align: left;
+    }
+
+    /* Social List Styling */
+    .socialaccount_providers {
+        list-style: none;
+        padding: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        margin-bottom: 2rem;
+    }
+
+    .socialaccount_providers a {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+        padding: 14px;
+        border-radius: 10px;
+        background: #fff;
+        border: 2px solid #ebedee;
+        color: #302419;
+        text-decoration: none;
+        font-weight: 700;
+        transition: all 0.2s;
+        font-family: system-ui, sans-serif;
+    }
+
+    .socialaccount_providers a:hover {
+        background: #fbf9f6;
+        border-color: #D48C11;
+        transform: translateY(-1px);
+    }
+
+    /* Hide Password Help Text */
+    .account-card .helptext {
+        display: none !important;
+    }
+
+    .account-card ul:not(.errorlist):not(.socialaccount_providers) {
+        display: none !important;
+    }
+
+    /* Checkbox Styling (Remember Me) */
+    .account-card form p:has(input[type="checkbox"]) {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        flex-direction: row;
+        width: 100%;
+    }
+
+    .account-card form p:has(input[type="checkbox"]) label {
+        margin-bottom: 0;
+        width: auto;
+    }
+
+    .account-card input[type="checkbox"] {
+        width: 20px !important;
+        height: 20px;
+        accent-color: #D48C11;
+        margin: 0;
+    }
+</style>
+{% endblock %}

@@ -1,0 +1,97 @@
+{% extends "newapp/_base.html" %}
+{% load static %}
+
+{% block title %} Manage {{ book.title }} - Mypen {% endblock %}
+
+{% block content %}
+<main class="manage-book-page">
+    <section class="dashboard-header">
+        <div class="dashboard-container">
+            <div class="header-with-back">
+                <a href="{% url 'dashboard' %}" class="btn-back"><i class="fa-solid fa-arrow-left"></i> Back to
+                    Dashboard</a>
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <h1>{{ book.title }}</h1>
+                    {% if book.status == 'FINISHED' %}
+                    <span class="status-badge finished"
+                        style="background: #28a745; color: white; padding: 4px 10px; border-radius: 12px; font-size: 12px; font-weight: 600;">Finished</span>
+                    {% elif book.status == 'PUBLISHED' %}
+                    <span class="status-badge published"
+                        style="background: #007bff; color: white; padding: 4px 10px; border-radius: 12px; font-size: 12px; font-weight: 600;">Published</span>
+                    {% else %}
+                    <span class="status-badge draft"
+                        style="background: #6c757d; color: white; padding: 4px 10px; border-radius: 12px; font-size: 12px; font-weight: 600;">Draft</span>
+                    {% endif %}
+                </div>
+            </div>
+            <p class="subtitle">Manage chapters and track progress for this story.</p>
+
+        </div>
+    </section>
+
+    <script>
+        function updateBookStatus(status, bookId) {
+            const formData = new FormData();
+            formData.append('status', status);
+
+            fetch(`/ajax/update-book-metadata/${bookId}/`, {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': '{{ csrf_token }}'
+                },
+                body: formData
+            })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === 'success') {
+                        // Optional: show a toast or notification
+                        console.log('Status updated');
+                    } else {
+                        alert('Error updating status: ' + data.message);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                });
+        }
+    </script>
+
+    <section class="chapters-section">
+        <div class="dashboard-container">
+            <div class="section-header">
+                <h2>Chapters</h2>
+                <a href="{% url 'add_chapter' book.id %}" class="btn-primary"><i class="fa-solid fa-plus"></i> Add New
+                    Chapter</a>
+            </div>
+
+            <div class="stories-list">
+                {% for chapter in chapters %}
+                <div class="dashboard-story-card">
+                    <div class="chapter-order">{{ forloop.counter }}</div>
+                    <div class="story-details">
+                        <h3>{{ chapter.title }}</h3>
+                        <p class="story-meta">
+                            <span><i class="fa-solid fa-clock"></i> Last saved {{ chapter.last_saved|timesince }}
+                                ago</span>
+                            <span class="status-badge {{ chapter.status|lower }}">{{ chapter.status }}</span>
+                        </p>
+                    </div>
+                    <div class="story-actions">
+                        <a href="{% url 'write_chapter' chapter.id %}" class="btn-icon" title="Edit Chapter"><i
+                                class="fa-solid fa-pen-to-square"></i></a>
+                        <a href="{% url 'read_chapter' chapter.id %}" class="btn-icon" title="Preview"><i
+                                class="fa-solid fa-eye"></i></a>
+                    </div>
+                </div>
+                {% empty %}
+                <div class="empty-state">
+                    <i class="fa-solid fa-file-signature"></i>
+                    <p>This book has no chapters yet. Let's start writing!</p>
+                    <a href="{% url 'add_chapter' book.id %}" class="btn-primary">Create Your First Chapter</a>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </section>
+</main>
+{% endblock %}

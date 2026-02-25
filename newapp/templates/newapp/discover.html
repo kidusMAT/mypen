@@ -1,0 +1,63 @@
+{% extends "newapp/_base.html" %}
+{% load static %}
+
+{% block title %} Discover - Mypen {% endblock %}
+
+{% block content %}
+<main class="discover-page">
+    <section class="discover-hero">
+        <div class="discover-container">
+            <div class="discover-header-icon">
+                <i class="fa-solid fa-compass"></i>
+            </div>
+            <h1>Discover</h1>
+            <p class="subtitle">Explore thousands of stories across every genre. Find your next favorite read.</p>
+
+            <form action="." method="GET" class="search-container" id="search-form">
+                <div class="search-bar">
+                    <i class="fa-solid fa-magnifying-glass" onclick="document.getElementById('search-form').submit();"
+                        style="cursor: pointer;"></i>
+                    <input type="text" name="q" value="{{ search_query|default:'' }}"
+                        placeholder="Search stories, authors, or genres..."
+                        onkeypress="if(event.key === 'Enter') this.form.submit();">
+                </div>
+            </form>
+        </div>
+    </section>
+
+    <section class="trending-section">
+        <div class="section-container">
+            <div class="section-title">
+                <i class="fa-solid fa-chart-line"></i>
+                <h2>{% if search_query %}Search Results for "{{ search_query }}"{% else %}Trending Now{% endif %}</h2>
+            </div>
+
+            <div class="trending-grid">
+                {% for book in trending_books %}
+                <div class="trending-card" onclick="window.location.href='/book/{{ book.id }}/view/';"
+                    style="cursor: pointer;">
+                    <div class="trending-rank">0{{ forloop.counter }}</div>
+                    <div class="trending-info">
+                        <h3>{{ book.title }}</h3>
+                        <p class="author">by {{ book.author.username }}</p>
+                        <div class="stats">
+                            <span><i class="fa-solid fa-eye"></i> {{ book.views }}</span>
+                            <span onclick="toggleBookLike(event, {{ book.id }})" style="cursor: pointer;">
+                                {% if user in book.likes.all %}
+                                <i class="fa-solid fa-heart" style="color: #ef4444;"></i>
+                                {% else %}
+                                <i class="fa-regular fa-heart"></i>
+                                {% endif %}
+                                <span class="like-count">{{ book.total_likes|default:0 }}</span>
+                            </span>
+                        </div>
+                    </div>
+                </div>
+                {% empty %}
+                <p class="no-results">No stories found matching your search.</p>
+                {% endfor %}
+            </div>
+        </div>
+    </section>
+</main>
+{% endblock %}

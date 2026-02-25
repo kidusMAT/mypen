@@ -1,0 +1,339 @@
+{% load socialaccount %}
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'newapp/css/style.css' %}?v=3">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <title>{% block title %} Document {% endblock %}</title>
+    {% block extra_head %}{% endblock %}
+</head>
+
+<body>
+    {% block header %}
+    <header class="global-header">
+        <div class="header-container">
+            <div class="header-left">
+                <a href="/" class="logo-inkwell">
+                    <i class="fa-solid fa-book-open"></i>
+                    <span>Mypen</span>
+                </a>
+            </div>
+
+            <nav class="header-center">
+                <ul class="nav-links">
+                    <li><a href="/discover/">Discover</a></li>
+
+                    <li><a href="/poems/">Poems</a></li>
+                    <li><a href="/scripts/">Scripts</a></li>
+                    <li><a href="/books/">Books</a></li>
+
+                </ul>
+            </nav>
+
+            <div class="header-right">
+                <ul class="user-actions">
+                    {% if user.is_authenticated %}
+                    <li><a href="{% url 'dashboard' %}" class="username-link">{{ user.username }}</a></li>
+                    <li><a href="{% url 'account_logout' %}" class="signin">Sign Out</a></li>
+                    {% else %}
+                    <li><a href="{% provider_login_url 'google' %}" class="signin">Sign In</a></li>
+                    {% endif %}
+                    <li><a href="/write/new/" class="btn-start-writing"><i class="fa-solid fa-pen-nib"></i> Start
+                            Writing</a></li>
+                </ul>
+                <button class="mobile-menu-btn" id="mobile-menu-toggle">
+                    <i class="fa-solid fa-bars"></i>
+                </button>
+            </div>
+        </div>
+        <!-- Mobile Navigation Overlay -->
+        <div class="mobile-nav-overlay" id="mobile-nav-overlay">
+            <div class="mobile-nav-content">
+                <div class="mobile-nav-header">
+                    <a href="/" class="logo-inkwell">
+                        <i class="fa-solid fa-book-open"></i>
+                        <span>Mypen</span>
+                    </a>
+                    <button class="close-mobile-menu" id="close-mobile-menu">
+                        <i class="fa-solid fa-xmark"></i>
+                    </button>
+                </div>
+                <ul class="mobile-nav-links">
+                    <li><a href="/discover/">Discover</a></li>
+                    <li><a href="/poems/">Poems</a></li>
+                    <li><a href="/scripts/">Scripts</a></li>
+                    <li><a href="/books/">Books</a></li>
+                </ul>
+                <div class="mobile-user-actions">
+                    {% if user.is_authenticated %}
+                    <a href="{% url 'dashboard' %}" class="mobile-username">{{ user.username }}</a>
+                    <a href="{% url 'account_logout' %}" class="mobile-signin">Sign Out</a>
+                    {% else %}
+                    <a href="{% provider_login_url 'google' %}" class="mobile-signin">Sign In</a>
+                    {% endif %}
+                    <a href="/write/new/" class="mobile-btn-start">Start Writing</a>
+                </div>
+            </div>
+        </div>
+    </header>
+    {% endblock%}
+    {% block content %}
+    {% endblock %}
+    {% block footer %}
+    <footer>
+        <section class="upper">
+            <div class="contact heads">
+                <a href="#" class="logo-bm">Mypen</a>
+                <div>
+                    <p class="saying">A home for writers and dreamers to share their stories with the world.</p>
+                </div>
+                <div class="socials">
+                    <li><a href="#"><i class="fa-brands fa-instagram"></i></a></li>
+                    <li><a href="#"><i class="fa-brands fa-tiktok"></i></a></li>
+                    <li><a href="#"><i class="fa-brands fa-telegram"></i></a></li>
+                </div>
+            </div>
+            <div class="Discover ">
+                <p class="heads">Discover</p>
+                <div class="LIst">
+                    <li><a href="/discover/">Discover</a></li>
+
+                    <li><a href="/poems/">Poems</a></li>
+                    <li><a href="/books/">Books</a></li>
+                    <li><a href="/scripts/">Scripts</a></li>
+
+                </div>
+            </div>
+            <div class="Discover">
+                <p class="heads">Writers</p>
+                <div class="LIst">
+                    <li><a href="/write/new/">Start Writing</a></li>
+                    <li><a href="{% url 'writing_tips' %}">Writing Tips</a></li>
+
+                    <li><a href="{% url 'contests' %}">Contests</a></li>
+                </div>
+            </div>
+            <div class="Discover">
+                <p class="heads">Company</p>
+                <div class="LIst">
+                    <li><a href="/about/">About</a></li>
+                    <li><a href="/privacy/">Privacy</a></li>
+                    <li><a href="/terms/">Terms</a></li>
+                    <li><a href="/contact/">Contact</a></li>
+
+                </div>
+            </div>
+        </section>
+        <section class="lower">
+            <p>© 2025 Mypen. All rights reserved. Made with love for writers everywhere.</p>
+        </section>
+    </footer>
+    {% endblock %}
+    <script src="{% static 'newapp/js/common.js' %}"></script>
+    <script type="module" src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.esm.js"></script>
+    <script nomodule src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.js"></script>
+
+
+    <div id="toast-container"></div>
+
+    <style>
+        #toast-container {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            z-index: 10000;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .toast {
+            background: #111 !important;
+            color: #fff !important;
+            padding: 16px 30px !important;
+            border-radius: 12px !important;
+            display: flex !important;
+            align-items: center !important;
+            gap: 15px !important;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.4) !important;
+            font-weight: 600 !important;
+            font-size: 14px !important;
+            animation: slideInPremium 0.3s ease-out !important;
+            transition: opacity 0.5s ease-out, transform 0.5s ease-out !important;
+            border: 1px solid rgba(255, 255, 255, 0.1) !important;
+            border-left: 5px solid #22c55e !important;
+        }
+
+        .toast.success {
+            border-left: 5px solid #22c55e !important;
+        }
+
+        .toast.info {
+            border-left: 5px solid #3b82f6 !important;
+        }
+
+        .toast.error {
+            border-left: 5px solid #ef4444 !important;
+        }
+
+        .toast span {
+            color: #fff !important;
+        }
+
+        @keyframes slideInPremium {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+    </style>
+
+    <script>
+        document.addEventListener('error', function (event) {
+            if (event.target.tagName.toLowerCase() === 'img') {
+                event.target.style.display = 'none';
+            }
+        }, true);
+
+        const isAuthenticated = "{{ user.is_authenticated }}" === "True";
+
+        function showToast(message, type = 'success') {
+            const container = document.getElementById('toast-container');
+            if (!container) return;
+
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+
+            let icon = 'fa-circle-check';
+            let iconColor = '#22c55e';
+            if (type === 'error') {
+                icon = 'fa-circle-exclamation';
+                iconColor = '#ef4444';
+            } else if (type === 'info') {
+                icon = 'fa-circle-info';
+                iconColor = '#3b82f6';
+            }
+
+            toast.innerHTML = `<i class="fa-solid ${icon}" style="color: ${iconColor};"></i> <span>${message}</span>`;
+            container.appendChild(toast);
+
+            setTimeout(() => {
+                toast.style.opacity = '0';
+                toast.style.transform = 'translateY(10px)';
+                setTimeout(() => toast.remove(), 500);
+            }, 3000);
+        }
+
+        function toggleLike(event, type, id) {
+            if (event) event.stopPropagation();
+            if (!isAuthenticated) {
+                showToast(`Please log in to like ${type}s`, 'info');
+                return;
+            }
+
+            fetch(`/ajax/toggle-like-${type}/${id}/`, {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': '{{ csrf_token }}',
+                    'Content-Type': 'application/json'
+                }
+            })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.liked !== undefined) {
+                        const target = event ? event.currentTarget : document.getElementById(`like-btn`);
+                        const icon = target.querySelector('i');
+                        const countSpan = target.querySelector('span');
+
+                        if (data.liked) {
+                            icon.classList.remove('fa-regular');
+                            icon.classList.add('fa-solid');
+                            icon.style.color = '#ef4444';
+                            showToast(`You liked this ${type}!`);
+                        } else {
+                            icon.classList.remove('fa-solid');
+                            icon.classList.add('fa-regular');
+                            icon.style.color = '';
+                            showToast(`Like removed`);
+                        }
+                        if (countSpan) countSpan.textContent = data.count;
+                    }
+                })
+                .catch(error => console.error('Error:', error));
+        }
+
+        function toggleBookmark(event, type, id) {
+            if (event) event.stopPropagation();
+            if (!isAuthenticated) {
+                showToast(`Please log in to bookmark ${type}s`, 'info');
+                return;
+            }
+
+            fetch(`/ajax/toggle-bookmark-${type}/${id}/`, {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': '{{ csrf_token }}',
+                    'Content-Type': 'application/json'
+                }
+            })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.bookmarked !== undefined) {
+                        const target = event ? event.currentTarget : document.getElementById(`bookmark-btn`);
+                        const icon = target.querySelector('i');
+
+                        if (data.bookmarked) {
+                            icon.classList.remove('fa-regular');
+                            icon.classList.add('fa-solid');
+                            icon.style.color = '#D48C11';
+                            showToast(`Saved to your bookmarks!`);
+                        } else {
+                            icon.classList.remove('fa-solid');
+                            icon.classList.add('fa-regular');
+                            icon.style.color = '';
+                            showToast(`Removed from your bookmarks`);
+                        }
+                    }
+                })
+                .catch(error => console.error('Error:', error));
+        }
+
+        // Legacy/Alias functions for compatibility
+        function togglePoemLike(event, id) { toggleLike(event, 'poem', id); }
+        function togglePoemBookmark(event, id) { toggleBookmark(event, 'poem', id); }
+        function toggleScriptLike(event, id) { toggleLike(event, 'script', id); }
+        function toggleScriptBookmark(event, id) { toggleBookmark(event, 'script', id); }
+        function toggleBookLike(event, id) { toggleLike(event, 'book', id); }
+        function toggleBookBookmark(event, id) { toggleBookmark(event, 'book', id); }
+        // Mobile Menu Toggle
+        const mobileToggle = document.getElementById('mobile-menu-toggle');
+        const closeMobile = document.getElementById('close-mobile-menu');
+        const mobileOverlay = document.getElementById('mobile-nav-overlay');
+
+        if (mobileToggle && mobileOverlay) {
+            mobileToggle.addEventListener('click', () => {
+                mobileOverlay.classList.add('active');
+                document.body.style.overflow = 'hidden';
+            });
+        }
+
+        if (closeMobile && mobileOverlay) {
+            closeMobile.addEventListener('click', () => {
+                mobileOverlay.classList.remove('active');
+                document.body.style.overflow = '';
+            });
+        }
+    </script>
+</body>
+
+</html>

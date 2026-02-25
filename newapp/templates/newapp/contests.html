@@ -1,0 +1,307 @@
+{% extends "newapp/_base.html" %}
+{% load static %}
+
+{% block title %} Contests - Mypen {% endblock %}
+
+{% block content %}
+<main class="static-page">
+    <section class="static-header">
+        <div class="static-container">
+            <h1><i class="fa-solid fa-trophy"></i> Writing Contests</h1>
+            <p class="subtitle">Showcase your talent and win amazing prizes.</p>
+        </div>
+    </section>
+
+    <section class="static-content">
+        <div class="static-container">
+            {% for contest in active_contests %}
+            <div class="active-contest">
+                <div class="contest-badge">Active Now</div>
+                <h2>{{ contest.title }}</h2>
+                <p>{{ contest.description }}</p>
+                <div class="contest-prizes">
+                    <span><i class="fa-solid fa-medal"></i> {{ contest.prize }}</span>
+                    <span><i class="fa-solid fa-calendar-days"></i> Ends {{ contest.end_date|date:"F d, Y" }}</span>
+                </div>
+                <button onclick="toggleEntrySection('{{ contest.id }}', '{{ contest.contest_type }}')"
+                    class="btn-primary"
+                    style="margin-top: 20px; display: inline-block; text-decoration: none; border: none; cursor: pointer;">Enter
+                    Now</button>
+
+                <!-- Inline Entry Section -->
+                <div id="entry-section-{{ contest.id }}" class="entry-section"
+                    style="display: none; margin-top: 20px; padding-top: 20px; border-top: 1px solid rgba(255,255,255,0.1);">
+                    <p style="margin-bottom: 15px; font-weight: 600;">How would you like to enter?</p>
+
+                    <div class="entry-actions" style="display: flex; gap: 10px; flex-wrap: wrap;">
+                        <button onclick="writeNewEntry('{{ contest.id }}', '{{ contest.contest_type }}')"
+                            class="btn-primary" style="font-size: 14px; padding: 8px 16px;">
+                            <i class="fa-solid fa-pen-nib"></i> Write New
+                        </button>
+
+                        <div class="existing-select-wrapper"
+                            style="flex: 1; min-width: 200px; display: flex; gap: 10px;">
+                            <select id="work-select-{{ contest.id }}" class="work-select-dropdown"
+                                style="flex: 1; padding: 8px; border-radius: 6px; border: 1px solid #ddd; background: #fff; color: #333;">
+                                <option value="">Select your {{ contest.contest_type|lower }}...</option>
+                                <!-- Populated via JS -->
+                            </select>
+                            <button
+                                onclick="submitExistingEntryInline('{{ contest.id }}', '{{ contest.contest_type }}')"
+                                class="btn-primary" style="font-size: 14px; padding: 8px 16px;">
+                                Submit
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% empty %}
+            <div class="empty-state"
+                style="padding: 40px; text-align: center; background: rgba(255,255,255,0.05); border-radius: 20px;">
+                <i class="fa-solid fa-hourglass-half" style="font-size: 40px; color: #a8a29e; margin-bottom: 20px;"></i>
+                <p>No active contests at the moment. Prepare your drafts!</p>
+            </div>
+            {% endfor %}
+
+            <h2 style="margin-top: 60px; margin-bottom: 30px;">Upcoming Contests</h2>
+            <div class="contest-grid">
+                {% for contest in upcoming_contests %}
+                <div class="contest-card-mini">
+                    <h3>{{ contest.title }}</h3>
+                    <p>Starts {{ contest.start_date|date:"F d, Y" }}</p>
+                </div>
+                {% empty %}
+                <p style="color: #a8a29e;">No upcoming contests announced yet.</p>
+                {% endfor %}
+            </div>
+
+            {% if completed_contests %}
+            <h2 style="margin-top: 60px; margin-bottom: 30px;">Past Winners</h2>
+            <div class="contest-grid">
+                {% for contest in completed_contests %}
+                <div class="contest-card-mini winner-card" style="border: 1px solid #ffd700;">
+                    <div
+                        style="background: #ffd700; color: #000; padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: bold; position: absolute; top: 10px; right: 10px;">
+                        <i class="fa-solid fa-crown"></i> Winner
+                    </div>
+                    <h3>{{ contest.title }}</h3>
+                    <p style="margin-bottom: 15px;">Ended {{ contest.end_date|date:"F d, Y" }}</p>
+
+                    {% if contest.winning_book %}
+                    <div class="winner-info">
+                        <img src="{% if contest.winning_book.cover_image %}{{ contest.winning_book.cover_image.url }}{% else %}{% static 'images/default_cover.jpg' %}{% endif %}"
+                            alt="Cover"
+                            style="width: 50px; height: 75px; object-fit: cover; border-radius: 4px; float: left; margin-right: 10px;">
+                        <div>
+                            <h4 style="margin: 0; font-size: 16px;">{{ contest.winning_book.title }}</h4>
+                            <p style="margin: 5px 0 0; font-size: 14px; color: #666;">by
+                                {{contest.winning_book.author.username }}</p>
+                        </div>
+                        <div style="clear: both;"></div>
+                    </div>
+                    {% elif contest.winning_script %}
+                    <div class="winner-info">
+                        <div
+                            style="width: 50px; height: 75px; background: #333; border-radius: 4px; float: left; margin-right: 10px; display: flex; align-items: center; justify-content: center;">
+                            <i class="fa-solid fa-scroll" style="color: #fff;"></i>
+                        </div>
+                        <div>
+                            <h4 style="margin: 0; font-size: 16px;">{{ contest.winning_script.title }}</h4>
+                            <p style="margin: 5px 0 0; font-size: 14px; color: #666;">by
+                                {{contest.winning_script.author.username }}</p>
+                        </div>
+                        <div style="clear: both;"></div>
+                    </div>
+                    {% elif contest.winning_poem %}
+                    <div class="winner-info">
+                        <div
+                            style="width: 50px; height: 75px; background: #333; border-radius: 4px; float: left; margin-right: 10px; display: flex; align-items: center; justify-content: center;">
+                            <i class="fa-solid fa-feather-pointed" style="color: #fff;"></i>
+                        </div>
+                        <div>
+                            <h4 style="margin: 0; font-size: 16px;">{{ contest.winning_poem.title }}</h4>
+                            <p style="margin: 5px 0 0; font-size: 14px; color: #666;">by
+                                {{contest.winning_poem.author.username }}</p>
+                        </div>
+                        <div style="clear: both;"></div>
+                    </div>
+                    {% else %}
+                    <p style="font-style: italic; color: #888;">Winner to be announced</p>
+                    {% endif %}
+                </div>
+                {% endfor %}
+            </div>
+            {% endif %}
+        </div>
+    </section>
+
+
+
+    <!-- Phone Number Modal -->
+    <div id="phone-modal" class="modal-overlay" style="display: none;">
+        <div class="modal-content">
+            <h2>Phone Number Required</h2>
+            <p>Please provide your phone number to enter contests.</p>
+
+            <div style="margin-top: 20px; text-align: left;">
+                <label style="display: block; margin-bottom: 8px;">Phone Number:</label>
+                <input type="tel" id="phone-input" placeholder="+251..."
+                    style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #ddd; margin-bottom: 15px;">
+                <small style="color: #666;">Format: +[Country Code][Number] (e.g. +251911223344)</small>
+                <button onclick="savePhoneNumber()" class="btn-primary" style="width: 100%; margin-top: 15px;">Save &
+                    Continue</button>
+            </div>
+
+            <button onclick="closePhoneModal()" class="modal-btn cancel"
+                style="margin-top: 20px; background: none; color: #666; border: none; cursor: pointer;">Cancel</button>
+        </div>
+    </div>
+    <!-- JSON Data for Scripts -->
+    {{ user_books|json_script:"user-books-data" }}
+    {{ user_scripts|json_script:"user-scripts-data" }}
+    {{ user_poems|json_script:"user-poems-data" }}
+
+    <script>
+        let currentContestId = null;
+        let currentContestType = null;
+
+        const userWorks = {
+            'Book': JSON.parse(document.getElementById('user-books-data')?.textContent || '[]'),
+            'Script': JSON.parse(document.getElementById('user-scripts-data')?.textContent || '[]'),
+            'Poem': JSON.parse(document.getElementById('user-poems-data')?.textContent || '[]')
+        };
+
+        function toggleEntrySection(contestId, contestType) {
+            {% if user.is_authenticated %}
+            const section = document.getElementById(`entry-section-${contestId}`);
+            const isHidden = section.style.display === 'none';
+
+            // Hide all other open sections
+            document.querySelectorAll('.entry-section').forEach(el => el.style.display = 'none');
+
+            if (isHidden) {
+                section.style.display = 'block';
+                populateDropdown(contestId, contestType);
+            }
+            {% else %}
+            window.location.href = "{% url 'account_login' %}?next={{ request.path }}";
+            {% endif %}
+        }
+
+        function populateDropdown(contestId, type) {
+            const select = document.getElementById(`work-select-${contestId}`);
+            // Clear except first option
+            select.innerHTML = `<option value="">Select your ${type.toLowerCase()}...</option>`;
+
+            const works = userWorks[type] || [];
+
+            if (works.length === 0) {
+                const option = document.createElement('option');
+                option.disabled = true;
+                option.textContent = `No published ${type.toLowerCase()}s found`;
+                select.appendChild(option);
+            } else {
+                works.forEach(work => {
+                    const option = document.createElement('option');
+                    option.value = work.id;
+                    option.textContent = work.title;
+                    select.appendChild(option);
+                });
+            }
+        }
+
+        function writeNewEntry(contestId, type) {
+            window.location.href = `/write/new/?contest_id=${contestId}&type=${type.toLowerCase()}`;
+        }
+
+        async function submitExistingEntryInline(contestId, type) {
+            const select = document.getElementById(`work-select-${contestId}`);
+            const workId = select.value;
+
+            if (!workId) {
+                alert('Please select a work to submit.');
+                return;
+            }
+
+            // Set current context for phone modal callbacks if needed
+            currentContestId = contestId;
+            currentContestType = type;
+
+            try {
+                const response = await fetch("{% url 'submit_contest_entry' %}", {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': '{{ csrf_token }}'
+                    },
+                    body: JSON.stringify({
+                        contest_id: contestId,
+                        work_id: workId,
+                        work_type: type
+                    })
+                });
+
+                const data = await response.json();
+                if (data.status === 'success') {
+                    if (typeof showToast === 'function') showToast(data.message, 'success');
+                    else alert(data.message);
+                    // Hide section on success
+                    document.getElementById(`entry-section-${contestId}`).style.display = 'none';
+                } else {
+                    if (data.phone_required) {
+                        openPhoneModal();
+                    } else {
+                        if (typeof showToast === 'function') showToast(data.message, 'error');
+                        else alert(data.message);
+                    }
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('An error occurred. Please try again.');
+            }
+        }
+
+        function openPhoneModal() {
+            document.getElementById('phone-modal').style.display = 'flex';
+        }
+
+        function closePhoneModal() {
+            document.getElementById('phone-modal').style.display = 'none';
+        }
+
+        async function savePhoneNumber() {
+            const phoneNumber = document.getElementById('phone-input').value.trim();
+            if (!phoneNumber) {
+                alert('Please enter a phone number.');
+                return;
+            }
+
+            try {
+                const response = await fetch("{% url 'update_phone_number' %}", {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': '{{ csrf_token }}'
+                    },
+                    body: JSON.stringify({ phone_number: phoneNumber })
+                });
+
+                const data = await response.json();
+                if (data.status === 'success') {
+                    if (typeof showToast === 'function') showToast(data.message, 'success');
+                    else alert(data.message);
+                    closePhoneModal();
+                    // Retry submission
+                    submitExistingEntryInline(currentContestId, currentContestType);
+                } else {
+                    if (typeof showToast === 'function') showToast(data.message, 'error');
+                    else alert(data.message);
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('An error occurred. Please try again.');
+            }
+        }
+    </script>
+</main>
+{% endblock %}

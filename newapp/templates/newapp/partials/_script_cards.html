@@ -1,0 +1,52 @@
+{% for script in books %}
+<div class="horizontal-script-card" onclick="window.location.href='/script/read/{{ script.id }}/';">
+    {% if script.cover_image %}
+    <div class="card-visual"
+        style="background-image: url('{{ script.cover_image.url }}'); background-size: cover; background-position: center;">
+    </div>
+    {% else %}
+    <div class="card-visual {% cycle 'v-teal' 'v-purple' 'v-orange' 'v-blue' %}">
+        <i class="fa-solid fa-clapperboard"></i>
+    </div>
+    {% endif %}
+    <div class="card-details">
+        <div class="details-top">
+            <span class="badge secondary">Feature</span>
+            {% if script.genre %}
+            <span class="badge outline">{{ script.genre }}</span>
+            {% endif %}
+        </div>
+        <h3 class="script-title">{{ script.title }}</h3>
+        <p class="script-author">by {{ script.author.username }}</p>
+        <p class="script-preview">
+            {% if script.description %}
+            {{ script.description|truncatewords:15 }}
+            {% else %}
+            No description provided for this masterpiece yet.
+            {% endif %}
+        </p>
+        <div class="details-footer">
+            <i class="fa-regular fa-clock"></i>
+            <span>{{ script.page_count|default:0 }} pages</span>
+
+            <div class="card-metrics-row" style="margin-left: auto; display: flex; gap: 15px;">
+                <span class="metric" onclick="toggleScriptLike(event, {{ script.id }})" style="cursor: pointer;">
+                    {% if user in script.likes.all %}
+                    <i class="fa-solid fa-heart" style="color: #ef4444;"></i>
+                    {% else %}
+                    <i class="fa-regular fa-heart"></i>
+                    {% endif %}
+                    <span>{{ script.total_likes|default:0 }}</span>
+                </span>
+                <span class="metric" onclick="toggleScriptBookmark(event, {{ script.id }})" style="cursor: pointer;">
+                    {% if user in script.bookmarks.all %}
+                    <i class="fa-solid fa-bookmark" style="color: #D48C11;"></i>
+                    {% else %}
+                    <i class="fa-regular fa-bookmark"></i>
+                    {% endif %}
+                </span>
+            </div>
+        </div>
+    </div>
+</div>
+{% endfor %}

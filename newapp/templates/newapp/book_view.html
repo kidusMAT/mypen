@@ -1,0 +1,230 @@
+{% extends "newapp/_base.html" %}
+{% load static %}
+
+{% block title %} {{ book.title }} - Mypen {% endblock %}
+
+{% block content %}
+<style>
+    /* Fix flex children overflowing with long unbroken text */
+    .profile-content-main,
+    .profile-card,
+    .profile-header-main {
+        min-width: 0;
+    }
+
+    .profile-desc,
+    .profile-title,
+    .chap-name,
+    .chap-meta,
+    .stat-lbl,
+    .stat-num {
+        overflow-wrap: break-word;
+        word-break: break-word;
+    }
+</style>
+<main class="book-profile-page">
+    {% if book.cover_image %}
+    <div class="profile-hero-bg" style="background-image: url('{{ book.cover_image.url }}');"></div>
+    {% endif %}
+
+    <section class="profile-hero-section">
+        <div class="profile-container">
+            <div class="profile-card">
+                <div class="profile-header-main">
+                    {% if book.cover_image %}
+                    <div class="profile-cover-wrapper">
+                        <img src="{{ book.cover_image.url }}" alt="{{ book.title }}" class="main-cover">
+                        <div class="cover-shadow"></div>
+                    </div>
+                    {% endif %}
+
+                    <div class="profile-content-main">
+                        <div class="profile-badge-row">
+                            {% if book.genre %}
+                            <span class="premium-badge">{{ book.genre }}</span>
+                            {% endif %}
+                            <span class="premium-badge outline">
+                                <i class="fa-solid fa-clock"></i> {{ book.read_time|default:"Approx 10m" }}
+                            </span>
+                            {% if book.status == 'FINISHED' %}
+                            <span class="premium-badge"
+                                style="background: #28a745; border-color: #28a745; color: white;">Finished</span>
+                            {% endif %}
+                        </div>
+
+                        <h1 class="profile-title">{{ book.title }}</h1>
+                        <div class="profile-author-row">
+                            <div class="author-avatar-stub">{{ book.author.username|slice:":1"|upper }}</div>
+                            <span class="author-label">Written by</span>
+                            <span class="author-value">{{ book.author.username }}</span>
+                        </div>
+
+                        <div class="profile-stats-row">
+                            <div class="stat-item">
+                                <span class="stat-num">{{ book.views }}</span>
+                                <span class="stat-lbl">Views</span>
+                            </div>
+                            <div class="stat-sep"></div>
+                            <div class="stat-item">
+                                <span class="stat-num" id="like-count-display">{{ total_likes }}</span>
+                                <span class="stat-lbl">Likes</span>
+                            </div>
+                            <div class="stat-sep"></div>
+                            <div class="stat-item">
+                                <span class="stat-num" id="bookmark-count-display">{{ total_bookmarks }}</span>
+                                <span class="stat-lbl">Bookmarks</span>
+                            </div>
+                            <div class="stat-sep"></div>
+                            <div class="stat-item">
+                                <span class="stat-num">{{ chapters.count|default:0 }}</span>
+                                <span class="stat-lbl">Chapters</span>
+                            </div>
+                        </div>
+
+                        <p class="profile-desc">
+                            {% if book.description %}
+                            {{ book.description }}
+                            {% else %}
+                            No description provided for this masterpiece yet.
+                            {% endif %}
+                        </p>
+
+                        <div class="profile-cta-row">
+                            {% if chapters %}
+                            <a href="{% url 'read_chapter' chapters.0.id %}" class="btn-premium-solid">
+                                <i class="fa-solid fa-play"></i> Start Reading
+                            </a>
+                            {% endif %}
+                            <button id="like-book-btn" class="btn-premium-outline">
+                                <i
+                                    class="{% if user in book.likes.all %}fa-solid{% else %}fa-regular{% endif %} fa-heart"></i>
+                                <span>{% if user in book.likes.all %}Liked{% else %}Like Story{% endif %}</span>
+                            </button>
+                            <button id="bookmark-book-btn" class="btn-premium-outline">
+                                <i
+                                    class="{% if user in book.bookmarks.all %}fa-solid{% else %}fa-regular{% endif %} fa-bookmark"></i>
+                                <span>{% if user in book.bookmarks.all %}Bookmarked{% else %}Bookmark{% endif %}</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="profile-chapters-section">
+        <div class="profile-container">
+            <div class="section-heading-row">
+                <h2><i class="fa-solid fa-feather-pointed"></i> Chapter Index</h2>
+                <div class="heading-line"></div>
+            </div>
+
+            {% if chapters %}
+            <div class="premium-chapters-grid">
+                {% for chapter in chapters %}
+                <a href="{% url 'read_chapter' chapter.id %}" class="chapter-list-item">
+                    <div class="chap-index">{% if forloop.counter < 10 %}0{% endif %}{{ forloop.counter }}</div>
+                            <div class="chap-info">
+                                <h4 class="chap-name">{{ chapter.title }}</h4>
+                                <span class="chap-meta">Updated {{ chapter.last_saved|timesince }} ago •
+                                    {{chapter.views}} reads</span>
+                            </div>
+                            <div class="chap-action">
+                                <i class="fa-solid fa-chevron-right"></i>
+                            </div>
+                </a>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="empty-chapters">
+                <div class="empty-icon"><i class="fa-solid fa-book-open"></i></div>
+                <p>The author is currently weaving this tale. Check back soon for the first chapter.</p>
+            </div>
+            {% endif %}
+        </div>
+    </section>
+
+    <div id="toast-container"></div>
+</main>
+
+<script>
+    function showToast(message) {
+        const container = document.getElementById('toast-container');
+        const toast = document.createElement('div');
+        toast.className = 'toast success-premium';
+        toast.innerHTML = `<i class="fa-solid fa-sparkles"></i> <span>${message}</span>`;
+        container.appendChild(toast);
+        setTimeout(() => {
+            toast.style.opacity = '0';
+            toast.style.transform = 'translateY(10px)';
+            setTimeout(() => toast.remove(), 500);
+        }, 3000);
+    }
+
+    const likeBtn = document.getElementById('like-book-btn');
+    if (likeBtn) {
+        likeBtn.onclick = function () {
+            if ("{{ user.is_authenticated }}" === "False") {
+                showToast("Please log in to like this story.");
+                return;
+            }
+            fetch(`/ajax/toggle-like-book/{{ book.id }}/`, {
+                method: 'POST',
+                headers: { 'X-CSRFToken': '{{ csrf_token }}' }
+            })
+                .then(r => r.json())
+                .then(data => {
+                    const icon = this.querySelector('i');
+                    const text = this.querySelector('span');
+                    const countSpan = document.getElementById('like-count-display');
+
+                    if (data.liked) {
+                        icon.classList.replace('fa-regular', 'fa-solid');
+                        icon.style.color = '#ef4444';
+                        text.innerText = 'Liked';
+                        showToast('Added to your library of likes!');
+                    } else {
+                        icon.classList.replace('fa-solid', 'fa-regular');
+                        icon.style.color = '';
+                        text.innerText = 'Like Story';
+                        showToast('Removed from your likes');
+                    }
+                    countSpan.innerText = data.count;
+                });
+        };
+    }
+
+    const bookmarkBtn = document.getElementById('bookmark-book-btn');
+    if (bookmarkBtn) {
+        bookmarkBtn.onclick = function () {
+            if ("{{ user.is_authenticated }}" === "False") {
+                showToast("Please log in to bookmark this story.");
+                return;
+            }
+            fetch(`/ajax/toggle-bookmark-book/{{ book.id }}/`, {
+                method: 'POST',
+                headers: { 'X-CSRFToken': '{{ csrf_token }}' }
+            })
+                .then(r => r.json())
+                .then(data => {
+                    const icon = this.querySelector('i');
+                    const text = this.querySelector('span');
+                    const countSpan = document.getElementById('bookmark-count-display');
+
+                    if (data.bookmarked) {
+                        icon.classList.replace('fa-regular', 'fa-solid');
+                        icon.style.color = '#D48C11';
+                        text.innerText = 'Bookmarked';
+                        showToast('Saved to your bookmarks!');
+                    } else {
+                        icon.classList.replace('fa-solid', 'fa-regular');
+                        icon.style.color = '';
+                        text.innerText = 'Bookmark';
+                        showToast('Removed from your bookmarks');
+                    }
+                    countSpan.innerText = data.count;
+                });
+        };
+    }
+</script>
+{% endblock %}

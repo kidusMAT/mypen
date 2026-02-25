@@ -1,0 +1,217 @@
+{% extends "newapp/_base.html" %}
+{% load static %}
+
+{% block title %} Writer Dashboard - Mypen {% endblock %}
+
+{% block content %}
+<main class="dashboard-page">
+    <section class="dashboard-header">
+        <div class="dashboard-container">
+            <h1>Welcome back, {{ user.username }}</h1>
+            <p class="subtitle">Manage your stories and track your writing progress.</p>
+        </div>
+    </section>
+
+    <section class="stats-overview">
+        <div class="dashboard-container">
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-icon"><i class="fa-solid fa-book"></i></div>
+                    <div class="stat-info">
+                        <span class="stat-label">Total Stories</span>
+                        <span class="stat-value">{{ total_stories }}</span>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon"><i class="fa-solid fa-eye"></i></div>
+                    <div class="stat-info">
+                        <span class="stat-label">Total Views</span>
+                        <span class="stat-value">{{ total_views }}</span>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon"><i class="fa-solid fa-heart"></i></div>
+                    <div class="stat-info">
+                        <span class="stat-label">Total Likes</span>
+                        <span class="stat-value">{{ total_likes }}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="my-stories-section">
+        <div class="dashboard-container">
+            <div class="section-header">
+                <h2>My Stories</h2>
+                <a href="/write/new/" class="btn-primary"><i class="fa-solid fa-plus"></i> Create New Story</a>
+            </div>
+
+            <div class="stories-list">
+                {% for book in user_books %}
+                <div class="dashboard-story-card">
+                    <div class="story-image">
+                        {% if book.cover_image %}
+                        <img src="{{ book.cover_image.url }}" alt="{{ book.title }}">
+                        {% else %}
+                        <div class="image-placeholder"><i class="fa-solid fa-image"></i></div>
+                        {% endif %}
+                    </div>
+                    <div class="story-details">
+                        <div class="badges" style="margin-bottom: 5px;">
+                            {% if book.status == 'FINISHED' %}
+                            <span class="status-badge finished"
+                                style="background: #28a745; color: white; padding: 2px 8px; border-radius: 12px; font-size: 11px; font-weight: 600;">Finished</span>
+                            {% elif book.status == 'PUBLISHED' %}
+                            <span class="status-badge published"
+                                style="background: #007bff; color: white; padding: 2px 8px; border-radius: 12px; font-size: 11px; font-weight: 600;">Published</span>
+                            {% else %}
+                            <span class="status-badge draft"
+                                style="background: #6c757d; color: white; padding: 2px 8px; border-radius: 12px; font-size: 11px; font-weight: 600;">Draft</span>
+                            {% endif %}
+                        </div>
+                        <h3>{{ book.title }}</h3>
+                        <p class="story-meta">
+                            <span><i class="fa-solid fa-layer-group"></i> {{ book.total_chapters }} Chapters</span>
+                            <span><i class="fa-solid fa-calendar"></i> {{ book.created_at|date:"M d, Y" }}</span>
+                        </p>
+                        <div class="story-stats">
+                            <span><i class="fa-solid fa-eye"></i> {{ book.views }} Views</span>
+                            <span><i class="fa-solid fa-heart"></i> {{ book.total_likes }} Likes</span>
+                        </div>
+                    </div>
+                    <div class="story-actions">
+                        <a href="{% url 'manage_book' book.id %}" class="btn-icon" title="Manage Story"><i
+                                class="fa-solid fa-list-check"></i></a>
+                        <a href="{% url 'view_book_public' book.id %}" class="btn-icon" title="View Public Page"><i
+                                class="fa-solid fa-external-link"></i></a>
+                        <button onclick="openDeleteModal({{ book.id }}, '{{ book.title|escapejs }}')"
+                            class="btn-icon btn-delete" title="Delete Story">
+                            <i class="fa-solid fa-trash"></i>
+                        </button>
+                    </div>
+                </div>
+                {% empty %}
+                <div class="empty-state">
+                    <i class="fa-solid fa-pen-fancy"></i>
+                    <p>You haven't created any stories yet. Time to share your imagination!</p>
+                    <a href="/write/new/" class="btn-primary">Start Your First Story</a>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </section>
+
+    <section class="my-scripts-section" style="margin-top: 50px;">
+        <div class="dashboard-container">
+            <div class="section-header">
+                <h2>My Scripts</h2>
+                <a href="/write/new/" class="btn-primary"><i class="fa-solid fa-plus"></i> Write New Script</a>
+            </div>
+
+            <div class="stories-list">
+                {% for script in user_scripts %}
+                <div class="dashboard-story-card" style="cursor: pointer;"
+                    onclick="window.location.href='{% url 'write_script' script.id %}';">
+                    <div class="story-image">
+                        {% if script.cover_image %}
+                        <img src="{{ script.cover_image.url }}" alt="{{ script.title }}">
+                        {% else %}
+                        <div class="image-placeholder"><i class="fa-solid fa-scroll"></i></div>
+                        {% endif %}
+                    </div>
+                    <div class="story-details">
+                        <h3>{{ script.title }}</h3>
+                        <p class="story-meta">
+                            <span><i class="fa-regular fa-file-lines"></i> {{ script.page_count|default:0 }}
+                                Pages</span>
+                            <span><i class="fa-solid fa-calendar"></i> {{ script.created_at|date:"M d, Y" }}</span>
+                        </p>
+                        <div class="story-stats">
+                            <span><i class="fa-solid fa-eye"></i> {{ script.views }} Views</span>
+                            <span><i class="fa-solid fa-heart"></i> {{ script.total_likes }} Likes</span>
+                        </div>
+                    </div>
+                    <div class="story-actions">
+                        <a href="{% url 'write_script' script.id %}" class="btn-icon" title="Edit Script"><i
+                                class="fa-solid fa-pen-to-square"></i></a>
+                        <a href="/script/read/{{ script.id }}/" class="btn-icon" title="Read Script"><i
+                                class="fa-solid fa-eye"></i></a>
+                    </div>
+                </div>
+                {% empty %}
+                <div class="empty-state">
+                    <i class="fa-solid fa-scroll"></i>
+                    <p>You haven't written any scripts yet. Action!</p>
+                    <a href="/write/new/" class="btn-primary">Start Your First Script</a>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </section>
+
+    <section class="my-poems-section" style="margin-top: 50px;">
+        <div class="dashboard-container">
+            <div class="section-header">
+                <h2>My Poems</h2>
+                <a href="/write/new/" class="btn-primary"><i class="fa-solid fa-plus"></i> Compose New Poem</a>
+            </div>
+
+            <div class="stories-list">
+                {% for poem in user_poems %}
+                <div class="dashboard-story-card" style="cursor: pointer;"
+                    onclick="window.location.href='{% url 'write_poem' poem.id %}';">
+                    <div class="story-image">
+                        {% if poem.cover_image %}
+                        <img src="{{ poem.cover_image.url }}" alt="{{ poem.title }}">
+                        {% else %}
+                        <div class="image-placeholder"><i class="fa-solid fa-feather-pointed"></i></div>
+                        {% endif %}
+                    </div>
+                    <div class="story-details">
+                        <h3>{{ poem.title }}</h3>
+                        <p class="story-meta">
+                            <span><i class="fa-solid fa-calendar"></i> {{ poem.created_at|date:"M d, Y" }}</span>
+                        </p>
+                        <div class="story-stats">
+                            <span><i class="fa-solid fa-eye"></i> {{ poem.views }} Views</span>
+                            <span><i class="fa-solid fa-heart"></i> {{ poem.total_likes }} Likes</span>
+                        </div>
+                    </div>
+                    <div class="story-actions">
+                        <a href="{% url 'write_poem' poem.id %}" class="btn-icon" title="Edit Poem"><i
+                                class="fa-solid fa-pen-to-square"></i></a>
+                    </div>
+                </div>
+                {% empty %}
+                <div class="empty-state">
+                    <i class="fa-solid fa-feather-pointed"></i>
+                    <p>You haven't written any poems yet. Let your emotions flow!</p>
+                    <a href="/write/new/" class="btn-primary">Start Your First Poem</a>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </section>
+
+    <!-- Delete Confirmation Modal -->
+    <div id="delete-modal" class="modal-overlay" style="display: none;">
+        <div class="modal-content">
+            <h2><i class="fa-solid fa-triangle-exclamation"></i> Delete Book?</h2>
+            <p style="color: #7a736d; font-size: 14px; margin-bottom: 20px;">
+                Are you sure you want to delete "<span id="delete-book-title"></span>"? This action cannot be undone and
+                will delete all chapters.
+            </p>
+
+            <div class="modal-btns">
+                <button type="button" class="modal-btn cancel" onclick="closeDeleteModal()">Cancel</button>
+                <button type="button" class="modal-btn confirm" id="confirm-delete-btn"
+                    onclick="confirmDeleteBook()">Delete Forever</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notification Container -->
+    <div id="toast-container"></div>
+</main>
+{% endblock %}

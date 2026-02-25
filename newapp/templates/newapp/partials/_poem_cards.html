@@ -1,0 +1,52 @@
+{% for poem in poems %}
+<div class="premium-story-card" onclick="window.location.href='{% url 'read_poem' poem.id %}';">
+    {% if poem.cover_image %}
+    <div class="card-header-vibrant"
+        style="background-image: url('{{ poem.cover_image.url }}'); background-size: cover; background-position: center;">
+    </div>
+    {% else %}
+    <div class="card-header-vibrant {% cycle 'v-purple' 'v-pink' 'v-blue' %}">
+        <div class="card-icon-overlay">
+            <i class="fa-solid fa-feather-pointed"></i>
+        </div>
+    </div>
+    {% endif %}
+    <div class="card-body-content">
+        <div class="card-badge-pill">Poem</div>
+        {% if poem.status == 'FINISHED' %}
+        <div class="card-badge-pill" style="background: #28a745; color: white; margin-left: 5px;">Finished</div>
+        {% endif %}
+        <h3 class="card-story-title">{{ poem.title }}</h3>
+        <p class="card-author-line">by {{ poem.author.username }}</p>
+        <p class="card-preview-text">
+            {% if poem.description %}
+            {{ poem.description|truncatewords:18 }}
+            {% else %}
+            No description provided for this masterpiece yet.
+            {% endif %}
+        </p>
+
+        <div class="card-metrics-footer">
+            <div class="metric">
+                <i class="fa-regular fa-eye"></i>
+                <span>{{ poem.views }}</span>
+            </div>
+            <div class="metric" onclick="togglePoemLike(event, {{ poem.id }})" style="cursor: pointer;">
+                {% if user in poem.likes.all %}
+                <i class="fa-solid fa-heart" style="color: #ef4444;"></i>
+                {% else %}
+                <i class="fa-regular fa-heart"></i>
+                {% endif %}
+                <span>{{ poem.likes.count }}</span>
+            </div>
+            <div class="metric" onclick="togglePoemBookmark(event, {{ poem.id }})" style="cursor: pointer;">
+                {% if user in poem.bookmarks.all %}
+                <i class="fa-solid fa-bookmark" style="color: #D48C11;"></i>
+                {% else %}
+                <i class="fa-regular fa-bookmark"></i>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endfor %}
