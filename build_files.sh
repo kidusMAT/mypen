@@ -1,7 +1,7 @@
 #!/bin/bash
 
 echo "Installing dependencies..."
-python3 -m pip install -r requirements.txt
+python3 -m pip install -r requirements.txt --break-system-packages
 
 echo "Collecting static files..."
 # Make sure the directory exists before collecting
