@@ -81,7 +81,8 @@ def create_content(request):
             author=request.user, 
             genre=genre,
             description=description,
-            cover_image=cover_image
+            cover_image=cover_image,
+            status='PUBLISHED' if 'publish' in request.POST else 'DRAFT'
         )
         
         if contest_id:
@@ -146,6 +147,8 @@ def write_chapter(request, chapter_id):
         
         if 'publish' in request.POST:
             chapter.status = 'PUBLISHED'
+            chapter.book.status = 'PUBLISHED'
+            chapter.book.save()
         elif 'save_draft' in request.POST or 'end_chapter' in request.POST or 'next_chapter' in request.POST:
             chapter.status = 'DRAFT'
             
@@ -296,6 +299,11 @@ def save_chapter_ajax(request, chapter_id):
         if title is not None:
             chapter.title = title
         chapter.status = status
+        
+        if status == 'PUBLISHED':
+            chapter.book.status = 'PUBLISHED'
+            chapter.book.save()
+            
         chapter.save()
         return JsonResponse({'status': 'success', 'message': 'Chapter saved'})
     except Exception as e:
