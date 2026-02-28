@@ -103,28 +103,26 @@
         <div class="newhead">
             <h1>New Releases</h1>
         </div>
-        <div id="new-releases-list" class="nr-list">
+        <div class="newlist">
             {% for book in new_releases %}
-            <div class="nr-card" onclick="window.location.href='{% url 'view_book_public' book.id %}';">
-                <div class="nr-visual">
+            <div class="newitem" onclick="window.location.href='{% url 'view_book_public' book.id %}';">
+                <div class="newimg">
                     {% if book.cover_image %}
-                    <img src="{{ book.cover_image.url }}" alt="{{ book.title }}"
-                        style="width:100%;height:100%;object-fit:cover;">
+                    <img src="{{ book.cover_image.url }}" alt="{{ book.title }}">
                     {% else %}
-                    <i class="fa-solid fa-book-open"></i>
+                    <div class="placeholder-cover">
+                        <i class="fa-solid fa-book"></i>
+                    </div>
                     {% endif %}
                 </div>
-                <div class="nr-details">
-                    <div class="nr-top">
-                        {% if book.status == 'FINISHED' %}
-                        <span class="nr-badge" style="background:#28a745;">Finished</span>
-                        {% elif book.status == 'PUBLISHED' %}
-                        <span class="nr-badge" style="background:#007bff;">Published</span>
-                        {% endif %}
-                        <span class="nr-genre">{{ book.genre|default:"General" }}</span>
+                <div class="newinfo">
+                    <div class="newgener">
+                        <p>{{ book.genre|default:"General" }}</p>
                     </div>
-                    <p class="nr-title">{{ book.title }}</p>
-                    <p class="nr-author">{{ book.author.username }}</p>
+                    <div>
+                        <p class="newtitle">{{ book.title }}</p>
+                        <p class="newauthor">{{ book.author.username }}</p>
+                    </div>
                 </div>
             </div>
             {% empty %}
@@ -135,104 +133,7 @@
 </section>
 
 <style>
-    /* ---- New Releases: DESKTOP = vertical card (original look) ---- */
-    .nr-list {
-        display: grid;
-        grid-template-columns: repeat(4, 1fr);
-        gap: 20px;
-        padding: 20px;
-        width: 100%;
-        box-sizing: border-box;
-    }
-
-    /* Vertical card (desktop default) */
-    .nr-card {
-        display: flex;
-        flex-direction: column;
-        background: #fff;
-        border-radius: 12px;
-        overflow: hidden;
-        border: 1px solid rgba(0, 0, 0, 0.05);
-        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.04);
-        cursor: pointer;
-        transition: transform 0.3s ease, box-shadow 0.3s ease;
-    }
-
-    .nr-card:hover {
-        transform: translateY(-4px);
-        box-shadow: 0 12px 25px rgba(0, 0, 0, 0.08);
-    }
-
-    /* Image/visual panel sits on TOP on desktop */
-    .nr-visual {
-        width: 100%;
-        height: 200px;
-        background: linear-gradient(135deg, #302419, #7a5c3e);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        color: rgba(255, 255, 255, 0.6);
-        font-size: 40px;
-        overflow: hidden;
-        flex-shrink: 0;
-    }
-
-    .nr-details {
-        padding: 14px;
-        display: flex;
-        flex-direction: column;
-        background: #fafafa;
-        flex: 1;
-    }
-
-    .nr-top {
-        display: flex;
-        gap: 8px;
-        align-items: center;
-        flex-wrap: wrap;
-        margin-bottom: 8px;
-    }
-
-    .nr-badge {
-        color: white;
-        padding: 3px 9px;
-        border-radius: 30px;
-        font-size: 10px;
-        font-weight: 700;
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
-    }
-
-    .nr-genre {
-        font-size: 11px;
-        color: #999;
-        font-weight: 600;
-        text-transform: uppercase;
-        letter-spacing: 0.4px;
-    }
-
-    .nr-title {
-        font-size: 15px;
-        font-weight: 800;
-        color: #2c3e50;
-        margin: 0 0 4px 0;
-        line-height: 1.3;
-        display: -webkit-box;
-        -webkit-line-clamp: 2;
-        line-clamp: 2;
-        -webkit-box-orient: vertical;
-        overflow: hidden;
-    }
-
-    .nr-author {
-        font-size: 12px;
-        color: #999;
-        margin: 0;
-        margin-top: auto;
-        padding-top: 6px;
-    }
-
-    /* ---- MOBILE: switch to horizontal script-style ---- */
+    /* Mobile description text */
     @media (max-width: 768px) {
         .stories.book .stories-desc-row p {
             font-size: 17px;
@@ -240,33 +141,73 @@
             margin-top: 10px;
         }
 
-        .nr-list {
-            grid-template-columns: 1fr;
-            gap: 14px;
+        /* Switch newitem to horizontal (script-style) on mobile */
+        .newlist {
+            display: flex !important;
+            flex-direction: column;
+            gap: 12px;
             padding: 12px;
         }
 
-        /* Horizontal layout on mobile */
-        .nr-card {
-            flex-direction: row;
-            min-height: 120px;
+        .newitem {
+            display: flex !important;
+            flex-direction: row !important;
             border-radius: 14px;
+            overflow: hidden;
+            background: #fff;
+            border: 1px solid rgba(0, 0, 0, 0.05);
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.04);
+            cursor: pointer;
+            min-height: 110px;
         }
 
-        .nr-visual {
-            width: auto;
-            height: auto;
-            flex: 0 0 110px;
-            font-size: 28px;
-            border-radius: 0;
+        .newimg {
+            flex: 0 0 100px !important;
+            width: 100px !important;
+            height: auto !important;
+            min-height: 110px;
+            overflow: hidden;
         }
 
-        .nr-title {
-            font-size: 14px;
+        .newimg img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
         }
 
-        .nr-author {
-            font-size: 12px;
+        .placeholder-cover {
+            width: 100%;
+            height: 100%;
+            min-height: 110px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #eee;
+            color: #ccc;
+            font-size: 24px;
+        }
+
+        .newinfo {
+            flex: 1;
+            padding: 12px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .newtitle {
+            font-size: 14px !important;
+            font-weight: 700;
+            color: #2c3e50;
+            margin: 0 0 4px 0;
+        }
+
+        .newauthor {
+            font-size: 12px !important;
+        }
+
+        .newgener p {
+            font-size: 10px;
         }
     }
 </style>
