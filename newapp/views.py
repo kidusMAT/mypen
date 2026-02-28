@@ -1052,9 +1052,27 @@ def get_profile_comments_ajax(request, username):
 
 def authors_list(request):
     profiles = AuthorProfile.objects.exclude(pen_name='').order_by('pen_name')
-    paginator = Paginator(profiles, 12)
+    
+    author_list = []
+    for profile in profiles:
+        user = profile.user
+        
+        books = list(user.book_set.filter(status='PUBLISHED'))
+        scripts = list(user.script_set.filter(status='PUBLISHED'))
+        poems = list(user.poem_set.filter(status='PUBLISHED'))
+        
+        all_works = sorted(books + scripts + poems, key=lambda x: x.created_at, reverse=True)
+        
+        if not all_works:
+            continue
+            
+        profile.works_count = len(all_works)
+        profile.latest_works = all_works[:3]
+        author_list.append(profile)
+
+    paginator = Paginator(author_list, 12)
     page_obj = paginator.get_page(request.GET.get('page'))
-    return render(request, 'newapp/authors_list.html', {'authors': page_obj})
+    return render(request, 'newapp/authors.html', {'page_obj': page_obj})
 
 # --- RECOVERED CONFESSION VIEWS ---
 
