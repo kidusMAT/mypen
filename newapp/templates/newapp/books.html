@@ -135,25 +135,26 @@
 </section>
 
 <style>
-    /* --- New Releases horizontal cards (scripts style) --- */
+    /* ---- New Releases: DESKTOP = vertical card (original look) ---- */
     .nr-list {
         display: grid;
-        grid-template-columns: repeat(2, 1fr);
+        grid-template-columns: repeat(4, 1fr);
         gap: 20px;
         padding: 20px;
         width: 100%;
         box-sizing: border-box;
     }
 
+    /* Vertical card (desktop default) */
     .nr-card {
         display: flex;
+        flex-direction: column;
         background: #fff;
-        border-radius: 16px;
+        border-radius: 12px;
         overflow: hidden;
         border: 1px solid rgba(0, 0, 0, 0.05);
-        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.03);
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.04);
         cursor: pointer;
-        min-height: 160px;
         transition: transform 0.3s ease, box-shadow 0.3s ease;
     }
 
@@ -162,23 +163,26 @@
         box-shadow: 0 12px 25px rgba(0, 0, 0, 0.08);
     }
 
+    /* Image/visual panel sits on TOP on desktop */
     .nr-visual {
-        flex: 0 0 120px;
+        width: 100%;
+        height: 200px;
         background: linear-gradient(135deg, #302419, #7a5c3e);
         display: flex;
         align-items: center;
         justify-content: center;
-        color: rgba(255, 255, 255, 0.7);
-        font-size: 36px;
+        color: rgba(255, 255, 255, 0.6);
+        font-size: 40px;
         overflow: hidden;
+        flex-shrink: 0;
     }
 
     .nr-details {
-        flex: 1;
-        padding: 16px;
+        padding: 14px;
         display: flex;
         flex-direction: column;
         background: #fafafa;
+        flex: 1;
     }
 
     .nr-top {
@@ -186,12 +190,12 @@
         gap: 8px;
         align-items: center;
         flex-wrap: wrap;
-        margin-bottom: 10px;
+        margin-bottom: 8px;
     }
 
     .nr-badge {
         color: white;
-        padding: 3px 10px;
+        padding: 3px 9px;
         border-radius: 30px;
         font-size: 10px;
         font-weight: 700;
@@ -208,10 +212,10 @@
     }
 
     .nr-title {
-        font-size: 16px;
+        font-size: 15px;
         font-weight: 800;
         color: #2c3e50;
-        margin: 0 0 5px 0;
+        margin: 0 0 4px 0;
         line-height: 1.3;
         display: -webkit-box;
         -webkit-line-clamp: 2;
@@ -221,51 +225,48 @@
     }
 
     .nr-author {
-        font-size: 13px;
+        font-size: 12px;
         color: #999;
         margin: 0;
         margin-top: auto;
+        padding-top: 6px;
     }
 
-    /* Responsive: single column on smaller screens */
-    @media (max-width: 900px) {
-        .nr-list {
-            grid-template-columns: 1fr;
-        }
-
-        .nr-visual {
-            flex: 0 0 110px;
-            font-size: 28px;
-        }
-    }
-
-    @media (max-width: 500px) {
-        .nr-list {
-            grid-template-columns: 1fr;
-            padding: 12px;
-            gap: 14px;
-        }
-
-        .nr-card {
-            min-height: 130px;
-        }
-
-        .nr-visual {
-            flex: 0 0 100px;
-            font-size: 24px;
-        }
-
-        .nr-title {
-            font-size: 14px;
-        }
-    }
-
-    /* Desktop description text */
+    /* ---- MOBILE: switch to horizontal script-style ---- */
     @media (max-width: 768px) {
         .stories.book .stories-desc-row p {
             font-size: 17px;
             line-height: 1.6;
             margin-top: 10px;
+        }
+
+        .nr-list {
+            grid-template-columns: 1fr;
+            gap: 14px;
+            padding: 12px;
+        }
+
+        /* Horizontal layout on mobile */
+        .nr-card {
+            flex-direction: row;
+            min-height: 120px;
+            border-radius: 14px;
+        }
+
+        .nr-visual {
+            width: auto;
+            height: auto;
+            flex: 0 0 110px;
+            font-size: 28px;
+            border-radius: 0;
+        }
+
+        .nr-title {
+            font-size: 14px;
+        }
+
+        .nr-author {
+            font-size: 12px;
         }
     }
 </style>
