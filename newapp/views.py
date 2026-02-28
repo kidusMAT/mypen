@@ -1051,7 +1051,7 @@ def get_profile_comments_ajax(request, username):
     return JsonResponse({'html': html})
 
 def authors_list(request):
-    profiles = AuthorProfile.objects.exclude(pen_name='').order_by('pen_name')
+    profiles = AuthorProfile.objects.all()
     
     author_list = []
     for profile in profiles:
