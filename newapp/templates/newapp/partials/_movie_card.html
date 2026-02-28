@@ -1,0 +1,49 @@
+<!-- newapp/partials/_movie_card.html -->
+<div class="movie-card"
+    style="border-radius: 8px; overflow: hidden; box-shadow: 0 4px 10px rgba(0,0,0,0.08); cursor: pointer; transition: transform 0.2s, box-shadow 0.2s; border: 1px solid #f0f0f0;"
+    onclick="window.location.href='{% url 'movie_detail' movie.id %}'"
+    onmouseover="this.style.transform='translateY(-3px)'; this.style.boxShadow='0 8px 15px rgba(0,0,0,0.1)';"
+    onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 10px rgba(0,0,0,0.08)';">
+
+    <div class="card-top" style="
+        height: 180px; 
+        padding: 20px; 
+        display: flex; 
+        flex-direction: column; 
+        justify-content: flex-end; 
+        color: white;
+        background-size: cover;
+        background-position: center;
+        {% if movie.cover_image %}
+        /* Note: linear-gradient inline won't override external nth-child if it's more specific, except with style */
+        background-image: linear-gradient(to bottom, rgba(0,0,0,0), rgba(0,0,0,0.6)), url('{{ movie.cover_image.url }}');
+        {% endif %}
+    ">
+        <h3
+            style="margin: 0; font-family: 'Georgia', serif; font-size: 1.4rem; font-weight: bold; text-shadow: 1px 1px 3px rgba(0,0,0,0.3);">
+            {{ movie.title }}</h3>
+        <div style="margin-top: 10px; font-size: 0.85rem; display: flex; align-items: center; gap: 10px;">
+            <span
+                style="background: rgba(255,255,255,0.9); color: #333; padding: 3px 12px; border-radius: 12px; font-weight: bold; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">{{
+                movie.genre|default:"Uncategorized" }}</span>
+            <span style="font-weight: 500; text-shadow: 1px 1px 2px rgba(0,0,0,0.5);">{{ movie.year|default:"" }}</span>
+        </div>
+    </div>
+
+    <div class="card-bottom"
+        style="background: white; padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; font-size: 0.9rem; color: #777;">
+        <div>
+            <div style="margin-bottom: 5px; font-size: 0.8rem; color: #888;">{{ movie.average_rating|floatformat:1 }} /
+                5 ({{ movie.rating_count }} ratings)</div>
+            <div style="color: #cf7c1c; font-size: 1rem;">
+                {% for i in "12345" %}
+                <i
+                    class="fa{% if forloop.counter <= movie.average_rating|default:0|add:0 %} fa-star{% elif forloop.counter|add:0.5 <= movie.average_rating|default:0 %} fa-star-half-stroke{% else %}-regular fa-star{% endif %}"></i>
+                {% endfor %}
+            </div>
+        </div>
+        <div style="display: flex; align-items: center; gap: 6px; font-weight: 500;">
+            <i class="fa-regular fa-comment" style="font-size: 1.1rem; color: #999;"></i> {{ movie.comment_count }}
+        </div>
+    </div>
+</div>

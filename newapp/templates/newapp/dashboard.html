@@ -7,7 +7,7 @@
 <main class="dashboard-page">
     <section class="dashboard-header">
         <div class="dashboard-container">
-            <h1>Welcome back, {{ user.username }}</h1>
+            <h1>Welcome back, <a href="{% url 'profile_view' user.username %}" class="dashboard-profile-link">{{ user.username }}</a></h1>
             <p class="subtitle">Manage your stories and track your writing progress.</p>
         </div>
     </section>

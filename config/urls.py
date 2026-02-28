@@ -16,7 +16,8 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path, include
-from newapp.views import index, scripts , books , poems, write, write_chapter , create_content, discover, dashboard, manage_book, add_chapter, save_chapter_ajax, add_chapter_ajax, update_book_metadata_ajax, view_book_public, delete_book, read_chapter, about, contact, privacy, terms, toggle_like_chapter, toggle_bookmark_book, toggle_like_book, writing_tips, contests, write_script, save_script_ajax, create_script_ajax, read_script, read_poem, coming_soon, write_poem, create_poem_ajax, save_poem_ajax, toggle_like_script, toggle_bookmark_script, toggle_like_poem, toggle_bookmark_poem, delete_book_ajax, submit_contest_entry, update_phone_number
+from newapp.views import index, scripts , books , poems, write, write_chapter , create_content, discover, dashboard, manage_book, add_chapter, save_chapter_ajax, add_chapter_ajax, update_book_metadata_ajax, view_book_public, delete_book, read_chapter, about, contact, privacy, terms, toggle_like_chapter, toggle_bookmark_book, toggle_like_book, writing_tips, contests, write_script, save_script_ajax, create_script_ajax, read_script, read_poem, coming_soon, write_poem, create_poem_ajax, save_poem_ajax, toggle_like_script, toggle_bookmark_script, toggle_like_poem, toggle_bookmark_poem, delete_book_ajax, submit_contest_entry, update_phone_number, movie_reviews_page, movie_detail_page, ajax_add_movie, ajax_add_movie_comment, ajax_rate_movie, profile_view, edit_profile, add_profile_comment, get_profile_comments_ajax, authors_list, confessions_page, get_confessions_ajax, add_confession_ajax, toggle_like_confession, add_confession_comment_ajax
+
 
 urlpatterns = [
     path('coming-soon/', coming_soon, name='coming_soon'),
@@ -65,7 +66,29 @@ urlpatterns = [
     path('ajax/delete-book/<int:book_id>/', delete_book_ajax, name='delete_book_ajax'),
     path('ajax/submit-contest-entry/', submit_contest_entry, name='submit_contest_entry'),
     path('ajax/update-phone-number/', update_phone_number, name='update_phone_number'),
+    
+    # Profile & Authors
+    path('profile/<str:username>/', profile_view, name='profile_view'),
+    path('profile/edit/me/', edit_profile, name='edit_profile'),
+    path('profile/<str:username>/comment/', add_profile_comment, name='add_profile_comment'),
+    path('ajax/profile/<str:username>/comments/', get_profile_comments_ajax, name='get_profile_comments_ajax'),
+    path('authors/', authors_list, name='authors_list'),
+    
+    # Confessions
+    path('confessions/', confessions_page, name='confessions'),
+    path('ajax/confessions/', get_confessions_ajax, name='get_confessions_ajax'),
+    path('ajax/confessions/add/', add_confession_ajax, name='add_confession_ajax'),
+    path('ajax/confessions/<int:confession_id>/like/', toggle_like_confession, name='toggle_like_confession'),
+    path('ajax/confessions/<int:confession_id>/comment/', add_confession_comment_ajax, name='add_confession_comment_ajax'),
+    
+    # Movie Reviews
+    path('reviews/', movie_reviews_page, name='movie_reviews'),
+    path('reviews/<int:movie_id>/', movie_detail_page, name='movie_detail'),
+    path('ajax/reviews/add/', ajax_add_movie, name='ajax_add_movie'),
+    path('ajax/reviews/<int:movie_id>/comment/', ajax_add_movie_comment, name='ajax_add_movie_comment'),
+    path('ajax/reviews/<int:movie_id>/rate/', ajax_rate_movie, name='ajax_rate_movie'),
 ]
+
 
 
 from django.conf import settings

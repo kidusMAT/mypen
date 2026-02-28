@@ -14,27 +14,33 @@
         </div>
     </div>
 
-    <ul class="filters">
-        <li><a href="/stories/" class="{% if not active_genre %}active{% endif %}">All</a></li>
-        <li><a href="/stories/?genre=Fantasy" class="{% if active_genre == 'Fantasy' %}active{% endif %}">Fantasy</a>
-        </li>
-        <li><a href="/stories/?genre=Romance" class="{% if active_genre == 'Romance' %}active{% endif %}">Romance</a>
-        </li>
-        <li><a href="/stories/?genre=Sci-Fi" class="{% if active_genre == 'Sci-Fi' %}active{% endif %}">Sci-Fi</a>
-        </li>
-        <li><a href="/stories/?genre=Mystery" class="{% if active_genre == 'Mystery' %}active{% endif %}">Mystery</a>
-        </li>
-        <li><a href="/stories/?genre=Thriller" class="{% if active_genre == 'Thriller' %}active{% endif %}">Thriller</a>
-        </li>
-        <li><a href="/stories/?genre=Horror" class="{% if active_genre == 'Horror' %}active{% endif %}">Horror</a>
-        </li>
-        <li><a href="/stories/?genre=Literary" class="{% if active_genre == 'Literary' %}active{% endif %}">Literary</a>
-        </li>
-    </ul>
+    <div class="mobile-filter-wrapper">
+        <button class="filter-dropdown-toggle" onclick="toggleFilterMenu()">
+            <span>{{ active_genre|default:"All Categories" }}</span>
+            <i class="fa-solid fa-chevron-down"></i>
+        </button>
+        <ul class="filters" id="filter-menu">
+            <li><a href="/books/" class="{% if not active_genre %}active{% endif %}">All</a></li>
+            <li><a href="/books/?genre=Fantasy" class="{% if active_genre == 'Fantasy' %}active{% endif %}">Fantasy</a>
+            </li>
+            <li><a href="/books/?genre=Romance" class="{% if active_genre == 'Romance' %}active{% endif %}">Romance</a>
+            </li>
+            <li><a href="/books/?genre=Sci-Fi" class="{% if active_genre == 'Sci-Fi' %}active{% endif %}">Sci-Fi</a>
+            </li>
+            <li><a href="/books/?genre=Mystery" class="{% if active_genre == 'Mystery' %}active{% endif %}">Mystery</a>
+            </li>
+            <li><a href="/books/?genre=Thriller"
+                    class="{% if active_genre == 'Thriller' %}active{% endif %}">Thriller</a></li>
+            <li><a href="/books/?genre=Horror" class="{% if active_genre == 'Horror' %}active{% endif %}">Horror</a>
+            </li>
+            <li><a href="/books/?genre=Literary"
+                    class="{% if active_genre == 'Literary' %}active{% endif %}">Literary</a></li>
+        </ul>
+    </div>
 </section>
 <hr>
 <section class="stories-box st">
-    <div class="boxed" id="story-container">
+    <div class="boxed book-list-view" id="story-container">
         {% include "newapp/partials/_story_cards.html" %}
     </div>
     {% if has_next %}
@@ -46,6 +52,10 @@
 </section>
 
 <script>
+    function toggleFilterMenu() {
+        const wrapper = document.querySelector('.mobile-filter-wrapper');
+        wrapper.classList.toggle('active');
+    }
     document.addEventListener('DOMContentLoaded', function () {
         const loadMoreBtn = document.getElementById('load-more-btn');
         const container = document.getElementById('story-container');

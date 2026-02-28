@@ -5,7 +5,7 @@
         style="background-image: url('{{ book.cover_image.url }}'); background-size: cover; background-position: center;">
     </div>
     {% else %}
-    <div class="card-header-vibrant {% cycle 'v-purple' 'v-pink' 'v-blue' %}">
+    <div class="card-header-vibrant {% cycle 'v-purple' 'v-maroon' 'v-slate' %}">
         <div class="card-icon-overlay">
             <i class="fa-solid fa-book"></i>
         </div>
@@ -35,7 +35,8 @@
                 <i class="fa-regular fa-eye"></i>
                 <span>{{ book.views }}</span>
             </div>
-            <div class="metric" onclick="toggleBookLike(event, {{ book.id }})" style="cursor: pointer;">
+            <div class="metric" onclick="event.stopPropagation(); toggleBookLike(event, '{{ book.id }}');"
+                style="cursor: pointer;">
                 {% if user in book.likes.all %}
                 <i class="fa-solid fa-heart" style="color: #ef4444;"></i>
                 {% else %}
@@ -43,7 +44,8 @@
                 {% endif %}
                 <span>{{ book.total_likes|default:0 }}</span>
             </div>
-            <div class="metric" onclick="toggleBookBookmark(event, {{ book.id }})" style="cursor: pointer;">
+            <div class="metric" onclick="event.stopPropagation(); toggleBookBookmark(event, '{{ book.id }}');"
+                style="cursor: pointer;">
                 {% if user in book.bookmarks.all %}
                 <i class="fa-solid fa-bookmark" style="color: #D48C11;"></i>
                 {% else %}

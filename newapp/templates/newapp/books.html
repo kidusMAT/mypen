@@ -15,28 +15,38 @@
         </div>
     </div>
 
-    <ul class="filters forbook">
-        <li><a href="/books/" class="{% if not active_genre %}active{% endif %}">All</a></li>
-        <li><a href="/books/?genre=Fiction" class="{% if active_genre == 'Fiction' %}active{% endif %}">Fiction</a>
-        </li>
-        <li><a href="/books/?genre=Non-Fiction"
-                class="{% if active_genre == 'Non-Fiction' %}active{% endif %}">Non-Fiction</a></li>
-        <li><a href="/books/?genre=Fantasy" class="{% if active_genre == 'Fantasy' %}active{% endif %}">Fantasy</a>
-        </li>
-        <li><a href="/books/?genre=Romance" class="{% if active_genre == 'Romance' %}active{% endif %}">Romance</a>
-        </li>
-        <li><a href="/books/?genre=Mystery" class="{% if active_genre == 'Mystery' %}active{% endif %}">Mystery</a>
-        </li>
-        <li><a href="/books/?genre=Biography"
-                class="{% if active_genre == 'Biography' %}active{% endif %}">Biography</a></li>
-        <li><a href="/books/?genre=Self-Help"
-                class="{% if active_genre == 'Self-Help' %}active{% endif %}">Self-Help</a></li>
-    </ul>
+    <div class="mobile-filter-wrapper">
+        <button class="filter-dropdown-toggle" onclick="toggleFilterMenu()">
+            <span>{{ active_genre|default:"All Categories" }}</span>
+            <i class="fa-solid fa-chevron-down"></i>
+        </button>
+        <ul class="filters forbook" id="filter-menu">
+            <li><a href="/books/?genre=Fiction" class="{% if active_genre == 'Fiction' %}active{% endif %}">Fiction</a>
+            </li>
+            <li><a href="/books/?genre=Non-Fiction"
+                    class="{% if active_genre == 'Non-Fiction' %}active{% endif %}">Non-Fiction</a></li>
+            <li><a href="/books/?genre=Fantasy" class="{% if active_genre == 'Fantasy' %}active{% endif %}">Fantasy</a>
+            </li>
+            <li><a href="/books/?genre=Romance" class="{% if active_genre == 'Romance' %}active{% endif %}">Romance</a>
+            </li>
+            <li><a href="/books/?genre=Mystery" class="{% if active_genre == 'Mystery' %}active{% endif %}">Mystery</a>
+            </li>
+            <li><a href="/books/?genre=Biography"
+                    class="{% if active_genre == 'Biography' %}active{% endif %}">Biography</a></li>
+            <li><a href="/books/?genre=Adventure"
+                    class="{% if active_genre == 'Adventure' %}active{% endif %}">Adventure</a></li>
+        </ul>
+    </div>
 </section>
 
 <section class="stories-box st">
+    <div class="head">
+        <h1>Featured Books</h1>
+        <a href="/books/">View All <i class="fa-solid fa-chevron-right"
+                style="font-size: 10px; margin-left: 5px;"></i></a>
+    </div>
 
-    <div class="boxed" id="book-container">
+    <div class="boxed book-list-view" id="book-container">
         {% include "newapp/partials/_book_cards.html" %}
     </div>
     {% if has_next %}
@@ -49,6 +59,10 @@
 </section>
 
 <script>
+    function toggleFilterMenu() {
+        const wrapper = document.querySelector('.mobile-filter-wrapper');
+        wrapper.classList.toggle('active');
+    }
     document.addEventListener('DOMContentLoaded', function () {
         const loadMoreBtn = document.getElementById('load-more-btn');
         const container = document.getElementById('book-container');

@@ -933,3 +933,187 @@ def save_poem_ajax(request, poem_id):
             return JsonResponse({'status': 'success', 'message': 'Poem updated'})
     except Exception as e:
         return JsonResponse({'status': 'error', 'message': str(e)}, status=400)
+
+def movie_reviews_page(request):
+    from .models import Movie
+    movies = Movie.objects.all().order_by('-created_at')
+    return render(request, 'newapp/movie_reviews.html', {'movies': movies})
+
+def movie_detail_page(request, movie_id):
+    from .models import Movie
+    movie = get_object_or_404(Movie, id=movie_id)
+    return render(request, 'newapp/movie_detail.html', {'movie': movie})
+
+
+@login_required
+def ajax_add_movie(request):
+    if request.method == 'POST':
+        from .models import Movie
+        title = request.POST.get('title')
+        genre = request.POST.get('genre')
+        year = request.POST.get('year')
+        cover_image = request.FILES.get('cover_image')
+        
+        if title:
+            # Handle year conversion safely
+            try:
+                year_int = int(year) if year else None
+            except ValueError:
+                year_int = None
+                
+            movie = Movie.objects.create(
+                title=title,
+                genre=genre,
+                year=year_int,
+                added_by=request.user,
+                cover_image=cover_image
+            )
+            html = render_to_string('newapp/partials/_movie_card.html', {'movie': movie}, request=request)
+            return JsonResponse({'success': True, 'html': html})
+    return JsonResponse({'success': False})
+
+@login_required
+def ajax_add_movie_comment(request, movie_id):
+    if request.method == 'POST':
+        from .models import Movie, MovieComment
+        movie = get_object_or_404(Movie, id=movie_id)
+        content = request.POST.get('content')
+        if content:
+            comment = MovieComment.objects.create(
+                movie=movie,
+                user=request.user,
+                content=content
+            )
+            html = render_to_string('newapp/partials/_movie_comment.html', {'comment': comment}, request=request)
+            return JsonResponse({'success': True, 'html': html, 'comment_count': movie.comments.count()})
+    return JsonResponse({'success': False})
+
+@login_required
+def ajax_rate_movie(request, movie_id):
+    if request.method == 'POST':
+        from .models import Movie, MovieRating
+        movie = get_object_or_404(Movie, id=movie_id)
+        rating_val = request.POST.get('rating')
+        try:
+            rating_val = int(rating_val)
+            if 1 <= rating_val <= 5:
+                rating, created = MovieRating.objects.update_or_create(
+                    movie=movie,
+                    user=request.user,
+                    defaults={'rating': rating_val}
+                )
+                return JsonResponse({
+                    'success': True, 
+                    'average_rating': round(movie.average_rating, 1),
+                    'rating_count': movie.ratings.count()
+                })
+        except ValueError:
+            pass
+    return JsonResponse({'success': False})
+
+# --- RECOVERED PROFILE VIEWS ---
+from django.core.paginator import Paginator
+from django.template.loader import render_to_string
+from .models import AuthorProfile, ProfileComment, Confession, ConfessionComment
+
+def profile_view(request, username):
+    user_prof = get_object_or_404(User, username=username)
+    profile, _ = AuthorProfile.objects.get_or_create(user=user_prof)
+    return render(request, 'newapp/profile.html', {'profile': profile})
+
+@login_required
+def edit_profile(request):
+    profile, _ = AuthorProfile.objects.get_or_create(user=request.user)
+    if request.method == 'POST':
+        profile.pen_name = request.POST.get('pen_name', '')
+        profile.bio = request.POST.get('bio', '')
+        if 'profile_picture' in request.FILES:
+            profile.profile_picture = request.FILES['profile_picture']
+        profile.save()
+        return redirect('profile_view', username=request.user.username)
+    return render(request, 'newapp/edit_profile.html', {'profile': profile})
+
+@login_required
+@require_POST
+def add_profile_comment(request, username):
+    user_prof = get_object_or_404(User, username=username)
+    profile = get_object_or_404(AuthorProfile, user=user_prof)
+    content = request.POST.get('content')
+    if content:
+        ProfileComment.objects.create(profile=profile, author=request.user, content=content)
+    return redirect('profile_view', username=username)
+
+def get_profile_comments_ajax(request, username):
+    user_prof = get_object_or_404(User, username=username)
+    profile = get_object_or_404(AuthorProfile, user=user_prof)
+    comments = profile.comments.all()
+    html = render_to_string('newapp/partials/_profile_comments.html', {'comments': comments})
+    return JsonResponse({'html': html})
+
+def authors_list(request):
+    profiles = AuthorProfile.objects.exclude(pen_name='').order_by('pen_name')
+    paginator = Paginator(profiles, 12)
+    page_obj = paginator.get_page(request.GET.get('page'))
+    return render(request, 'newapp/authors_list.html', {'authors': page_obj})
+
+# --- RECOVERED CONFESSION VIEWS ---
+
+def confessions_page(request):
+    return render(request, 'newapp/confessions.html')
+
+def get_confessions_ajax(request):
+    confessions_list = Confession.objects.all().order_by('-created_at')
+    
+    # Add Paginator for infinite scroll
+    paginator = Paginator(confessions_list, 10) # Load 10 at a time
+    page_number = request.GET.get('page', 1)
+    
+    try:
+        confessions = paginator.page(page_number)
+    except Exception:
+        # If page is out of range, return empty HTML to signal end of feed
+        return JsonResponse({'html': ''})
+
+    # Adding is_liked attr for the template
+    if request.user.is_authenticated:
+        user_likes = request.user.liked_confessions.values_list('id', flat=True)
+        for conf in confessions:
+            conf.is_liked = conf.id in user_likes
+            
+    html = render_to_string('newapp/partials/_confession_list.html', {'confessions': confessions}, request=request)
+    return JsonResponse({'html': html})
+
+@require_POST
+def add_confession_ajax(request):
+    content = request.POST.get('content')
+    if content:
+        confession = Confession.objects.create(content=content)
+        if request.user.is_authenticated:
+            confession.is_liked = False
+        html = render_to_string('newapp/partials/_confession_list.html', {'confessions': [confession]}, request=request)
+        return JsonResponse({'success': True, 'html': html})
+    return JsonResponse({'success': False})
+
+@login_required
+@require_POST
+def toggle_like_confession(request, confession_id):
+    confession = get_object_or_404(Confession, id=confession_id)
+    if request.user in confession.likes.all():
+        confession.likes.remove(request.user)
+        liked = False
+    else:
+        confession.likes.add(request.user)
+        liked = True
+    return JsonResponse({'liked': liked, 'count': confession.likes.count()})
+
+@login_required
+@require_POST
+def add_confession_comment_ajax(request, confession_id):
+    confession = get_object_or_404(Confession, id=confession_id)
+    content = request.POST.get('content')
+    if content:
+        comment = ConfessionComment.objects.create(confession=confession, content=content)
+        html = render_to_string('newapp/partials/_confession_comment.html', {'comment': comment}, request=request)
+        return JsonResponse({'success': True, 'html': html})
+    return JsonResponse({'success': False})
+

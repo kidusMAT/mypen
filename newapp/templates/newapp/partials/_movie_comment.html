@@ -1,0 +1,10 @@
+<!-- newapp/partials/_movie_comment.html -->
+<div class="comment-card">
+    <div class="comment-header">
+        <a href="{% url 'profile_view' comment.user.username %}" class="comment-author">{{ comment.user.username }}</a>
+        <span class="comment-date">{{ comment.created_at|date:"Y-m-d" }}</span>
+    </div>
+    <div class="comment-content">
+        {{ comment.content|linebreaksbr }}
+    </div>
+</div>

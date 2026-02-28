@@ -16,8 +16,17 @@
 
 </section>
 <hr>
+<div class="mobile-filter-wrapper">
+    <button class="filter-dropdown-toggle" onclick="toggleFilterMenu()">
+        <span>Categories</span>
+        <i class="fa-solid fa-chevron-down"></i>
+    </button>
+    <ul class="filters" id="filter-menu">
+        <!-- Poems doesn't seem to have dynamic genres in the current view, but keeping the container if needed later -->
+    </ul>
+</div>
 <section class="stories-box st">
-    <div class="boxed" id="poem-container">
+    <div class="boxed poem-list-view" id="poem-container">
         {% include "newapp/partials/_poem_cards.html" %}
     </div>
     {% if has_next %}
@@ -31,6 +40,10 @@
 
 
 <script>
+    function toggleFilterMenu() {
+        const wrapper = document.querySelector('.mobile-filter-wrapper');
+        wrapper.classList.toggle('active');
+    }
     document.addEventListener('DOMContentLoaded', function () {
         const loadMoreBtn = document.getElementById('load-more-btn');
         const container = document.getElementById('poem-container');

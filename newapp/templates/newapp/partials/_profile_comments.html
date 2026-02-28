@@ -1,0 +1,30 @@
+<div class="drawer-header">
+    <h3>Comments for {{ profile.pen_name|default:profile.user.username }}</h3>
+    <button class="close-drawer-btn" onclick="closeCommentDrawer()"><i class="fa-solid fa-xmark"></i></button>
+</div>
+
+<div class="drawer-comments-list" id="drawer-comments-list">
+    {% for comment in comments %}
+    <div class="drawer-comment">
+        <div class="comment-author"><strong>{{ comment.author.username }}</strong></div>
+        <div class="comment-content">{{ comment.content }}</div>
+        <div class="comment-date">{{ comment.created_at|date:"M d, Y" }}</div>
+    </div>
+    {% empty %}
+    <div class="no-comments-msg">No comments yet. Be the first to share your thoughts!</div>
+    {% endfor %}
+</div>
+
+{% if user.is_authenticated %}
+<div class="drawer-comment-form-container">
+    <form onsubmit="submitCommentAjax(event, '{{ profile.user.username }}')" class="drawer-comment-form">
+        {% csrf_token %}
+        <textarea name="content" placeholder="Add your comment..." required maxlength="500"></textarea>
+        <button type="submit" class="btn-submit-comment">Post Comment</button>
+    </form>
+</div>
+{% else %}
+<div class="drawer-login-prompt">
+    <a href="{% url 'account_login' %}">Log in</a> to leave a comment.
+</div>
+{% endif %}

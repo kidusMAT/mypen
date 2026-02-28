@@ -56,7 +56,7 @@
             <p class="titles">Romance</p>
             <p class="numbers">{{ genre_counts.Romance|default:"9.7k" }} stories</p>
         </div>
-        <div onclick="window.location.href='/stories/?genre=Adventure';" style="cursor: pointer;">
+        <div onclick="window.location.href='/books/?genre=Adventure';" style="cursor: pointer;">
             <p class="icons"><i class="fa-solid fa-compass" style="color: #10b981;"></i></p>
             <p class="titles">Adventure</p>
             <p class="numbers">{{ genre_counts.Adventure|default:"7.3k" }} stories</p>
@@ -67,11 +67,12 @@
 
 <section class="stories-box st">
     <div class="head">
-        <h1>Featured Stories</h1>
-        <a href="/books/">View All Stories</a>
+        <h1>Featured Books</h1>
+        <a href="/books/">View All <i class="fa-solid fa-chevron-right"
+                style="font-size: 10px; margin-left: 5px;"></i></a>
     </div>
 
-    <div class="boxed">
+    <div class="boxed book-list-view">
         {% for book in handpicked_books %}
         <div class="premium-story-card" onclick="window.location.href='{% url 'view_book_public' book.id %}';">
             {% if book.cover_image %}
@@ -79,7 +80,7 @@
                 style="background-image: url('{{ book.cover_image.url }}'); background-size: cover; background-position: center;">
             </div>
             {% else %}
-            <div class="card-header-vibrant {% cycle 'v-purple' 'v-pink' 'v-blue' %}">
+            <div class="card-header-vibrant {% cycle 'v-purple' 'v-maroon' 'v-slate' %}">
                 <div class="card-icon-overlay">
                     <i class="fa-solid fa-book"></i>
                 </div>
@@ -99,16 +100,29 @@
 
                 <div class="card-metrics-footer">
                     <div class="metric">
-                        <i class="fa-regular fa-clock"></i>
-                        <span>{{ book.read_time|default:"10 min" }}</span>
+                        <i class="fa-regular fa-file-lines"></i>
+                        <span>{{ book.total_chapters }} chs</span>
                     </div>
                     <div class="metric">
                         <i class="fa-regular fa-eye"></i>
                         <span>{{ book.views }}</span>
                     </div>
-                    <div class="metric">
+                    <div class="metric" onclick="event.stopPropagation(); toggleBookLike(event, '{{ book.id }}');"
+                        style="cursor: pointer;">
+                        {% if user in book.likes.all %}
+                        <i class="fa-solid fa-heart" style="color: #ef4444;"></i>
+                        {% else %}
                         <i class="fa-regular fa-heart"></i>
-                        <span>{{ book.like_count|default:0 }}</span>
+                        {% endif %}
+                        <span>{{ book.total_likes|default:0 }}</span>
+                    </div>
+                    <div class="metric" onclick="event.stopPropagation(); toggleBookBookmark(event, '{{ book.id }}');"
+                        style="cursor: pointer;">
+                        {% if user in book.bookmarks.all %}
+                        <i class="fa-solid fa-bookmark" style="color: #D48C11;"></i>
+                        {% else %}
+                        <i class="fa-regular fa-bookmark"></i>
+                        {% endif %}
                     </div>
                 </div>
             </div>

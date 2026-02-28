@@ -1,0 +1,570 @@
+{% extends "newapp/_base.html" %}
+{% load static %}
+
+{% block title %} Discover Authors - Mypen {% endblock %}
+
+{% block content %}
+<main class="authors-page">
+    <div class="authors-hero">
+        <div class="authors-container">
+            <h1>Meet the Minds Behind the Magic</h1>
+            <p>Discover talented writers and stay updated with their latest creations.</p>
+        </div>
+    </div>
+
+    <div class="authors-container">
+        <div class="authors-grid">
+            {% for profile in page_obj %}
+            <article class="author-card-premium">
+                <div class="author-card-header">
+                    {% if profile.profile_picture %}
+                    <img src="{{ profile.profile_picture.url }}" alt="{{ profile.user.username }}" class="author-pic">
+                    {% else %}
+                    <div class="author-pic-placeholder">
+                        <i class="fa-solid fa-user"></i>
+                    </div>
+                    {% endif %}
+                    <div class="author-intro">
+                        <h3><a href="{% url 'profile_view' profile.user.username %}">
+                                {{ profile.pen_name|default:profile.user.username }}</a></h3>
+                        <span class="author-work-count">{{ profile.works_count }} publications</span>
+                    </div>
+                </div>
+
+                <div class="author-mini-bio">
+                    {{ profile.bio|default:"Writing words that matter."|truncatechars:100 }}
+                </div>
+
+                <div class="author-latest-posts">
+                    <span class="label">Latest Posts</span>
+                    <div class="mini-posts-row">
+                        {% for work in profile.latest_works %}
+                        <div class="micro-post"
+                            onclick="location.href='{% if work.chapters %}{% url 'view_book_public' work.id %}{% elif work.script_file %}{% url 'read_script' work.id %}{% else %}{% url 'read_poem' work.id %}{% endif %}';"
+                            title="{{ work.title }}">
+                            <i
+                                class="fa-solid {% if work.chapters %}fa-book{% elif work.script_file %}fa-scroll{% else %}fa-feather-pointed{% endif %}"></i>
+                            <span class="work-title">{{ work.title|truncatechars:20 }}</span>
+                        </div>
+                        {% empty %}
+                        <span class="no-posts">No recent posts</span>
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <div class="author-card-footer">
+                    <button class="btn-view-comments" onclick="openCommentDrawer('{{ profile.user.username }}')">
+                        <i class="fa-regular fa-comment"></i> <span class="badge">{{ profile.comments.count }}</span>
+                    </button>
+                    <a href="{% url 'profile_view' profile.user.username %}" class="btn-profile-link">View Profile</a>
+                </div>
+            </article>
+            {% endfor %}
+        </div>
+
+        <!-- Premium Pagination -->
+        {% if page_obj.has_other_pages %}
+        <nav class="premium-pagination">
+            {% if page_obj.has_previous %}
+            <a href="?page={{ page_obj.previous_page_number }}" class="page-arrow"><i
+                    class="fa-solid fa-chevron-left"></i></a>
+            {% endif %}
+
+            <div class="page-numbers">
+                {% for num in page_obj.paginator.page_range %}
+                {% if page_obj.number == num %}
+                <span class="page-num active">{{ num }}</span>
+                {% else %}
+                <a href="?page={{ num }}" class="page-num">{{ num }}</a>
+                {% endif %}
+                {% endfor %}
+            </div>
+
+            {% if page_obj.has_next %}
+            <a href="?page={{ page_obj.next_page_number }}" class="page-arrow"><i
+                    class="fa-solid fa-chevron-right"></i></a>
+            {% endif %}
+        </nav>
+        {% endif %}
+    </div>
+</main>
+
+<!-- Comment Drawer -->
+<div class="drawer-overlay" id="comment-drawer-overlay" onclick="closeCommentDrawer()"></div>
+<div class="comment-drawer" id="comment-drawer">
+    <div class="comment-drawer-content" id="comment-drawer-content">
+        <!-- Loaded via AJAX -->
+        <div style="padding: 20px; text-align: center;"><i class="fa-solid fa-spinner fa-spin"></i> Loading...</div>
+    </div>
+</div>
+
+<script>
+    function openCommentDrawer(username) {
+        const overlay = document.getElementById('comment-drawer-overlay');
+        const drawer = document.getElementById('comment-drawer');
+        const content = document.getElementById('comment-drawer-content');
+
+        overlay.classList.add('active');
+        drawer.classList.add('active');
+        content.innerHTML = '<div style="padding: 20px; text-align: center;"><i class="fa-solid fa-spinner fa-spin"></i> Loading...</div>';
+
+        fetch(`/ajax/profile/${username}/comments/`, {
+            headers: { 'X-Requested-With': 'XMLHttpRequest' }
+        })
+            .then(res => res.text())
+            .then(html => {
+                content.innerHTML = html;
+            });
+    }
+
+    function closeCommentDrawer() {
+        document.getElementById('comment-drawer-overlay').classList.remove('active');
+        document.getElementById('comment-drawer').classList.remove('active');
+    }
+
+    function submitCommentAjax(e, username) {
+        e.preventDefault();
+        const form = e.target;
+        const formData = new FormData(form);
+        const submitBtn = form.querySelector('button[type="submit"]');
+        submitBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>';
+        submitBtn.disabled = true;
+
+        fetch(`/profile/${username}/comment/`, {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+                'X-CSRFToken': formData.get('csrfmiddlewaretoken')
+            }
+        })
+            .then(res => res.text())
+            .then(html => {
+                document.getElementById('comment-drawer-content').innerHTML = html;
+            })
+            .finally(() => {
+                if (submitBtn) {
+                    submitBtn.innerHTML = 'Post Comment';
+                    submitBtn.disabled = false;
+                }
+            });
+    }
+</script>
+
+<style>
+    .authors-page {
+        padding-bottom: 80px;
+    }
+
+    .authors-hero {
+        background: #111;
+        color: white;
+        padding: 100px 0;
+        text-align: center;
+        margin-bottom: 60px;
+    }
+
+    .authors-hero h1 {
+        font-size: 40px;
+        margin-bottom: 15px;
+    }
+
+    .authors-hero p {
+        opacity: 0.7;
+    }
+
+    .authors-container {
+        max-width: 1100px;
+        margin: 0 auto;
+        padding: 0 20px;
+    }
+
+    .authors-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+        gap: 30px;
+    }
+
+    .author-card-premium {
+        background: white;
+        border-radius: 20px;
+        padding: 25px;
+        border: 1px solid #eee;
+        transition: 0.3s;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .author-card-premium:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.05);
+        border-color: #ddd;
+    }
+
+    .author-card-header {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+        margin-bottom: 20px;
+    }
+
+    .author-pic,
+    .author-pic-placeholder {
+        width: 60px;
+        height: 60px;
+        border-radius: 50%;
+        object-fit: cover;
+        background: #f3f4f6;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .author-pic-placeholder i {
+        color: #ccc;
+        font-size: 24px;
+    }
+
+    .author-intro h3 {
+        font-size: 18px;
+        margin: 0;
+    }
+
+    .author-intro h3 a {
+        color: #111;
+        text-decoration: none;
+    }
+
+    .author-work-count {
+        font-size: 12px;
+        color: #888;
+    }
+
+    .author-mini-bio {
+        font-size: 14px;
+        color: #555;
+        line-height: 1.5;
+        margin-bottom: 20px;
+        flex-grow: 1;
+    }
+
+    .author-latest-posts {
+        background: #f9fafb;
+        padding: 15px;
+        border-radius: 12px;
+        margin-bottom: 20px;
+    }
+
+    .author-latest-posts .label {
+        display: block;
+        font-size: 11px;
+        text-transform: uppercase;
+        font-weight: 700;
+        margin-bottom: 10px;
+        color: #999;
+    }
+
+    .mini-posts-row {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    .micro-post {
+        width: 100%;
+        padding: 8px 12px;
+        background: white;
+        border: 1px solid #eee;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        cursor: pointer;
+        transition: 0.2s;
+    }
+
+    .micro-post .work-title {
+        font-size: 13px;
+        font-weight: 600;
+        color: #333;
+    }
+
+    .micro-post:hover {
+        background: #111;
+        color: white;
+        transform: scale(1.1);
+    }
+
+    .no-posts {
+        font-size: 12px;
+        font-style: italic;
+        color: #bbb;
+    }
+
+    /* Comment Drawer Styles */
+    .drawer-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100vw;
+        height: 100vh;
+        background: rgba(0, 0, 0, 0.4);
+        opacity: 0;
+        visibility: hidden;
+        transition: 0.3s;
+        z-index: 1000;
+        backdrop-filter: blur(2px);
+    }
+
+    .drawer-overlay.active {
+        opacity: 1;
+        visibility: visible;
+    }
+
+    .comment-drawer {
+        position: fixed;
+        top: 0;
+        right: -400px;
+        width: 100%;
+        max-width: 400px;
+        height: 100vh;
+        background: white;
+        z-index: 1001;
+        box-shadow: -5px 0 30px rgba(0, 0, 0, 0.1);
+        transition: right 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);
+        display: flex;
+        flex-direction: column;
+    }
+
+    .comment-drawer.active {
+        right: 0;
+    }
+
+    .comment-drawer-content {
+        display: flex;
+        flex-direction: column;
+        height: 100%;
+    }
+
+    .drawer-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 20px 25px;
+        border-bottom: 1px solid #eee;
+    }
+
+    .drawer-header h3 {
+        margin: 0;
+        font-size: 18px;
+    }
+
+    .close-drawer-btn {
+        background: none;
+        border: none;
+        font-size: 20px;
+        color: #888;
+        cursor: pointer;
+        transition: 0.2s;
+    }
+
+    .close-drawer-btn:hover {
+        color: #111;
+        transform: rotate(90deg);
+    }
+
+    .drawer-comments-list {
+        flex: 1;
+        overflow-y: auto;
+        padding: 25px;
+        background: #fdfdfd;
+        display: flex;
+        flex-direction: column;
+        gap: 15px;
+    }
+
+    .drawer-comment {
+        background: white;
+        padding: 15px;
+        border-radius: 12px;
+        border: 1px solid #f0f0f0;
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.02);
+    }
+
+    .comment-author {
+        font-size: 13px;
+        margin-bottom: 5px;
+    }
+
+    .comment-content {
+        font-size: 14px;
+        color: #444;
+        line-height: 1.5;
+        margin-bottom: 8px;
+        word-break: break-word;
+    }
+
+    .comment-date {
+        font-size: 11px;
+        color: #999;
+    }
+
+    .no-comments-msg {
+        text-align: center;
+        color: #888;
+        font-style: italic;
+        padding: 20px 0;
+    }
+
+    .drawer-comment-form-container {
+        padding: 20px 25px;
+        border-top: 1px solid #eee;
+        background: white;
+    }
+
+    .drawer-comment-form {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .drawer-comment-form textarea {
+        width: 100%;
+        border: 1px solid #ddd;
+        border-radius: 12px;
+        padding: 12px;
+        font-family: inherit;
+        font-size: 14px;
+        resize: vertical;
+        min-height: 80px;
+        outline: none;
+        transition: 0.2s;
+    }
+
+    .drawer-comment-form textarea:focus {
+        border-color: #111;
+    }
+
+    .btn-submit-comment {
+        background: #111;
+        color: white;
+        border: none;
+        border-radius: 10px;
+        padding: 12px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: 0.2s;
+    }
+
+    .btn-submit-comment:hover {
+        background: #333;
+    }
+
+    .drawer-login-prompt {
+        padding: 20px 25px;
+        text-align: center;
+        border-top: 1px solid #eee;
+        background: #f9fafb;
+        font-size: 14px;
+    }
+
+    .drawer-login-prompt a {
+        color: #111;
+        font-weight: 600;
+        text-decoration: underline;
+    }
+
+    .author-card-footer {
+        display: flex;
+        gap: 10px;
+    }
+
+    .btn-view-comments {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+        background: #f3f4f6;
+        color: #111;
+        border: 1px solid #eee;
+        border-radius: 10px;
+        padding: 10px;
+        cursor: pointer;
+        font-weight: 600;
+        font-size: 14px;
+        transition: 0.2s;
+        flex: 1;
+    }
+
+    .btn-view-comments:hover {
+        background: #e5e7eb;
+    }
+
+    .btn-profile-link {
+        display: block;
+        text-align: center;
+        padding: 10px;
+        background: #111;
+        color: white;
+        border-radius: 10px;
+        text-decoration: none;
+        font-size: 14px;
+        font-weight: 600;
+    }
+
+    /* Pagination */
+    .premium-pagination {
+        margin-top: 60px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 20px;
+    }
+
+    .page-arrow {
+        width: 45px;
+        height: 45px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: white;
+        border: 1px solid #eee;
+        border-radius: 50%;
+        color: #111;
+        text-decoration: none;
+        transition: 0.3s;
+    }
+
+    .page-arrow:hover {
+        background: #111;
+        color: white;
+    }
+
+    .page-numbers {
+        display: flex;
+        gap: 10px;
+    }
+
+    .page-num {
+        width: 45px;
+        height: 45px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: white;
+        border: 1px solid #eee;
+        border-radius: 12px;
+        color: #666;
+        text-decoration: none;
+        font-weight: 600;
+        transition: 0.3s;
+    }
+
+    .page-num:hover,
+    .page-num.active {
+        background: #111;
+        color: white;
+        border-color: #111;
+    }
+</style>
+{% endblock %}

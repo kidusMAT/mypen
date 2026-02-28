@@ -1,0 +1,161 @@
+{% extends "newapp/_base.html" %}
+
+{% block title %} Movie Reviews {% endblock %}
+
+{% block content %}
+<style>
+    .movie-reviews-container {
+        max-width: 1000px;
+        margin: 0 auto;
+        padding: 40px 20px;
+    }
+
+    .header-section {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 30px;
+    }
+
+    .header-titles h1 {
+        font-family: 'Georgia', serif;
+        font-size: 2.5rem;
+        color: #302419;
+        margin: 0 0 10px 0;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .header-titles h1 i {
+        color: #cf7c1c;
+    }
+
+    .header-titles p {
+        color: #888;
+        font-size: 1.1rem;
+        margin: 0;
+    }
+
+    .add-movie-btn {
+        background: #cf7c1c;
+        color: white;
+        border: none;
+        padding: 10px 20px;
+        border-radius: 5px;
+        font-weight: 600;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        transition: background 0.2s;
+    }
+
+    .add-movie-btn:hover {
+        background: #b56b16;
+    }
+
+    .movies-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+        gap: 20px;
+    }
+
+    /* Assign background gradient based on child index */
+    .movies-grid>div:nth-child(3n+1) .card-top {
+        background: linear-gradient(135deg, #c05c00, #a64c01);
+    }
+
+    .movies-grid>div:nth-child(3n+2) .card-top {
+        background: linear-gradient(135deg, #d3205a, #99285f);
+    }
+
+    .movies-grid>div:nth-child(3n) .card-top {
+        background: linear-gradient(135deg, #8139e6, #5d2b99);
+    }
+</style>
+
+<div class="movie-reviews-container">
+    <div class="header-section">
+        <div class="header-titles">
+            <h1><i class="fa-solid fa-film"></i> Movie Reviews</h1>
+            <p>Rate, review, and discuss your favorite films</p>
+        </div>
+        <button class="add-movie-btn" id="toggle-form-btn" onclick="toggleAddForm()">
+            <i class="fa-solid fa-plus"></i> Add Movie
+        </button>
+    </div>
+
+    <form id="add-movie-form"
+        style="display: none; background: white; padding: 30px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); margin-bottom: 30px; border: 1px solid #eee;">
+        {% csrf_token %}
+        <h3
+            style="font-family: 'Georgia', serif; font-size: 1.5rem; margin-top: 0; margin-bottom: 25px; color: #302419;">
+            Add a New Movie</h3>
+        <div style="display: flex; gap: 15px; margin-bottom: 25px; align-items: stretch; flex-wrap: wrap;">
+            <input type="text" name="title" placeholder="Movie title" required
+                style="flex: 2; padding: 12px 15px; border: 1px solid #e0e0e0; border-radius: 5px; min-width: 250px; outline: none; transition: border 0.2s;">
+            <input type="text" name="genre" placeholder="Genre"
+                style="flex: 1; padding: 12px 15px; border: 1px solid #e0e0e0; border-radius: 5px; min-width: 150px; outline: none;">
+            <input type="number" name="year" placeholder="Year"
+                style="flex: 1; padding: 12px 15px; border: 1px solid #e0e0e0; border-radius: 5px; min-width: 100px; outline: none;">
+        </div>
+        <button type="submit" class="add-movie-btn" id="submit-movie-btn">Add Movie</button>
+    </form>
+
+    <div class="movies-grid" id="movies-container">
+        {% for movie in movies %}
+        {% include "newapp/partials/_movie_card.html" %}
+        {% empty %}
+        <p style="color: #666; font-style: italic;" id="no-movies-msg">No movies added yet. Be the first to add one!</p>
+        {% endfor %}
+    </div>
+</div>
+
+<script>
+    function toggleAddForm() {
+        const form = document.getElementById('add-movie-form');
+        const btn = document.getElementById('toggle-form-btn');
+        if (form.style.display === 'none') {
+            form.style.display = 'block';
+            btn.innerHTML = '<i class="fa-solid fa-xmark"></i> Cancel';
+        } else {
+            form.style.display = 'none';
+            btn.innerHTML = '<i class="fa-solid fa-plus"></i> Add Movie';
+        }
+    }
+
+    document.getElementById('add-movie-form').addEventListener('submit', function (e) {
+        e.preventDefault();
+        const formData = new FormData(this);
+        const submitBtn = document.getElementById('submit-movie-btn');
+        submitBtn.innerText = 'Adding...';
+        submitBtn.disabled = true;
+
+        fetch('{% url "ajax_add_movie" %}', {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    const noMoviesMsg = document.getElementById('no-movies-msg');
+                    if (noMoviesMsg) noMoviesMsg.remove();
+
+                    document.getElementById('movies-container').insertAdjacentHTML('afterbegin', data.html);
+                    this.reset();
+                    toggleAddForm();
+                } else {
+                    alert('Error adding movie.');
+                }
+            })
+            .finally(() => {
+                submitBtn.innerText = 'Add Movie';
+                submitBtn.disabled = false;
+            });
+    });
+</script>
+{% endblock %}

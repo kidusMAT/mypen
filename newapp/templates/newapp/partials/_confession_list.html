@@ -1,0 +1,49 @@
+{% load static %}
+{% for confession in confessions %}
+<article class="confession-card" id="confession-{{ confession.id }}">
+    <p class="confession-content">{{ confession.content }}</p>
+
+    <div class="confession-meta">
+        <span class="confession-time"><i class="fa-regular fa-clock"></i> {{ confession.created_at|timesince }}
+            ago</span>
+
+        <div class="confession-actions">
+            <button class="action-btn like-btn {% if confession.is_liked %}liked{% endif %}"
+                onclick="toggleLikeConfession({{ confession.id }})" id="like-btn-{{ confession.id }}">
+                <i class="fa-{% if confession.is_liked %}solid{% else %}regular{% endif %} fa-heart"></i>
+                <span id="like-count-{{ confession.id }}">{{ confession.likes.count }}</span>
+            </button>
+            <button class="action-btn comment-btn" onclick="toggleConfessionComments({{ confession.id }})">
+                <i class="fa-regular fa-comment"></i>
+                <span>{{ confession.comments.count }}</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- Inline Comments Section -->
+    <div class="confession-comments-section" id="comments-section-{{ confession.id }}" style="display: none;">
+        <div class="comments-list" id="comments-list-{{ confession.id }}">
+            {% for comment in confession.comments.all %}
+            <div class="confession-comment">
+                <p>{{ comment.content }}</p>
+                <span class="comment-time">{{ comment.created_at|timesince }} ago</span>
+            </div>
+            {% empty %}
+            <div class="no-comments">No comments yet.</div>
+            {% endfor %}
+        </div>
+
+        {% if user.is_authenticated %}
+        <form class="add-confession-comment-form" onsubmit="submitConfessionComment(event, {{ confession.id }})">
+            {% csrf_token %}
+            <input type="text" name="content" placeholder="Add a comment..." required maxlength="500">
+            <button type="submit" class="submit-comment-btn"><i class="fa-regular fa-paper-plane"></i></button>
+        </form>
+        {% else %}
+        <div class="login-to-comment">
+            <a href="{% url 'account_login' %}">Log in to comment</a>
+        </div>
+        {% endif %}
+    </div>
+</article>
+{% endfor %}

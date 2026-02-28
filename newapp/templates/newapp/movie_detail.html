@@ -1,0 +1,357 @@
+{% extends "newapp/_base.html" %}
+
+{% block title %} {{ movie.title }} - Movie Review {% endblock %}
+
+{% block content %}
+<style>
+    .movie-detail-container {
+        max-width: 800px;
+        margin: 40px auto;
+        background: #fafafa;
+        border-radius: 12px;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+        overflow: hidden;
+    }
+
+    .detail-header {
+        height: 250px;
+        padding: 30px;
+        display: flex;
+        flex-direction: column;
+        justify-content: flex-end;
+        color: white;
+        background-size: cover;
+        background-position: center;
+        position: relative;
+    }
+
+    /* Dynamic background logic similar to cards */
+        {
+        % with id_mod=movie.id|add: 0|stringformat:"d" |slice:"-1" %
+    }
+
+    .detail-header {
+        background: {
+            % if movie.cover_image %
+        }
+
+        linear-gradient(to bottom, rgba(0, 0, 0, 0.1), rgba(0, 0, 0, 0.8)),
+        url('{{ movie.cover_image.url }}') center/cover {
+            % elif id_mod=='0' or id_mod=='3' or id_mod=='6' or id_mod=='9' %
+        }
+
+        linear-gradient(135deg, #c05c00, #a64c01) {
+            % elif id_mod=='1' or id_mod=='4' or id_mod=='7' %
+        }
+
+        linear-gradient(135deg, #d3205a, #99285f) {
+            % else %
+        }
+
+        linear-gradient(135deg, #8139e6, #5d2b99) {
+            % endif %
+        }
+
+        ;
+    }
+
+        {
+        % endwith %
+    }
+
+    .detail-header h1 {
+        margin: 0;
+        font-family: 'Georgia', serif;
+        font-size: 2.2rem;
+        text-shadow: 1px 1px 4px rgba(0, 0, 0, 0.4);
+    }
+
+    .detail-meta {
+        margin-top: 15px;
+        display: flex;
+        align-items: center;
+        gap: 15px;
+        font-size: 1rem;
+    }
+
+    .genre-badge {
+        background: rgba(255, 255, 255, 0.9);
+        color: #333;
+        padding: 5px 15px;
+        border-radius: 20px;
+        font-weight: bold;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    }
+
+    .detail-body {
+        padding: 30px;
+        background: white;
+    }
+
+    .rating-section {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding-bottom: 20px;
+        border-bottom: 1px solid #eee;
+        margin-bottom: 30px;
+    }
+
+    .rating-score {
+        font-size: 1.1rem;
+        color: #666;
+        margin-bottom: 8px;
+    }
+
+    .stars {
+        color: #cf7c1c;
+        font-size: 1.5rem;
+    }
+
+    .stars .interactive-star {
+        cursor: pointer;
+        transition: color 0.1s;
+    }
+
+    .stars .interactive-star:hover {
+        color: #e68c22;
+    }
+
+    .comment-count {
+        font-size: 1.2rem;
+        color: #888;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .comments-section h3 {
+        font-family: 'Georgia', serif;
+        color: #302419;
+        font-size: 1.5rem;
+        margin-bottom: 25px;
+    }
+
+    .comment-list {
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+        margin-bottom: 40px;
+    }
+
+    .comment-card {
+        background: #f8f9fa;
+        padding: 20px;
+        border-radius: 8px;
+        border: 1px solid #f0f0f0;
+    }
+
+    .comment-header {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 15px;
+        font-size: 0.95rem;
+    }
+
+    .comment-author {
+        font-weight: bold;
+        color: #333;
+        text-decoration: none;
+    }
+
+    .comment-author:hover {
+        color: #cf7c1c;
+        text-decoration: underline;
+    }
+
+    .comment-date {
+        color: #999;
+    }
+
+    .comment-content {
+        color: #555;
+        line-height: 1.6;
+        font-size: 1.05rem;
+    }
+
+    .add-comment-form {
+        display: flex;
+        flex-direction: column;
+        gap: 15px;
+    }
+
+    .add-comment-form textarea {
+        padding: 15px;
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        min-height: 120px;
+        font-family: inherit;
+        font-size: 1rem;
+        resize: vertical;
+        outline: none;
+    }
+
+    .add-comment-form textarea:focus {
+        border-color: #cf7c1c;
+    }
+
+    .submit-btn {
+        background: #cf7c1c;
+        color: white;
+        border: none;
+        padding: 12px 25px;
+        border-radius: 6px;
+        font-weight: bold;
+        font-size: 1.05rem;
+        cursor: pointer;
+        align-self: flex-start;
+        transition: background 0.2s;
+    }
+
+    .submit-btn:hover {
+        background: #b56b16;
+    }
+
+    .back-link {
+        display: inline-block;
+        margin-bottom: 20px;
+        color: #666;
+        text-decoration: none;
+        font-weight: 500;
+        transition: color 0.1s;
+    }
+
+    .back-link:hover {
+        color: #cf7c1c;
+    }
+</style>
+
+<div class="movie-detail-container">
+    <div style="padding: 20px 30px 0 30px;">
+        <a href="{% url 'movie_reviews' %}" class="back-link"><i class="fa-solid fa-arrow-left"></i> Back to the
+            Reviews</a>
+    </div>
+
+    <div class="detail-header">
+        <h1>{{ movie.title }}</h1>
+        <div class="detail-meta">
+            <span class="genre-badge">{{ movie.genre|default:"Uncategorized" }}</span>
+            <span style="font-weight: bold; text-shadow: 1px 1px 2px rgba(0,0,0,0.5);">{{ movie.year|default:""
+                }}</span>
+        </div>
+    </div>
+
+    <div class="detail-body">
+        <div class="rating-section">
+            <div>
+                <div class="rating-score" id="rating-text">
+                    {{ movie.average_rating|floatformat:1 }} / 5 ({{ movie.rating_count }} ratings)
+                </div>
+                <div class="stars" id="star-container">
+                    {% for i in "12345" %}
+                    <i class="fa{% if forloop.counter <= movie.average_rating|default:0|add:0 %} fa-star{% elif forloop.counter|add:0.5 <= movie.average_rating|default:0 %} fa-star-half-stroke{% else %}-regular fa-star{% endif %} interactive-star"
+                        data-rating="{{ forloop.counter }}" onclick="rateMovie({{ forloop.counter }})"></i>
+                    {% endfor %}
+                </div>
+            </div>
+            <div class="comment-count">
+                <i class="fa-regular fa-comment"></i> <span id="comments-total-count">{{ movie.comment_count }}</span>
+            </div>
+        </div>
+
+        <div class="comments-section">
+            <h3>Comments</h3>
+
+            <div class="comment-list" id="comments-list">
+                {% for comment in movie.comments.all %}
+                {% include "newapp/partials/_movie_comment.html" %}
+                {% empty %}
+                <p id="no-comments-msg" style="color: #999; font-style: italic;">No comments yet. Be the first to share
+                    your thoughts!</p>
+                {% endfor %}
+            </div>
+
+            {% if user.is_authenticated %}
+            <form class="add-comment-form" id="comment-form">
+                {% csrf_token %}
+                <!-- No name input, username is fetched automatically in view -->
+                <textarea name="content" placeholder="Write a comment..." required></textarea>
+                <button type="submit" class="submit-btn" id="submit-comment-btn">Post Comment</button>
+            </form>
+            {% else %}
+            <div
+                style="padding: 20px; background: #fff3e0; border-radius: 8px; color: #cf7c1c; border: 1px solid #ffe0b2;">
+                <p style="margin: 0;"><a href="{% url 'account_login' %}?next={{ request.path }}"
+                        style="color: #c05c00; font-weight: bold; text-decoration: underline;">Log in</a> to post a
+                    comment and rate this movie.</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<script>
+    function rateMovie(rating) {
+        {% if not user.is_authenticated %}
+        alert("You must be logged in to rate.");
+        return;
+        {% endif %}
+
+        const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+        const formData = new FormData();
+        formData.append('rating', rating);
+        formData.append('csrfmiddlewaretoken', csrfToken);
+
+        fetch('{% url "ajax_rate_movie" movie.id %}', {
+            method: 'POST',
+            body: formData,
+            headers: { 'X-Requested-With': 'XMLHttpRequest' }
+        })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    document.getElementById('rating-text').innerText = `${data.average_rating.toFixed(1)} / 5 (${data.rating_count} ratings)`;
+                    // Update stars visually
+                    const stars = document.querySelectorAll('#star-container i');
+                    stars.forEach((star, index) => {
+                        star.className = index < Math.round(data.average_rating) ? 'fa-solid fa-star interactive-star' : 'fa-regular fa-star interactive-star';
+                    });
+                }
+            });
+    }
+
+    {% if user.is_authenticated %}
+    document.getElementById('comment-form').addEventListener('submit', function (e) {
+        e.preventDefault();
+        const submitBtn = document.getElementById('submit-comment-btn');
+        submitBtn.disabled = true;
+        submitBtn.innerText = 'Posting...';
+
+        const formData = new FormData(this);
+
+        fetch('{% url "ajax_add_movie_comment" movie.id %}', {
+            method: 'POST',
+            body: formData,
+            headers: { 'X-Requested-With': 'XMLHttpRequest' }
+        })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    const noComments = document.getElementById('no-comments-msg');
+                    if (noComments) noComments.remove();
+
+                    document.getElementById('comments-list').insertAdjacentHTML('afterbegin', data.html);
+                    document.getElementById('comments-total-count').innerText = data.comment_count;
+                    this.reset();
+                } else {
+                    alert("Error posting comment.");
+                }
+            })
+            .finally(() => {
+                submitBtn.disabled = false;
+                submitBtn.innerText = 'Post Comment';
+            });
+    });
+    {% endif %}
+</script>
+{% endblock %}

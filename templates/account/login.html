@@ -13,10 +13,31 @@
 {% if socialaccount_providers %}
 <div class="socialaccount_ballot">
     <div class="socialaccount_providers">
-        {% include "socialaccount/snippets/provider_list.html" with process="login" %}
+        <a title="Google" class="socialaccount_provider google" href="{% provider_login_url 'google' process='login' %}"
+            style="display: flex; align-items: center; justify-content: center; gap: 12px; padding: 16px; border-radius: 16px; background: #fff; border: 1px solid rgba(0,0,0,0.08); color: #1a1a1a; text-decoration: none; font-weight: 600; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); font-family: 'Inter', system-ui, sans-serif; box-shadow: 0 4px 12px rgba(0,0,0,0.05); width: 100%; box-sizing: border-box;">
+            <img src="https://upload.wikimedia.org/wikipedia/commons/c/c1/Google_%22G%22_Logo.svg" style="width: 22px;">
+            Continue with Google
+        </a>
+    </div>
+    <style>
+        .socialaccount_provider.google:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+            border-color: rgba(0, 0, 0, 0.15);
+            background: #fafafa;
+        }
+
+        .socialaccount_provider.google:active {
+            transform: translateY(0);
+        }
+    </style>
+    <div class="login-or"
+        style="text-align: center; margin: 24px 0; color: #888; position: relative; font-size: 14px; font-weight: 500; text-transform: uppercase; letter-spacing: 1px;">
+        <span style="background: #fff; padding: 0 16px; position: relative; z-index: 1;">{% trans "or" %}</span>
+        <hr
+            style="position: absolute; top: 50%; left: 0; right: 0; border: none; border-top: 1px solid #eee; margin: 0;">
     </div>
 </div>
-{% include "socialaccount/snippets/login_extra.html" %}
 {% endif %}
 
 <form class="login" method="POST" action="{% url 'account_login' %}">

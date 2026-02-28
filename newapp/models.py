@@ -11,6 +11,7 @@ class AuthorProfile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
     pen_name = models.CharField(max_length=100, blank=True)
     bio = models.TextField(blank=True)
+    profile_picture = models.ImageField(upload_to='profile_pics/', blank=True, null=True)
     phone_number = models.CharField(
         max_length=20,
         blank=True,
@@ -22,6 +23,21 @@ class AuthorProfile(models.Model):
             )
         ]
     )
+
+    def __str__(self):
+        return f"{self.user.username}'s Profile"
+
+class ProfileComment(models.Model):
+    profile = models.ForeignKey(AuthorProfile, related_name='comments', on_delete=models.CASCADE)
+    author = models.ForeignKey(User, on_delete=models.CASCADE)
+    content = models.TextField()
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"Comment by {self.author.username} on {self.profile.user.username}"
 
 class Book(models.Model):
     STATUS_CHOICES = (
@@ -179,3 +195,74 @@ class ContactMessage(models.Model):
 
     def __str__(self):
         return f"Message from {self.name} ({self.email})"
+
+class Confession(models.Model):
+    content = models.TextField(max_length=500)
+    created_at = models.DateTimeField(auto_now_add=True)
+    likes = models.ManyToManyField(User, related_name='liked_confessions', blank=True)
+
+    class Meta:
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"Confession {self.id} (Anonymous)"
+
+class ConfessionComment(models.Model):
+    confession = models.ForeignKey(Confession, related_name='comments', on_delete=models.CASCADE)
+    content = models.TextField()
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['created_at']
+
+    def __str__(self):
+        return f"Comment on Confession {self.confession.id}"
+
+class Movie(models.Model):
+    title = models.CharField(max_length=200)
+    genre = models.CharField(max_length=100, blank=True)
+    year = models.PositiveIntegerField(blank=True, null=True)
+    added_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, related_name='added_movies')
+    cover_image = models.ImageField(upload_to='movie_covers/', blank=True, null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return self.title
+
+    @property
+    def average_rating(self):
+        ratings = self.ratings.all()
+        if ratings:
+            return sum(r.rating for r in ratings) / len(ratings)
+        return 0
+
+    @property
+    def rating_count(self):
+        return self.ratings.count()
+
+    @property
+    def comment_count(self):
+        return self.comments.count()
+
+class MovieComment(models.Model):
+    movie = models.ForeignKey(Movie, related_name='comments', on_delete=models.CASCADE)
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    content = models.TextField()
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"Comment by {self.user.username} on {self.movie.title}"
+
+class MovieRating(models.Model):
+    movie = models.ForeignKey(Movie, related_name='ratings', on_delete=models.CASCADE)
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    rating = models.PositiveIntegerField(choices=[(i, str(i)) for i in range(1, 6)])
+
+    class Meta:
+        unique_together = ('movie', 'user')
+
+    def __str__(self):
+        return f"{self.user.username} rated {self.movie.title} {self.rating}"

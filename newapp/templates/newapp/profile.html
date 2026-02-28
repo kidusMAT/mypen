@@ -1,0 +1,299 @@
+{% extends "newapp/_base.html" %}
+{% load static %}
+
+{% block title %} {{ profile_user.username }}'s Profile - Mypen {% endblock %}
+
+{% block content %}
+<main class="profile-page">
+    <div class="profile-header-premium">
+        <div class="profile-container">
+            <div class="profile-info-card">
+                <div class="profile-pic-wrapper">
+                    {% if profile.profile_picture %}
+                    <img src="{{ profile.profile_picture.url }}" alt="{{ profile_user.username }}" class="profile-pic">
+                    {% else %}
+                    <div class="profile-pic-placeholder">
+                        <i class="fa-solid fa-user"></i>
+                    </div>
+                    {% endif %}
+                    {% if request.user == profile_user %}
+                    <a href="{% url 'edit_profile' %}" class="edit-pic-btn"><i class="fa-solid fa-camera"></i></a>
+                    {% endif %}
+                </div>
+                <div class="profile-details">
+                    <h1 class="pen-name">{{ profile.pen_name|default:profile_user.username }}</h1>
+                    <p class="username">@{{ profile_user.username }}</p>
+                    <p class="bio">{{ profile.bio|default:"No bio yet." }}</p>
+                    {% if request.user == profile_user %}
+                    <a href="{% url 'edit_profile' %}" class="btn-edit-profile">Edit Profile</a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="profile-container">
+        <div class="profile-content-grid">
+            <section class="latest-works">
+                <h2 class="section-title">Latest Works</h2>
+                <div class="works-list">
+                    {% for work in works %}
+                    <div class="mini-post-card">
+                        <div class="work-badge">{{ work.genre|default:"Writing" }}</div>
+                        <h3>{{ work.title }}</h3>
+                        <p>{{ work.description|truncatewords:20 }}</p>
+                        <a href="{% if work.chapters %}{% url 'view_book_public' work.id %}{% elif work.script_file %}{% url 'read_script' work.id %}{% else %}{% url 'read_poem' work.id %}{% endif %}"
+                            class="read-more">Read More →</a>
+                    </div>
+                    {% empty %}
+                    <p class="empty-msg">No published works yet.</p>
+                    {% endfor %}
+                </div>
+            </section>
+
+            <section class="profile-comments">
+                <h2 class="section-title">Little Comments</h2>
+                <div class="comments-container">
+                    {% for comment in comments %}
+                    <div class="mini-comment">
+                        <div class="comment-header">
+                            <span class="comment-author">{{ comment.author.username }}</span>
+                            <span class="comment-date">{{ comment.created_at|date:"M d" }}</span>
+                        </div>
+                        <p class="comment-body">{{ comment.content }}</p>
+                    </div>
+                    {% empty %}
+                    <p class="empty-msg">No comments yet. Be the first to say hi!</p>
+                    {% endfor %}
+                </div>
+
+                {% if user.is_authenticated %}
+                <form action="{% url 'add_profile_comment' profile_user.username %}" method="POST" class="comment-form">
+                    {% csrf_token %}
+                    <textarea name="content" placeholder="Leave a nice comment..." required></textarea>
+                    <button type="submit">Post Comment</button>
+                </form>
+                {% endif %}
+            </section>
+        </div>
+    </div>
+</main>
+
+<style>
+    .profile-page {
+        padding-bottom: 50px;
+        background: #fafaf9;
+    }
+
+    .profile-header-premium {
+        background: linear-gradient(135deg, #111 0%, #333 100%);
+        padding: 80px 0 60px;
+        color: white;
+        margin-bottom: 40px;
+    }
+
+    .profile-container {
+        max-width: 1000px;
+        margin: 0 auto;
+        padding: 0 20px;
+    }
+
+    .profile-info-card {
+        display: flex;
+        align-items: center;
+        gap: 40px;
+    }
+
+    .profile-pic-wrapper {
+        position: relative;
+        width: 150px;
+        height: 150px;
+        flex-shrink: 0;
+    }
+
+    .profile-pic,
+    .profile-pic-placeholder {
+        width: 100%;
+        height: 100%;
+        border-radius: 50%;
+        object-fit: cover;
+        border: 4px solid rgba(255, 255, 255, 0.2);
+        background: #444;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .profile-pic-placeholder i {
+        font-size: 60px;
+        color: #888;
+    }
+
+    .edit-pic-btn {
+        position: absolute;
+        bottom: 5px;
+        right: 5px;
+        background: #fff;
+        color: #111;
+        width: 35px;
+        height: 35px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 14px;
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+    }
+
+    .pen-name {
+        font-size: 32px;
+        margin-bottom: 5px;
+    }
+
+    .username {
+        opacity: 0.7;
+        font-family: monospace;
+        margin-bottom: 15px;
+    }
+
+    .bio {
+        max-width: 600px;
+        line-height: 1.6;
+        margin-bottom: 20px;
+    }
+
+    .btn-edit-profile {
+        display: inline-block;
+        padding: 10px 20px;
+        background: rgba(255, 255, 255, 0.1);
+        border: 1px solid rgba(255, 255, 255, 0.3);
+        color: white;
+        border-radius: 8px;
+        text-decoration: none;
+        font-weight: 500;
+        transition: 0.3s;
+    }
+
+    .btn-edit-profile:hover {
+        background: white;
+        color: #111;
+    }
+
+    .profile-content-grid {
+        display: grid;
+        grid-template-columns: 2fr 1fr;
+        gap: 40px;
+    }
+
+    .section-title {
+        font-size: 20px;
+        margin-bottom: 20px;
+        color: #111;
+        border-bottom: 2px solid #ddd;
+        padding-bottom: 10px;
+    }
+
+    .mini-post-card {
+        background: white;
+        padding: 20px;
+        border-radius: 12px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+        margin-bottom: 20px;
+    }
+
+    .work-badge {
+        display: inline-block;
+        padding: 4px 10px;
+        background: #f3f4f6;
+        border-radius: 20px;
+        font-size: 11px;
+        font-weight: 600;
+        color: #666;
+        margin-bottom: 10px;
+    }
+
+    .mini-post-card h3 {
+        font-size: 18px;
+        margin-bottom: 10px;
+    }
+
+    .mini-post-card p {
+        font-size: 14px;
+        color: #555;
+        margin-bottom: 15px;
+    }
+
+    .read-more {
+        color: #111;
+        font-weight: 600;
+        text-decoration: none;
+        font-size: 14px;
+    }
+
+    .mini-comment {
+        background: #fff;
+        padding: 15px;
+        border-radius: 10px;
+        margin-bottom: 10px;
+        border-left: 3px solid #111;
+    }
+
+    .comment-header {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 8px;
+        font-size: 12px;
+    }
+
+    .comment-author {
+        font-weight: 700;
+    }
+
+    .comment-date {
+        opacity: 0.5;
+    }
+
+    .comment-body {
+        font-size: 14px;
+        line-height: 1.4;
+    }
+
+    .comment-form textarea {
+        width: 100%;
+        padding: 12px;
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        margin-bottom: 10px;
+        font-family: inherit;
+        resize: none;
+    }
+
+    .comment-form button {
+        width: 100%;
+        padding: 10px;
+        background: #111;
+        color: white;
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+        font-weight: 600;
+    }
+
+    .empty-msg {
+        opacity: 0.5;
+        font-style: italic;
+        font-size: 14px;
+    }
+
+    @media (max-width: 768px) {
+        .profile-info-card {
+            flex-direction: column;
+            text-align: center;
+        }
+
+        .profile-content-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+{% endblock %}
