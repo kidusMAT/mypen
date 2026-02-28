@@ -1047,7 +1047,7 @@ def get_profile_comments_ajax(request, username):
     user_prof = get_object_or_404(User, username=username)
     profile = get_object_or_404(AuthorProfile, user=user_prof)
     comments = profile.comments.all()
-    html = render_to_string('newapp/partials/_profile_comments.html', {'comments': comments})
+    html = render_to_string('newapp/partials/_profile_comments.html', {'comments': comments, 'profile': profile})
     return JsonResponse({'html': html})
 
 def authors_list(request):
