@@ -111,9 +111,9 @@
         fetch(`/ajax/profile/${username}/comments/`, {
             headers: { 'X-Requested-With': 'XMLHttpRequest' }
         })
-            .then(res => res.text())
-            .then(html => {
-                content.innerHTML = html;
+            .then(res => res.json())
+            .then(data => {
+                content.innerHTML = data.html;
             });
     }
 
@@ -138,9 +138,9 @@
                 'X-CSRFToken': formData.get('csrfmiddlewaretoken')
             }
         })
-            .then(res => res.text())
-            .then(html => {
-                document.getElementById('comment-drawer-content').innerHTML = html;
+            .then(res => res.json())
+            .then(data => {
+                document.getElementById('comment-drawer-content').innerHTML = data.html;
             })
             .finally(() => {
                 if (submitBtn) {
