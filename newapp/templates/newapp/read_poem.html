@@ -395,11 +395,11 @@
         let pages = [];
         let currentPageNodes = [];
         let lineCount = 0;
-        const maxLinesPerPage = 20; // Force split if it gets too long
+        const maxLinesPerPage = 10; // Forced split if it gets too long
 
         children.forEach((child) => {
             const isBreakMarker = child.classList.contains('poem-stanza-break');
-            const isEmptyLine = child.innerText.trim() === '' && !child.querySelector('img');
+            const isEmptyLine = child.textContent.trim() === '' && !child.querySelector('img');
             const isSubHeader = child.classList.contains('poem-sub-name');
 
             // If we hit any of these, we consider it a good point to start a new page
@@ -438,8 +438,11 @@
         });
 
         totalPages = pages.length;
-        document.getElementById('poem-footer').style.display = 'flex';
-        updateNavigation();
+        console.log(`DEBUG: Poem paginated into ${totalPages} pages.`);
+        if (totalPages > 1) {
+            document.getElementById('poem-footer').style.display = 'flex';
+            updateNavigation();
+        }
     }
 
     function changePage(delta) {
