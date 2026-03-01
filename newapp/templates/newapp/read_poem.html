@@ -263,13 +263,11 @@
 
             <button class="tool-btn {% if liked %}active{% endif %}" id="like-btn"
                 onclick="togglePoemLike(null, {{ poem.id }})">
-                <i class="{% if liked %}fa-solid{% else %}fa-regular{% endif %} fa-heart" {% if liked
-                    %}style="color: #ef4444;" {% endif %}></i>
+                <i class="{% if liked %}fa-solid{% else %}fa-regular{% endif %} fa-heart" {% if liked %}style="color: #ef4444;" {% endif %}></i>
             </button>
             <button class="tool-btn {% if bookmarked %}bookmarked{% endif %}" id="bookmark-btn"
                 onclick="togglePoemBookmark(null, {{ poem.id }})">
-                <i class="{% if bookmarked %}fa-solid{% else %}fa-regular{% endif %} fa-bookmark" {% if bookmarked
-                    %}style="color: #D48C11;" {% endif %}></i>
+                <i class="{% if bookmarked %}fa-solid{% else %}fa-regular{% endif %} fa-bookmark" {% if bookmarked %}style="color: #D48C11;" {% endif %}></i>
             </button>
             <button class="tool-btn" onclick="sharePoem()">
                 <i class="fa-solid fa-share-nodes"></i>
