@@ -3,7 +3,24 @@
 {% block title %} Reviews {% endblock %}
 
 {% block content %}
+<div id="toast-container" style="position: fixed; top: 20px; right: 20px; z-index: 9999;"></div>
+
 <style>
+    .toast {
+        background: #333;
+        color: white;
+        padding: 12px 24px;
+        border-radius: 8px;
+        margin-bottom: 10px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        animation: slideIn 0.3s ease, fadeOut 0.3s ease 2.7s forwards;
+    }
+    @keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+    @keyframes fadeOut { from { opacity: 1; } to { opacity: 0; } }
+
     .reviews-container {
         max-width: 1300px;
         margin: 0 auto;
@@ -320,6 +337,14 @@
     let activeTab = 'movies';
     let isSubmitting = false;
 
+    function showToast(msg, icon = 'fa-check-circle') {
+        const container = document.getElementById('toast-container');
+        const toast = document.createElement('div');
+        toast.className = 'toast';
+        toast.innerHTML = `<i class="fa-solid ${icon}" style="color: #cf7c1c;"></i> ${msg}`;
+        container.appendChild(toast);
+        setTimeout(() => toast.remove(), 3000);
+    }
 
     function switchTab(tab) {
         activeTab = tab;
@@ -401,6 +426,7 @@
             .then(res => res.json())
             .then(data => {
                 if (data.success) {
+                    showToast('Rating updated!');
                     document.getElementById(`movie-rating-text-${id}`).innerText = `${data.average_rating.toFixed(1)} / 5 (${data.rating_count})`;
                     const stars = document.querySelectorAll(`.card-stars-${id} i`);
                     stars.forEach((star, index) => {
@@ -433,6 +459,7 @@
             .then(res => res.json())
             .then(data => {
                 if (data.success) {
+                    showToast('Rating updated!');
                     document.getElementById(`book-rating-text-${id}`).innerText = `${data.average_rating.toFixed(1)} / 5 (${data.rating_count})`;
                     const stars = document.querySelectorAll(`.card-stars-book-${id} i`);
                     stars.forEach((star, index) => {
