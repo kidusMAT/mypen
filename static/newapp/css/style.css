@@ -2137,6 +2137,10 @@ footer .lower p {
     display: none;
 }
 
+.mobile-tab-btn {
+    display: none;
+}
+
 /* --- Writing Page Mobile Responsiveness --- */
 @media (max-width: 768px) {
     .headeded {
