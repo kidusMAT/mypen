@@ -136,7 +136,7 @@
     /* Main Reader Content */
     .reader-main {
         margin-top: 64px;
-        padding: 60px 20px 100px 20px;
+        padding: 60px 20px;
         display: flex;
         flex-direction: column;
         align-items: center;
@@ -148,6 +148,7 @@
         background: #ffffff;
         width: 100%;
         max-width: 800px;
+        min-height: 1000px;
         box-shadow: 0 10px 50px rgba(0, 0, 0, 0.04);
         border: 1px solid rgba(0, 0, 0, 0.03);
         border-radius: 4px;
@@ -297,85 +298,8 @@
     </main>
 </div>
 
-<footer class="reader-footer" id="poem-footer" style="display: none;">
-    <div class="footer-btn" id="prev-btn" onclick="changePage(-1)">
-        <i class="fa-solid fa-chevron-left"></i> Previous
-    </div>
-    <div class="page-indicator" id="page-indicator-text">
-        Page 1 of 1
-    </div>
-    <div class="footer-btn" id="next-btn" onclick="changePage(1)">
-        Next <i class="fa-solid fa-chevron-right"></i>
-    </div>
-</footer>
-</div>
-
-<style>
-    .reader-footer {
-        height: 64px;
-        background: var(--toolbar-bg);
-        border-top: 1px solid rgba(0, 0, 0, 0.08);
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        padding: 0 40px;
-        position: fixed;
-        bottom: 0;
-        width: 100%;
-        z-index: 1000;
-    }
-
-    .footer-btn {
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        color: var(--text-main);
-        text-decoration: none;
-        font-weight: 600;
-        font-size: 14px;
-        transition: opacity 0.2s;
-        cursor: pointer;
-        padding: 10px;
-    }
-
-    .footer-btn.disabled {
-        opacity: 0.3;
-        cursor: not-allowed;
-    }
-
-    .footer-btn:hover:not(.disabled) {
-        opacity: 0.7;
-    }
-
-    .page-indicator {
-        font-size: 14px;
-        color: var(--text-muted);
-        font-weight: 500;
-    }
-
-    .poem-page {
-        display: none;
-    }
-
-    .poem-page.active {
-        display: block;
-    }
-
-    @media (max-width: 600px) {
-        .reader-footer {
-            padding: 0 15px;
-        }
-
-        .footer-btn {
-            font-size: 13px;
-        }
-    }
-</style>
-
 <script>
     let currentZoom = 22;
-    let currentPage = 1;
-    let totalPages = 1;
 
     function adjustZoom(delta) {
         currentZoom += delta;
@@ -383,84 +307,6 @@
         if (currentZoom > 48) currentZoom = 48;
         document.getElementById('zoom-level').innerText = currentZoom;
         document.getElementById('poem-content').style.fontSize = currentZoom + 'px';
-    }
-
-    function paginatePoem() {
-        const contentArea = document.getElementById('poem-content');
-        const children = Array.from(contentArea.children);
-        if (children.length === 0) return;
-
-        // Group children into pages based on viewport height
-        let pages = [];
-        let currentPageNodes = [];
-
-        // Define max height per page: viewport - header - footer - margins
-        const headerHeight = 64;
-        const footerHeight = 64;
-        const padding = 120; // top/bottom padding
-        const maxHeight = window.innerHeight - headerHeight - footerHeight - padding;
-
-        // Temparary measurer
-        const tempContainer = document.createElement('div');
-        tempContainer.className = 'poem-content-area';
-        tempContainer.style.fontSize = currentZoom + 'px';
-        tempContainer.style.visibility = 'hidden';
-        tempContainer.style.position = 'absolute';
-        tempContainer.style.width = contentArea.offsetWidth + 'px';
-        document.body.appendChild(tempContainer);
-
-        children.forEach((child) => {
-            const clone = child.cloneNode(true);
-            tempContainer.appendChild(clone);
-
-            if (tempContainer.offsetHeight > maxHeight && currentPageNodes.length > 0) {
-                pages.push(currentPageNodes);
-                currentPageNodes = [child];
-                tempContainer.innerHTML = '';
-                tempContainer.appendChild(clone);
-            } else {
-                currentPageNodes.push(child);
-            }
-        });
-
-        if (currentPageNodes.length > 0) {
-            pages.push(currentPageNodes);
-        }
-
-        document.body.removeChild(tempContainer);
-
-        contentArea.innerHTML = '';
-        pages.forEach((pageNodes, idx) => {
-            const pageDiv = document.createElement('div');
-            pageDiv.className = `poem-page page-${idx + 1}`;
-            if (idx === 0) pageDiv.classList.add('active');
-            pageNodes.forEach(node => pageDiv.appendChild(node));
-            contentArea.appendChild(pageDiv);
-        });
-
-        totalPages = pages.length;
-        console.log(`DEBUG: Poem paginated into ${totalPages} pages by height.`);
-
-        // Always show footer for consistent reader UI
-        document.getElementById('poem-footer').style.display = 'flex';
-        updateNavigation();
-    }
-
-    function changePage(delta) {
-        const newPage = currentPage + delta;
-        if (newPage >= 1 && newPage <= totalPages) {
-            document.querySelector(`.page-${currentPage}`).classList.remove('active');
-            currentPage = newPage;
-            document.querySelector(`.page-${currentPage}`).classList.add('active');
-            updateNavigation();
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-        }
-    }
-
-    function updateNavigation() {
-        document.getElementById('page-indicator-text').innerText = `Page ${currentPage} of ${totalPages}`;
-        document.getElementById('prev-btn').classList.toggle('disabled', currentPage === 1);
-        document.getElementById('next-btn').classList.toggle('disabled', currentPage === totalPages);
     }
 
     function sharePoem() {
@@ -473,9 +319,5 @@
             }
         });
     }
-
-    window.addEventListener('load', paginatePoem);
-    window.addEventListener('resize', paginatePoem);
-    paginatePoem(); // Run immediately
 </script>
 {% endblock %}
