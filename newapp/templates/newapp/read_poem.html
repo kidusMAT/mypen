@@ -263,11 +263,13 @@
 
             <button class="tool-btn {% if liked %}active{% endif %}" id="like-btn"
                 onclick="togglePoemLike(null, {{ poem.id }})">
-                <i class="{% if liked %}fa-solid{% else %}fa-regular{% endif %} fa-heart" {% if liked %}style="color: #ef4444;" {% endif %}></i>
+                <i class="{% if liked %}fa-solid{% else %}fa-regular{% endif %} fa-heart" {% if liked
+                    %}style="color: #ef4444;" {% endif %}></i>
             </button>
             <button class="tool-btn {% if bookmarked %}bookmarked{% endif %}" id="bookmark-btn"
                 onclick="togglePoemBookmark(null, {{ poem.id }})">
-                <i class="{% if bookmarked %}fa-solid{% else %}fa-regular{% endif %} fa-bookmark" {% if bookmarked %}style="color: #D48C11;" {% endif %}></i>
+                <i class="{% if bookmarked %}fa-solid{% else %}fa-regular{% endif %} fa-bookmark" {% if bookmarked
+                    %}style="color: #D48C11;" {% endif %}></i>
             </button>
             <button class="tool-btn" onclick="sharePoem()">
                 <i class="fa-solid fa-share-nodes"></i>
@@ -296,8 +298,85 @@
     </main>
 </div>
 
+<footer class="reader-footer" id="poem-footer" style="display: none;">
+    <div class="footer-btn" id="prev-btn" onclick="changePage(-1)">
+        <i class="fa-solid fa-chevron-left"></i> Previous
+    </div>
+    <div class="page-indicator" id="page-indicator-text">
+        Page 1 of 1
+    </div>
+    <div class="footer-btn" id="next-btn" onclick="changePage(1)">
+        Next <i class="fa-solid fa-chevron-right"></i>
+    </div>
+</footer>
+</div>
+
+<style>
+    .reader-footer {
+        height: 64px;
+        background: var(--toolbar-bg);
+        border-top: 1px solid rgba(0, 0, 0, 0.08);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0 40px;
+        position: fixed;
+        bottom: 0;
+        width: 100%;
+        z-index: 1000;
+    }
+
+    .footer-btn {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        color: var(--text-main);
+        text-decoration: none;
+        font-weight: 600;
+        font-size: 14px;
+        transition: opacity 0.2s;
+        cursor: pointer;
+        padding: 10px;
+    }
+
+    .footer-btn.disabled {
+        opacity: 0.3;
+        cursor: not-allowed;
+    }
+
+    .footer-btn:hover:not(.disabled) {
+        opacity: 0.7;
+    }
+
+    .page-indicator {
+        font-size: 14px;
+        color: var(--text-muted);
+        font-weight: 500;
+    }
+
+    .poem-page {
+        display: none;
+    }
+
+    .poem-page.active {
+        display: block;
+    }
+
+    @media (max-width: 600px) {
+        .reader-footer {
+            padding: 0 15px;
+        }
+
+        .footer-btn {
+            font-size: 13px;
+        }
+    }
+</style>
+
 <script>
     let currentZoom = 22;
+    let currentPage = 1;
+    let totalPages = 1;
 
     function adjustZoom(delta) {
         currentZoom += delta;
@@ -307,6 +386,66 @@
         document.getElementById('poem-content').style.fontSize = currentZoom + 'px';
     }
 
+    function paginatePoem() {
+        const contentArea = document.getElementById('poem-content');
+        const children = Array.from(contentArea.children);
+        if (children.length === 0) return;
+
+        // Group children into pages based on stanza breaks or sub-headers
+        let pages = [];
+        let currentPageNodes = [];
+
+        children.forEach((child) => {
+            if (child.classList.contains('poem-stanza-break') || child.classList.contains('poem-sub-name')) {
+                if (currentPageNodes.length > 0) {
+                    pages.push(currentPageNodes);
+                    currentPageNodes = [];
+                }
+                if (child.classList.contains('poem-sub-name')) {
+                    currentPageNodes.push(child);
+                }
+            } else {
+                currentPageNodes.push(child);
+            }
+        });
+
+        if (currentPageNodes.length > 0) {
+            pages.push(currentPageNodes);
+        }
+
+        // If we only have one page, we don't need pagination UI
+        if (pages.length <= 1) return;
+
+        contentArea.innerHTML = '';
+        pages.forEach((pageNodes, idx) => {
+            const pageDiv = document.createElement('div');
+            pageDiv.className = `poem-page page-${idx + 1}`;
+            if (idx === 0) pageDiv.classList.add('active');
+            pageNodes.forEach(node => pageDiv.appendChild(node));
+            contentArea.appendChild(pageDiv);
+        });
+
+        totalPages = pages.length;
+        document.getElementById('poem-footer').style.display = 'flex';
+        updateNavigation();
+    }
+
+    function changePage(delta) {
+        const newPage = currentPage + delta;
+        if (newPage >= 1 && newPage <= totalPages) {
+            document.querySelector(`.page-${currentPage}`).classList.remove('active');
+            currentPage = newPage;
+            document.querySelector(`.page-${currentPage}`).classList.add('active');
+            updateNavigation();
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+    }
+
+    function updateNavigation() {
+        document.getElementById('page-indicator-text').innerText = `Page ${currentPage} of ${totalPages}`;
+        document.getElementById('prev-btn').classList.toggle('disabled', currentPage === 1);
+        document.getElementById('next-btn').classList.toggle('disabled', currentPage === totalPages);
+    }
 
     function sharePoem() {
         const url = window.location.href;
@@ -318,5 +457,7 @@
             }
         });
     }
+
+    window.addEventListener('load', paginatePoem);
 </script>
 {% endblock %}

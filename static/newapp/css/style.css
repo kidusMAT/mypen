@@ -5263,6 +5263,11 @@ body.poem-mode .formcont {
     color: #1967d2;
 }
 
+/* Hide page dividers in reading mode */
+.chapter-body-text .page-divider {
+    display: none !important;
+}
+
 /* ==========================================================================
    RESPONSIVE DESIGN (Media Queries)
    ========================================================================== */
