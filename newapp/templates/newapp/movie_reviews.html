@@ -227,6 +227,55 @@
         border: 1px dashed #ddd;
         color: #999;
     }
+
+    /* Responsive Styles */
+    @media (max-width: 768px) {
+        .reviews-container {
+            padding: 30px 15px;
+        }
+
+        .header-main {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 20px;
+        }
+
+        .header-titles h1 {
+            font-size: 2.2rem;
+            gap: 10px;
+        }
+
+        .header-titles h1 i {
+            font-size: 1.8rem;
+        }
+
+        .header-titles p {
+            font-size: 1rem;
+            line-height: 1.4;
+        }
+
+        .add-review-btn {
+            width: 100%;
+            justify-content: center;
+            padding: 14px;
+            font-size: 1.1rem;
+        }
+
+        .nav-tabs {
+            width: 100%;
+            display: flex;
+        }
+
+        .nav-tab {
+            flex: 1;
+            justify-content: center;
+            padding: 10px;
+        }
+
+        .search-input {
+            font-size: 0.95rem;
+        }
+    }
 </style>
 
 <div class="reviews-container">
@@ -321,7 +370,8 @@
             {% empty %}
             <div class="empty-msg">
                 <i class="fa-solid fa-book" style="font-size: 2rem; margin-bottom: 10px;"></i>
-                <p>No book reviews found. {% if query %}Try another search!{% else %}Be the first to rate a book!{% endif %}</p>
+                <p>No book reviews found. {% if query %}Try another search!{% else %}Be the first to rate a book!{%
+                    endif %}</p>
             </div>
             {% endfor %}
         </div>
