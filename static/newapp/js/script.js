@@ -57,8 +57,13 @@ function switchMode(type) {
             editor.innerHTML = '<div class="poem-line"><br></div>';
         }
         document.body.classList.add('poem-mode');
+        document.body.classList.remove('script-mode');
+    } else if (type === 'script') {
+        document.body.classList.add('script-mode');
+        document.body.classList.remove('poem-mode');
     } else {
         document.body.classList.remove('poem-mode');
+        document.body.classList.remove('script-mode');
     }
 }
 
