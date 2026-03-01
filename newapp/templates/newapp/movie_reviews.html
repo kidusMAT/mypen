@@ -348,36 +348,37 @@
         <button type="submit" class="add-review-btn" id="submit-book-btn">Add Book</button>
     </form>
 
-    <!-- Movie Tab Content -->
-    <div id="content-movies" class="tab-content active">
+    <!-- Tab 1: Movies -->
+    <div id="movies-tab" class="tab-content active">
         <div class="reviews-grid" id="movies-container">
-            {% for movie in movies %}
-            {% include "newapp/partials/_movie_card.html" %}
-            {% empty %}
-            <div class="empty-msg">
-                <i class="fa-solid fa-film" style="font-size: 2rem; margin-bottom: 10px;"></i>
-                <p>No movies found. {% if query %}Try another search!{% else %}Be the first to add one!{% endif %}</p>
-            </div>
-            {% endfor %}
+            {% include "newapp/partials/_movie_card_list.html" %}
         </div>
+        {% if movie_has_next %}
+        <div style="display: flex; justify-content: center; margin-top: 40px;" id="movie-load-more-container">
+            <button class="add-review-btn" id="movie-load-more" data-page="2"
+                style="background: transparent; color: #cf7c1c; border: 1px solid #cf7c1c; box-shadow: none;">
+                See More Movies
+            </button>
+        </div>
+        {% endif %}
     </div>
 
-    <!-- Book Tab Content -->
-    <div id="content-books" class="tab-content">
+    <!-- Tab 2: Books -->
+    <div id="books-tab" class="tab-content">
         <div class="reviews-grid" id="books-container">
-            {% for book in books %}
-            {% include "newapp/partials/_book_review_card.html" with book_review=book %}
-            {% empty %}
-            <div class="empty-msg">
-                <i class="fa-solid fa-book" style="font-size: 2rem; margin-bottom: 10px;"></i>
-                <p>No book reviews found. {% if query %}Try another search!{% else %}Be the first to rate a book!{%
-                    endif %}</p>
-            </div>
-            {% endfor %}
+            {% include "newapp/partials/_book_review_card_list.html" %}
         </div>
+        {% if book_has_next %}
+        <div style="display: flex; justify-content: center; margin-top: 40px;" id="book-load-more-container">
+            <button class="add-review-btn" id="book-load-more" data-page="2"
+                style="background: transparent; color: #cf7c1c; border: 1px solid #cf7c1c; box-shadow: none;">
+                See More Book Reviews
+            </button>
+        </div>
+        {% endif %}
     </div>
 </div>
-
+</div>
 <script>
     let activeTab = 'movies';
     let isSubmitting = false;
@@ -396,7 +397,7 @@
         document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
         document.getElementById(`tab-btn-${tab}`).classList.add('active');
         document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
-        document.getElementById(`content-${tab}`).classList.add('active');
+        document.getElementById(`${tab}-tab`).classList.add('active');
 
         const headerDesc = document.getElementById('header-desc');
         const mainAddBtn = document.getElementById('main-add-btn');
@@ -656,6 +657,68 @@
                 }
             })
             .catch(err => console.error('Error deleting comment:', err));
+    }
+
+    // --- PAGINATION ---
+    const movieLoadMore = document.getElementById('movie-load-more');
+    const bookLoadMore = document.getElementById('book-load-more');
+
+    if (movieLoadMore) {
+        movieLoadMore.addEventListener('click', function () {
+            const page = this.getAttribute('data-page');
+            const query = '{{ query|default:"" }}';
+            let url = `?movie_page=${page}&ajax=1&target=movie`;
+            if (query) url += `&q=${encodeURIComponent(query)}`;
+
+            this.innerText = 'Loading...';
+            this.disabled = true;
+
+            fetch(url)
+                .then(res => {
+                    if (res.headers.get('X-Has-Next') === 'false') {
+                        document.getElementById('movie-load-more-container').style.display = 'none';
+                    }
+                    return res.text();
+                })
+                .then(html => {
+                    if (html.trim()) {
+                        document.getElementById('movies-container').insertAdjacentHTML('beforeend', html);
+                        this.setAttribute('data-page', parseInt(page) + 1);
+                    }
+                    this.innerText = 'See More Movies';
+                    this.disabled = false;
+                })
+                .catch(err => console.error(err));
+        });
+    }
+
+    if (bookLoadMore) {
+        bookLoadMore.addEventListener('click', function () {
+            const page = this.getAttribute('data-page');
+            const query = '{{ query|default:"" }}';
+            let url = `?book_page=${page}&ajax=1&target=book`;
+            if (query) url += `&q=${encodeURIComponent(query)}`;
+
+            this.innerText = 'Loading...';
+            this.disabled = true;
+
+            fetch(url)
+                .then(res => {
+                    if (res.headers.get('X-Has-Next') === 'false') {
+                        document.getElementById('book-load-more-container').style.display = 'none';
+                    }
+                    return res.text();
+                })
+                .then(html => {
+                    if (html.trim()) {
+                        document.getElementById('books-container').insertAdjacentHTML('beforeend', html);
+                        this.setAttribute('data-page', parseInt(page) + 1);
+                    }
+                    this.innerText = 'See More Book Reviews';
+                    this.disabled = false;
+                })
+                .catch(err => console.error(err));
+        });
     }
 
     // --- FORM SUBMISSION ---

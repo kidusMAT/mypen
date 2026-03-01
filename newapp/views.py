@@ -364,7 +364,7 @@ def poems(request):
     page_number = request.GET.get('page', 1)
     poems_list = Poem.objects.filter(status__in=['PUBLISHED', 'FINISHED']).order_by('-created_at', '-id')
     
-    paginator = Paginator(poems_list, 6)
+    paginator = Paginator(poems_list, 9)
     page_obj = paginator.get_page(page_number)
     
     if request.GET.get('ajax'):
@@ -938,17 +938,40 @@ def save_poem_ajax(request, poem_id):
 def reviews_page(request):
     from .models import Movie, BookReview
     query = request.GET.get('q', '')
+    movie_page = request.GET.get('movie_page', 1)
+    book_page = request.GET.get('book_page', 1)
     
-    movies = Movie.objects.all().order_by('-created_at')
-    books = BookReview.objects.all().order_by('-created_at')
+    movies_qs = Movie.objects.all().order_by('-created_at')
+    books_qs = BookReview.objects.all().order_by('-created_at')
     
     if query:
-        movies = movies.filter(Q(title__icontains=query) | Q(genre__icontains=query))
-        books = books.filter(Q(title__icontains=query) | Q(genre__icontains=query) | Q(author_name__icontains=query))
+        movies_qs = movies_qs.filter(Q(title__icontains=query) | Q(genre__icontains=query))
+        books_qs = books_qs.filter(Q(title__icontains=query) | Q(genre__icontains=query) | Q(author_name__icontains=query))
+    
+    movie_paginator = Paginator(movies_qs, 8)
+    movie_obj = movie_paginator.get_page(movie_page)
+    
+    book_paginator = Paginator(books_qs, 8)
+    book_obj = book_paginator.get_page(book_page)
+
+    if request.GET.get('ajax'):
+        target = request.GET.get('target', 'movie')
+        if target == 'movie':
+            if not movie_obj.object_list: return HttpResponse("", status=200)
+            response = render(request, 'newapp/partials/_movie_card_list.html', {'movies': movie_obj})
+            response['X-Has-Next'] = 'true' if movie_obj.has_next() else 'false'
+            return response
+        else:
+            if not book_obj.object_list: return HttpResponse("", status=200)
+            response = render(request, 'newapp/partials/_book_review_card_list.html', {'books': book_obj})
+            response['X-Has-Next'] = 'true' if book_obj.has_next() else 'false'
+            return response
     
     return render(request, 'newapp/movie_reviews.html', {
-        'movies': movies,
-        'books': books,
+        'movies': movie_obj,
+        'books': book_obj,
+        'movie_has_next': movie_obj.has_next(),
+        'book_has_next': book_obj.has_next(),
         'query': query
     })
 
@@ -1173,8 +1196,20 @@ def authors_list(request):
         author_list.append(profile)
 
     paginator = Paginator(author_list, 12)
-    page_obj = paginator.get_page(request.GET.get('page'))
-    return render(request, 'newapp/authors.html', {'page_obj': page_obj})
+    page_number = request.GET.get('page', 1)
+    page_obj = paginator.get_page(page_number)
+
+    if request.GET.get('ajax'):
+        if not page_obj.object_list:
+            return HttpResponse("", status=200)
+        response = render(request, 'newapp/partials/_author_cards.html', {'page_obj': page_obj})
+        response['X-Has-Next'] = 'true' if page_obj.has_next() else 'false'
+        return response
+
+    return render(request, 'newapp/authors.html', {
+        'page_obj': page_obj,
+        'has_next': page_obj.has_next()
+    })
 
 # --- RECOVERED CONFESSION VIEWS ---
 
