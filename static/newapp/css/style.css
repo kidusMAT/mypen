@@ -2133,6 +2133,10 @@ footer .lower p {
     gap: 10px;
 }
 
+.mobile-tabs {
+    display: none;
+}
+
 /* --- Writing Page Mobile Responsiveness --- */
 @media (max-width: 768px) {
     .headeded {
@@ -2212,6 +2216,14 @@ footer .lower p {
         gap: 5px;
         order: 3;
         margin-top: 5px;
+    }
+
+    .desktop-tabs {
+        display: none !important;
+    }
+
+    .mobile-tabs {
+        display: flex !important;
     }
 
     .writeing-section {

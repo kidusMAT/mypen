@@ -34,7 +34,7 @@ function switchMode(type) {
 
     // Update Tab Styling
     document.querySelectorAll('.mode-tab').forEach(btn => btn.classList.remove('active'));
-    document.getElementById('btn-' + type)?.classList.add('active');
+    document.querySelectorAll('.btn-mode-' + type).forEach(btn => btn.classList.add('active'));
 
     // Toggle Chapter Controls & Separators (Story Only)
     const chapterControls = document.querySelector('.chapterc');

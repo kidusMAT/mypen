@@ -28,14 +28,14 @@
                 {% endif %}
             </li>
         </ul>
-        <div class="mode-tabs-container">
-            <a href="javascript:void(0)" class="mode-tab active" id="btn-story" onclick="switchMode('story')">
+        <div class="mode-tabs-container desktop-tabs">
+            <a href="javascript:void(0)" class="mode-tab active btn-mode-story" onclick="switchMode('story')">
                 <i class="fa-solid fa-book-open"></i> Story
             </a>
-            <a href="javascript:void(0)" class="mode-tab" id="btn-poem" onclick="switchMode('poem')">
+            <a href="javascript:void(0)" class="mode-tab btn-mode-poem" onclick="switchMode('poem')">
                 <i class="fa-solid fa-feather-pointed"></i> Poem
             </a>
-            <a href="javascript:void(0)" class="mode-tab" id="btn-script" onclick="switchMode('script')">
+            <a href="javascript:void(0)" class="mode-tab btn-mode-script" onclick="switchMode('script')">
                 <i class="fa-solid fa-clapperboard"></i> Script
             </a>
         </div>
@@ -58,6 +58,18 @@
         </div>
 
         <div class="editor-toolbar" id="editor-toolbar">
+            <div class="mode-tabs-container mobile-tabs">
+                <a href="javascript:void(0)" class="mode-tab active btn-mode-story" onclick="switchMode('story')">
+                    <i class="fa-solid fa-book-open"></i> Story
+                </a>
+                <a href="javascript:void(0)" class="mode-tab btn-mode-poem" onclick="switchMode('poem')">
+                    <i class="fa-solid fa-feather-pointed"></i> Poem
+                </a>
+                <a href="javascript:void(0)" class="mode-tab btn-mode-script" onclick="switchMode('script')">
+                    <i class="fa-solid fa-clapperboard"></i> Script
+                </a>
+            </div>
+
             <div class="customize">
                 <div class="texts">
                     <input type="checkbox" id="check-bold" class="tool-btn-input">
