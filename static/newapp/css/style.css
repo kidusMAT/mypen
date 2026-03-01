@@ -2130,7 +2130,7 @@ footer .lower p {
 }
 
 .mobile-tabs {
-    display: none;
+    display: none !important;
 }
 
 /* --- Writing Page Mobile Responsiveness --- */
