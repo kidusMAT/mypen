@@ -1080,6 +1080,57 @@ async function savePoem(actionName) {
 
 
 
+// Helper: Find the direct block child of the editor
+function getBlock(editor, selection) {
+    let node = selection.anchorNode;
+    if (!node) return null;
+    if (node === editor) {
+        const offset = selection.anchorOffset;
+        return editor.childNodes[offset] || editor.lastElementChild;
+    }
+    while (node && node.parentNode !== editor) {
+        node = node.parentNode;
+        if (node === document.body || node === null) return null;
+    }
+    return node;
+}
+
+// Global function to handle Script/Poem Tab logic (reusable for mobile)
+function handleScriptTab(editor) {
+    const selection = window.getSelection();
+    if (!selection.rangeCount || !selection.anchorNode) return;
+    if (!editor.contains(selection.anchorNode)) return;
+
+    const currentBlock = getBlock(editor, selection);
+    if (!currentBlock) return;
+
+    if (currentMode === 'script') {
+        // Screenplay Tab Logic
+        // Action/Scene -> 1 tab -> Dialogue, 2 tabs -> Character
+        if (currentBlock.classList.contains('script-left') || currentBlock.classList.contains('script-scene')) {
+            // Action -> Dialogue (1st tab)
+            currentBlock.className = 'script-dialogue';
+        } else if (currentBlock.classList.contains('script-dialogue')) {
+            // Dialogue -> Character (2nd tab)
+            currentBlock.className = 'script-character';
+            currentBlock.innerText = currentBlock.innerText.toUpperCase(); // Characters are UPPERCASE
+        } else if (currentBlock.classList.contains('script-character')) {
+            // Character -> Action (reset)
+            currentBlock.className = 'script-left';
+            currentBlock.style.textTransform = 'none';
+        } else if (currentBlock.classList.contains('script-parenthetical')) {
+            // Parenthetical -> Dialogue
+            currentBlock.className = 'script-dialogue';
+        }
+    } else if (currentMode === 'poem') {
+        // Poem Tab Logic removed as per user request
+    }
+
+    // Ensure sync after class change
+    const hiddenId = currentMode === 'script' ? 'hidden-script' : 'hidden-poem';
+    syncEditor(editor.id, hiddenId);
+}
+
 // Improved Script & Poem Mode Key Handling
 document.addEventListener('keydown', (e) => {
     if (currentMode !== 'script' && currentMode !== 'poem') return;
@@ -1092,24 +1143,9 @@ document.addEventListener('keydown', (e) => {
     if (!selection.rangeCount || !selection.anchorNode) return;
     if (!editor.contains(selection.anchorNode)) return;
 
-    // Helper: Find the direct block child of the editor
-    const getBlock = () => {
-        let node = selection.anchorNode;
-        if (!node) return null;
-        if (node === editor) {
-            const offset = selection.anchorOffset;
-            return editor.childNodes[offset] || editor.lastElementChild;
-        }
-        while (node && node.parentNode !== editor) {
-            node = node.parentNode;
-            if (node === document.body || node === null) return null;
-        }
-        return node;
-    };
-
     if (e.key === 'Enter') {
         e.preventDefault();
-        const currentBlock = getBlock();
+        const currentBlock = getBlock(editor, selection);
         let newBlock = document.createElement('div');
         newBlock.innerHTML = '<br>';
 
@@ -1158,7 +1194,7 @@ document.addEventListener('keydown', (e) => {
                 else editor.appendChild(newBlock);
             }
         } else if (currentMode === 'poem') {
-            const currentBlock = getBlock();
+            const currentBlock = getBlock(editor, selection);
             const isEmpty = currentBlock && currentBlock.innerText.trim() === '';
 
             if (isEmpty) {
@@ -1210,34 +1246,10 @@ document.addEventListener('keydown', (e) => {
         updatePageIndicators();
     } else if (e.key === 'Tab') {
         e.preventDefault();
-        const currentBlock = getBlock();
-        if (!currentBlock) return;
-
-        if (currentMode === 'script') {
-            // Screenplay Tab Logic
-            // Action/Scene -> 1 tab -> Dialogue, 2 tabs -> Character
-            if (currentBlock.classList.contains('script-left') || currentBlock.classList.contains('script-scene')) {
-                // Action -> Dialogue (1st tab)
-                currentBlock.className = 'script-dialogue';
-            } else if (currentBlock.classList.contains('script-dialogue')) {
-                // Dialogue -> Character (2nd tab)
-                currentBlock.className = 'script-character';
-                currentBlock.innerText = currentBlock.innerText.toUpperCase(); // Characters are UPPERCASE
-            } else if (currentBlock.classList.contains('script-character')) {
-                // Character -> Action (reset)
-                currentBlock.className = 'script-left';
-                currentBlock.style.textTransform = 'none';
-            } else if (currentBlock.classList.contains('script-parenthetical')) {
-                // Parenthetical -> Dialogue
-                currentBlock.className = 'script-dialogue';
-            }
-        } else if (currentMode === 'poem') {
-            // Poem Tab Logic removed as per user request
-            // Previously toggled sub-name, now standard tab behavior (or prevented)
-        }
+        handleScriptTab(editor);
     } else if (e.key === 'Backspace') {
         if (currentMode !== 'script') return;
-        const currentBlock = getBlock();
+        const currentBlock = getBlock(editor, selection);
         if (currentBlock && selection.anchorOffset === 0) {
             // Backspace at start of line converts specialized blocks back to Action
             const specialized = ['script-character', 'script-dialogue', 'script-parenthetical', 'script-transition', 'script-scene'];

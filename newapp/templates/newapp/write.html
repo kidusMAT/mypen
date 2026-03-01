@@ -206,19 +206,10 @@
     <script>
         function insertTab() {
             const editor = document.getElementById('editor-script');
-            if (!editor) return;
-            editor.focus();
-            const sel = window.getSelection();
-            if (!sel.rangeCount) return;
-            const range = sel.getRangeAt(0);
-            range.deleteContents();
-            const tabNode = document.createTextNode('\u00a0\u00a0\u00a0\u00a0\u00a0');
-            range.insertNode(tabNode);
-            range.setStartAfter(tabNode);
-            range.collapse(true);
-            sel.removeAllRanges();
-            sel.addRange(range);
-            syncEditor('editor-script', 'hidden-script');
+            if (editor && typeof handleScriptTab === 'function') {
+                editor.focus();
+                handleScriptTab(editor);
+            }
         }
     </script>
 
