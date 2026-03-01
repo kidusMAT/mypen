@@ -1,10 +1,9 @@
 <!-- newapp/partials/_movie_card.html -->
-{% with id_mod=movie.id|add:0|stringformat:"d"|slice:"-1" %}
 <div class="movie-card" id="movie-card-{{ movie.id }}"
     style="border-radius: 12px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.06); transition: transform 0.2s, box-shadow 0.2s; border: 1px solid #eee; background: white; margin-bottom: 20px;">
     <!-- TOP SECTION -->
     <div class="card-top random-bg-card" id="movie-card-top-{{ movie.id }}"
-        style="height: 160px; padding: 30px; display: flex; flex-direction: column; justify-content: flex-end; color: white; background-size: cover; background-position: center; position: relative; transition: background 0.4s; background: {% if movie.cover_image %}linear-gradient(to bottom, rgba(0,0,0,0), rgba(0,0,0,0.7)), url('{{ movie.cover_image.url }}'){% else %}{% if id_mod == '0' or id_mod == '3' or id_mod == '6' or id_mod == '9' %}linear-gradient(135deg, #cc5c11, #8f3d02){% elif id_mod == '1' or id_mod == '4' or id_mod == '7' %}linear-gradient(135deg, #2563eb, #1e3a8a){% else %}linear-gradient(135deg, #7b32f5, #5122a1){% endif %}{% endif %};">
+        style="height: 160px; padding: 30px; display: flex; flex-direction: column; justify-content: flex-end; color: white; background-size: cover; background-position: center; position: relative; transition: background 0.4s; background: {% if movie.cover_image %}linear-gradient(to bottom, rgba(0,0,0,0), rgba(0,0,0,0.7)), url('{{ movie.cover_image.url }}'){% else %}{% if movie.id|divisibleby:3 %}linear-gradient(135deg, #cc5c11, #8f3d02){% elif movie.id|divisibleby:2 %}linear-gradient(135deg, #2563eb, #1e3a8a){% else %}linear-gradient(135deg, #7b32f5, #5122a1){% endif %}{% endif %};">
         <div style="position: relative; z-index: 1;">
             <a href="{% url 'movie_detail' movie.id %}" style="text-decoration: none; color: inherit; display: block;">
                 <h3 style="margin: 0; font-family: 'Georgia', serif; font-size: 1.4rem; font-weight: bold; text-shadow: 1px 1px 3px rgba(0,0,0,0.4); transition: color 0.2s;"
@@ -52,7 +51,8 @@
             <div style="max-height: 150px; overflow-y: auto; margin-bottom: 15px; display: flex; flex-direction: column; gap: 8px;"
                 id="movie-comments-list-{{ movie.id }}">
                 {% for comment in movie.comments.all|slice:":3" %}
-                <div style="background: #f9fafb; padding: 8px 12px; border-radius: 8px; font-size: 0.85rem;">
+                <div id="movie-comment-{{ comment.id }}"
+                    style="background: #f9fafb; padding: 8px 12px; border-radius: 8px; font-size: 0.85rem;">
                     <div style="display: flex; justify-content: space-between; margin-bottom: 3px;"><strong>{{
                             comment.user.username }}</strong><span style="color: #999; font-size: 0.75rem;">{{
                             comment.created_at|date:"M d" }}</span></div>
@@ -76,4 +76,3 @@
         </div>
     </div>
 </div>
-{% endwith %}
