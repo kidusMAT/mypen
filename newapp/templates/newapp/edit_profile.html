@@ -16,15 +16,15 @@
                 <div class="form-group profile-pic-upload">
                     <label>Profile Picture</label>
                     <div class="pic-preview-container">
-                        {% if form.instance.profile_picture %}
-                        <img src="{{ form.instance.profile_picture.url }}" id="pic-preview" class="current-pic">
+                        {% if profile.profile_picture %}
+                        <img src="{{ profile.profile_picture.url }}" id="pic-preview" class="current-pic">
                         {% else %}
                         <div id="pic-preview-placeholder" class="current-pic-placeholder">
                             <i class="fa-solid fa-user"></i>
                         </div>
                         {% endif %}
                         <div class="upload-btn-wrapper">
-                            <button class="btn-subtle">Choose Image</button>
+                            <button class="btn-subtle" type="button">Choose Image</button>
                             <input type="file" name="profile_picture" accept="image/*" onchange="previewImage(this)">
                         </div>
                     </div>
@@ -46,6 +46,16 @@
                     <label>Phone Number </label>
                     {{ form.phone_number }}
                     <small>Optional. Format: +999999999</small>
+                </div>
+
+                <div class="form-group security-section"
+                    style="margin-top: 30px; border-top: 1px solid #eee; padding-top: 20px;">
+                    <label
+                        style="color: #666; font-size: 13px; text-transform: uppercase; letter-spacing: 1px;">Security</label>
+                    <a href="{% url 'account_change_password' %}" class="btn-subtle"
+                        style="display: inline-block; text-decoration: none; margin-top: 10px;">
+                        <i class="fa-solid fa-key" style="margin-right: 8px;"></i> Change Password
+                    </a>
                 </div>
 
                 <div class="form-actions">

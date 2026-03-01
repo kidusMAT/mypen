@@ -1125,21 +1125,43 @@ from django.template.loader import render_to_string
 from .models import AuthorProfile, ProfileComment, Confession, ConfessionComment
 
 def profile_view(request, username):
+    from .models import AuthorProfile, ProfileComment
     user_prof = get_object_or_404(User, username=username)
     profile, _ = AuthorProfile.objects.get_or_create(user=user_prof)
-    return render(request, 'newapp/profile.html', {'profile': profile})
+    
+    # Get works
+    books = list(user_prof.book_set.filter(status='PUBLISHED'))
+    scripts = list(user_prof.script_set.filter(status='PUBLISHED'))
+    poems = list(user_prof.poem_set.filter(status='PUBLISHED'))
+    works = sorted(books + scripts + poems, key=lambda x: x.created_at, reverse=True)
+    
+    # Get profile comments
+    comments = profile.comments.all().order_by('-created_at')
+    
+    return render(request, 'newapp/profile.html', {
+        'profile': profile,
+        'profile_user': user_prof,
+        'works': works,
+        'comments': comments
+    })
 
 @login_required
 def edit_profile(request):
+    from .forms import AuthorProfileForm
     profile, _ = AuthorProfile.objects.get_or_create(user=request.user)
+    
     if request.method == 'POST':
-        profile.pen_name = request.POST.get('pen_name', '')
-        profile.bio = request.POST.get('bio', '')
-        if 'profile_picture' in request.FILES:
-            profile.profile_picture = request.FILES['profile_picture']
-        profile.save()
-        return redirect('profile_view', username=request.user.username)
-    return render(request, 'newapp/edit_profile.html', {'profile': profile})
+        form = AuthorProfileForm(request.POST, request.FILES, instance=profile)
+        if form.is_valid():
+            form.save()
+            return redirect('profile_view', username=request.user.username)
+    else:
+        form = AuthorProfileForm(instance=profile)
+        
+    return render(request, 'newapp/edit_profile.html', {
+        'form': form,
+        'profile': profile
+    })
 
 @login_required
 @require_POST
