@@ -2113,6 +2113,26 @@ footer .lower p {
     font-weight: inherit;
 }
 
+/* --- Editor Toolbar Layout --- */
+.mobile-toolbar-toggle {
+    display: none;
+}
+
+.editor-toolbar {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+    margin-bottom: 15px;
+    gap: 10px;
+}
+
+.mode-tabs-container {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+}
+
 /* --- Writing Page Mobile Responsiveness --- */
 @media (max-width: 768px) {
     .headeded {
@@ -2143,13 +2163,54 @@ footer .lower p {
         font-size: 13px;
     }
 
+    /* Mobile Writing Toolbar Dropdown */
+    .mobile-toolbar-toggle {
+        display: flex;
+        justify-content: center;
+        width: 100%;
+        margin-bottom: 10px;
+    }
+
+    .mobile-toolbar-toggle button {
+        background: #fff;
+        border: 1px solid rgba(212, 140, 17, 0.4);
+        color: #D48C11;
+        padding: 10px 20px;
+        border-radius: 8px;
+        font-family: system-ui, sans-serif;
+        font-size: 14px;
+        font-weight: 600;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        box-shadow: 0 4px 6px rgba(212, 140, 17, 0.1);
+        transition: all 0.2s ease;
+    }
+
+    .editor-toolbar {
+        display: none;
+        /* Hidden by default behind toggle */
+        background: #fff;
+        padding: 15px;
+        border-radius: 12px;
+        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
+        border: 1px solid rgba(0, 0, 0, 0.03);
+        margin-bottom: 15px;
+        width: 100%;
+    }
+
+    .editor-toolbar.active {
+        display: flex;
+    }
+
     .mode-tabs-container {
         width: 100%;
         display: flex;
+        flex-wrap: wrap;
         justify-content: center;
-        order: 3;
-        margin-top: 5px;
         gap: 5px;
+        margin-bottom: 10px;
     }
 
     .writeing-section {
