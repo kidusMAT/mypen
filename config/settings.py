@@ -94,6 +94,14 @@ if DATABASE_URL:
             ssl_require=True,
         )
     }
+    # Add robust options for Neon/Pooler connections on Windows
+    DATABASES['default']['OPTIONS'] = {
+        'connect_timeout': 10,
+        'keepalives': 1,
+        'keepalives_idle': 30,
+        'keepalives_interval': 10,
+        'keepalives_count': 5,
+    }
 else:
     DATABASES = {
         'default': {
