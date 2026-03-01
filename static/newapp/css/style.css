@@ -2257,6 +2257,17 @@ footer .lower p {
     .writeing-section .customize div label {
         padding: 8px 12px;
     }
+
+    /* Script editor wider spacing on mobile */
+    #editor-script {
+        line-height: 2.2;
+        font-size: 16px;
+    }
+
+    #editor-script>div,
+    #editor-script>p {
+        margin-bottom: 16px;
+    }
 }
 
 /* ==========================================================================
