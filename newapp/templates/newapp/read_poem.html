@@ -391,21 +391,33 @@
         const children = Array.from(contentArea.children);
         if (children.length === 0) return;
 
-        // Group children into pages based on stanza breaks or sub-headers
+        // Group children into pages based on stanza breaks, sub-headers, or line count fallback
         let pages = [];
         let currentPageNodes = [];
+        let lineCount = 0;
+        const maxLinesPerPage = 20; // Force split if it gets too long
 
         children.forEach((child) => {
-            if (child.classList.contains('poem-stanza-break') || child.classList.contains('poem-sub-name')) {
+            const isBreakMarker = child.classList.contains('poem-stanza-break');
+            const isEmptyLine = child.innerText.trim() === '' && !child.querySelector('img');
+            const isSubHeader = child.classList.contains('poem-sub-name');
+
+            // If we hit any of these, we consider it a good point to start a new page
+            if (isBreakMarker || isEmptyLine || isSubHeader || lineCount >= maxLinesPerPage) {
                 if (currentPageNodes.length > 0) {
                     pages.push(currentPageNodes);
                     currentPageNodes = [];
+                    lineCount = 0;
                 }
-                if (child.classList.contains('poem-sub-name')) {
+                // Sub-headers should be the start of the next page
+                if (isSubHeader) {
                     currentPageNodes.push(child);
+                    lineCount++;
                 }
+                // We skip empty lines/breaks as they are just separators
             } else {
                 currentPageNodes.push(child);
+                lineCount++;
             }
         });
 
@@ -413,7 +425,7 @@
             pages.push(currentPageNodes);
         }
 
-        // If we only have one page, we don't need pagination UI
+        // Final safety check: if we somehow have one huge page, but multiple stanzas were intended
         if (pages.length <= 1) return;
 
         contentArea.innerHTML = '';
