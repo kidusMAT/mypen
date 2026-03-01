@@ -12,14 +12,34 @@
         padding: 12px 24px;
         border-radius: 8px;
         margin-bottom: 10px;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
         display: flex;
         align-items: center;
         gap: 10px;
         animation: slideIn 0.3s ease, fadeOut 0.3s ease 2.7s forwards;
     }
-    @keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
-    @keyframes fadeOut { from { opacity: 1; } to { opacity: 0; } }
+
+    @keyframes slideIn {
+        from {
+            transform: translateX(100%);
+            opacity: 0;
+        }
+
+        to {
+            transform: translateX(0);
+            opacity: 1;
+        }
+    }
+
+    @keyframes fadeOut {
+        from {
+            opacity: 1;
+        }
+
+        to {
+            opacity: 0;
+        }
+    }
 
     .reviews-container {
         max-width: 1300px;
@@ -213,31 +233,7 @@
     <div class="header-section">
         <div class="header-main">
             <div class="header-titles">
-                <h1>
-                    <i class="fa-solid fa-clapperboard"></i> Reviews
-                    <span
-                        style="font-size: 0.7rem; background: #ef4444; color: white; padding: 2px 8px; border-radius: 12px; vertical-align: middle; margin-left: 10px; font-family: sans-serif; display: inline-flex; align-items: center; gap: 5px; animation: pulse 2s infinite;">
-                        <span style="width: 6px; height: 6px; background: white; border-radius: 50%;"></span> LIVE
-                    </span>
-                </h1>
-                <style>
-                    @keyframes pulse {
-                        0% {
-                            transform: scale(1);
-                            opacity: 1;
-                        }
-
-                        50% {
-                            transform: scale(1.05);
-                            opacity: 0.8;
-                        }
-
-                        100% {
-                            transform: scale(1);
-                            opacity: 1;
-                        }
-                    }
-                </style>
+                <h1><i class="fa-solid fa-clapperboard"></i> Reviews</h1>
                 <p id="header-desc">Rate, review, and discuss your favorite films</p>
             </div>
             <button class="add-review-btn" onclick="toggleAddForm()" id="main-add-btn">
@@ -473,45 +469,21 @@
     }
 
     function updateRatingHover(id, type, rating) {
-        const ratingBox = document.getElementById(`${type}-rating-box-${id}`);
         const stars = document.querySelectorAll(`.card-stars-${type === 'book' ? 'book-' : ''}${id} i`);
-
-        const colors = [
-            'linear-gradient(135deg, #ef4444, #991b1b)', // 1: Red
-            'linear-gradient(135deg, #f97316, #b45309)', // 2: Orange
-            'linear-gradient(135deg, #f59e0b, #92400e)', // 3: Amber
-            'linear-gradient(135deg, #10b981, #065f46)', // 4: Emerald
-            'linear-gradient(135deg, #3b82f6, #1d4ed8)'  // 5: Blue
-        ];
-
-        if (ratingBox) {
-            ratingBox.style.background = colors[rating - 1];
-            ratingBox.style.boxShadow = '0 4px 12px rgba(0,0,0,0.15)';
-            const textEl = document.getElementById(`${type}-rating-text-${id}`);
-            if (textEl) textEl.style.color = '#fff';
-        }
 
         stars.forEach((star, index) => {
             if (index < rating) {
                 star.className = 'fa-solid fa-star';
-                star.style.color = '#fff';
+                star.style.color = '#cf7c1c'; // Focus brown color
             } else {
                 star.className = 'fa-regular fa-star';
-                star.style.color = 'rgba(255,255,255,0.4)';
+                star.style.color = '#ddd';
             }
         });
     }
 
     function resetRatingHover(id, type) {
-        const ratingBox = document.getElementById(`${type}-rating-box-${id}`);
         const stars = document.querySelectorAll(`.card-stars-${type === 'book' ? 'book-' : ''}${id} i`);
-
-        if (ratingBox) {
-            ratingBox.style.background = 'transparent';
-            ratingBox.style.boxShadow = 'none';
-            const textEl = document.getElementById(`${type}-rating-text-${id}`);
-            if (textEl) textEl.style.color = '#888';
-        }
 
         const textEl = document.getElementById(`${type}-rating-text-${id}`);
         if (textEl) {
