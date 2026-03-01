@@ -2113,6 +2113,71 @@ footer .lower p {
     font-weight: inherit;
 }
 
+/* --- Writing Page Mobile Responsiveness --- */
+@media (max-width: 768px) {
+    .headeded {
+        flex-wrap: wrap;
+        padding: 10px;
+        gap: 10px;
+        justify-content: center;
+    }
+
+    .headeded ul {
+        padding: 0;
+        margin: 0;
+        flex-wrap: wrap;
+        gap: 10px;
+    }
+
+    .headeded ul li {
+        margin-right: 0;
+    }
+
+    .headeded ul li a {
+        padding: 6px 12px;
+        font-size: 13px;
+    }
+
+    .headeded ul li .tab-btn {
+        padding: 6px 14px;
+        font-size: 13px;
+    }
+
+    .mode-tabs-container {
+        width: 100%;
+        display: flex;
+        justify-content: center;
+        order: 3;
+        margin-top: 5px;
+        gap: 5px;
+    }
+
+    .writeing-section {
+        padding: 15px 10px;
+    }
+
+    .writeing-section .customize {
+        width: 100%;
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 8px;
+    }
+
+    .writeing-section .formcont {
+        padding: 0 10px;
+    }
+
+    .writeing-section .formcont form.Poem {
+        padding-left: 0;
+        padding-right: 0;
+    }
+
+    .writeing-section .customize div button,
+    .writeing-section .customize div label {
+        padding: 8px 12px;
+    }
+}
+
 /* ==========================================================================
    DASHBOARD SECTION
    ========================================================================== */
