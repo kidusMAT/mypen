@@ -2268,6 +2268,36 @@ footer .lower p {
     #editor-script>p {
         margin-bottom: 16px;
     }
+
+    /* Floating Tab key button - only visible in script mode */
+    .mobile-tab-btn {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        position: fixed;
+        bottom: 16px;
+        left: 16px;
+        z-index: 9999;
+        background: #fff;
+        border: 1.5px solid rgba(212, 140, 17, 0.5);
+        color: #D48C11;
+        font-family: system-ui, sans-serif;
+        font-size: 15px;
+        font-weight: 700;
+        padding: 10px 22px;
+        border-radius: 10px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+        cursor: pointer;
+        user-select: none;
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.2s ease;
+    }
+
+    body.script-mode .mobile-tab-btn {
+        opacity: 1;
+        pointer-events: auto;
+    }
 }
 
 /* ==========================================================================

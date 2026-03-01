@@ -196,7 +196,31 @@
         <div class="writing-area">
             <!-- <textarea name="story" id="story" cols="30" rows="20" placeholder="Start writing your story here..."></textarea> -->
         </div>
+
+        <!-- Floating Tab button for mobile script mode -->
+        <div id="mobile-tab-btn" class="mobile-tab-btn" onclick="insertTab()">
+            &#8677; Tab
+        </div>
     </section>
+
+    <script>
+        function insertTab() {
+            const editor = document.getElementById('editor-script');
+            if (!editor) return;
+            editor.focus();
+            const sel = window.getSelection();
+            if (!sel.rangeCount) return;
+            const range = sel.getRangeAt(0);
+            range.deleteContents();
+            const tabNode = document.createTextNode('\u00a0\u00a0\u00a0\u00a0\u00a0');
+            range.insertNode(tabNode);
+            range.setStartAfter(tabNode);
+            range.collapse(true);
+            sel.removeAllRanges();
+            sel.addRange(range);
+            syncEditor('editor-script', 'hidden-script');
+        }
+    </script>
 
     <script>
         document.addEventListener('DOMContentLoaded', () => {
