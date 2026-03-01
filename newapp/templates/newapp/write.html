@@ -53,7 +53,7 @@
 
         <div class="mobile-toolbar-toggle">
             <button type="button" onclick="document.getElementById('editor-toolbar').classList.toggle('active')">
-                <i class="fa-solid fa-sliders"></i> Formatting & Modes
+                <i class="fa-solid fa-sliders"></i> Formatting &amp; Modes
             </button>
         </div>
 
@@ -72,39 +72,73 @@
 
             <div class="customize">
                 <div class="texts">
-                    <input type="checkbox" id="check-bold" class="tool-btn-input">
-                    <label for="check-bold" onclick="formatText('bold')"><i class="fa-solid fa-bold"></i></label>
+                    <input type="checkbox" id="check-bold-m" class="tool-btn-input">
+                    <label for="check-bold-m" onclick="formatText('bold')"><i class="fa-solid fa-bold"></i></label>
 
-                    <input type="checkbox" id="check-italic" class="tool-btn-input">
-                    <label for="check-italic" onclick="formatText('italic')"><i class="fa-solid fa-italic"></i></label>
+                    <input type="checkbox" id="check-italic-m" class="tool-btn-input">
+                    <label for="check-italic-m" onclick="formatText('italic')"><i
+                            class="fa-solid fa-italic"></i></label>
 
-                    <input type="checkbox" id="check-underline" class="tool-btn-input">
-                    <label for="check-underline" onclick="formatText('underline')"><i
+                    <input type="checkbox" id="check-underline-m" class="tool-btn-input">
+                    <label for="check-underline-m" onclick="formatText('underline')"><i
                             class="fa-solid fa-underline"></i></label>
 
-                    <input type="checkbox" id="check-strike" class="tool-btn-input">
-                    <label for="check-strike" onclick="formatText('strikeThrough')"><i
+                    <input type="checkbox" id="check-strike-m" class="tool-btn-input">
+                    <label for="check-strike-m" onclick="formatText('strikeThrough')"><i
                             class="fa-solid fa-strikethrough"></i></label>
                 </div>
                 <div class="aligns">
-                    <input type="radio" name="align" id="align-left" class="tool-btn-input" checked>
-                    <label for="align-left" onclick="alignText('left')"><i class="fa-solid fa-align-left"></i></label>
+                    <input type="radio" name="align-m" id="align-left-m" class="tool-btn-input" checked>
+                    <label for="align-left-m" onclick="alignText('left')"><i class="fa-solid fa-align-left"></i></label>
 
-                    <input type="radio" name="align" id="align-center" class="tool-btn-input">
-                    <label for="align-center" onclick="alignText('center')"><i
+                    <input type="radio" name="align-m" id="align-center-m" class="tool-btn-input">
+                    <label for="align-center-m" onclick="alignText('center')"><i
                             class="fa-solid fa-align-center"></i></label>
 
-                    <input type="radio" name="align" id="align-right" class="tool-btn-input">
-                    <label for="align-right" onclick="alignText('right')"><i
+                    <input type="radio" name="align-m" id="align-right-m" class="tool-btn-input">
+                    <label for="align-right-m" onclick="alignText('right')"><i
                             class="fa-solid fa-align-right"></i></label>
                 </div>
                 <div class="chapterc">
                     <button type="button" onclick="submitActiveForm('next_chapter')"><i
-                            class="fa-solid fa-arrow-right"></i>
-                        Next Ch.</button>
+                            class="fa-solid fa-arrow-right"></i> Next Ch.</button>
                     <button type="button" onclick="submitActiveForm('end_chapter')"><i class="fa-solid fa-flag"></i> End
                         Ch.</button>
                 </div>
+            </div>
+        </div>
+
+        <div class="customize desktop-customize">
+            <div class="texts">
+                <input type="checkbox" id="check-bold" class="tool-btn-input">
+                <label for="check-bold" onclick="formatText('bold')"><i class="fa-solid fa-bold"></i></label>
+
+                <input type="checkbox" id="check-italic" class="tool-btn-input">
+                <label for="check-italic" onclick="formatText('italic')"><i class="fa-solid fa-italic"></i></label>
+
+                <input type="checkbox" id="check-underline" class="tool-btn-input">
+                <label for="check-underline" onclick="formatText('underline')"><i
+                        class="fa-solid fa-underline"></i></label>
+
+                <input type="checkbox" id="check-strike" class="tool-btn-input">
+                <label for="check-strike" onclick="formatText('strikeThrough')"><i
+                        class="fa-solid fa-strikethrough"></i></label>
+            </div>
+            <div class="aligns">
+                <input type="radio" name="align" id="align-left" class="tool-btn-input" checked>
+                <label for="align-left" onclick="alignText('left')"><i class="fa-solid fa-align-left"></i></label>
+
+                <input type="radio" name="align" id="align-center" class="tool-btn-input">
+                <label for="align-center" onclick="alignText('center')"><i class="fa-solid fa-align-center"></i></label>
+
+                <input type="radio" name="align" id="align-right" class="tool-btn-input">
+                <label for="align-right" onclick="alignText('right')"><i class="fa-solid fa-align-right"></i></label>
+            </div>
+            <div class="chapterc">
+                <button type="button" onclick="submitActiveForm('next_chapter')"><i class="fa-solid fa-arrow-right"></i>
+                    Next Ch.</button>
+                <button type="button" onclick="submitActiveForm('end_chapter')"><i class="fa-solid fa-flag"></i> End
+                    Ch.</button>
             </div>
         </div>
         <div class="formcont">

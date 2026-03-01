@@ -2119,8 +2119,12 @@ footer .lower p {
 }
 
 .editor-toolbar {
-    display: block;
+    display: none;
     width: 100%;
+}
+
+.desktop-customize {
+    display: flex;
 }
 
 .mode-tabs-container {
@@ -2130,7 +2134,7 @@ footer .lower p {
 }
 
 .mobile-tabs {
-    display: none !important;
+    display: none;
 }
 
 /* --- Writing Page Mobile Responsiveness --- */
@@ -2223,6 +2227,10 @@ footer .lower p {
 
     .mobile-tabs {
         display: flex !important;
+    }
+
+    .desktop-customize {
+        display: none !important;
     }
 
     .writeing-section {
