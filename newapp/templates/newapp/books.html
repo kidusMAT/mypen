@@ -15,14 +15,13 @@
         </div>
     </div>
 
-    <hr style="margin-top: 30px; border: none; border-top: 1px solid rgba(0,0,0,0.1);">
-
     <div class="mobile-filter-wrapper">
         <button class="filter-dropdown-toggle" onclick="toggleFilterMenu()">
             <span>{{ active_genre|default:"All Categories" }}</span>
             <i class="fa-solid fa-chevron-down"></i>
         </button>
         <ul class="filters forbook" id="filter-menu">
+            <li><a href="/books/" class="{% if not active_genre %}active{% endif %}">All</a></li>
             <li><a href="/books/?genre=Fiction" class="{% if active_genre == 'Fiction' %}active{% endif %}">Fiction</a>
             </li>
             <li><a href="/books/?genre=Non-Fiction"
@@ -40,6 +39,7 @@
         </ul>
     </div>
 </section>
+<hr style="margin: 0; padding: 0; width: 100%; border: none; border-top: 1px solid rgba(0,0,0,0.1);">
 
 <section class="stories-box st">
     <div class="boxed book-list-view" id="book-container">
