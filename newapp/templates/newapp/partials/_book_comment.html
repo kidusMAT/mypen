@@ -1,12 +1,12 @@
-<!-- newapp/partials/_movie_comment.html -->
-<div class="comment-card" id="movie-comment-{{ comment.id }}">
+<!-- newapp/partials/_book_comment.html -->
+<div class="comment-card" id="book-comment-{{ comment.id }}">
     <div class="comment-header" style="display: flex; justify-content: space-between; align-items: center;">
         <div>
             <span class="comment-author">{{ comment.user.username }}</span>
             <span class="comment-date">{{ comment.created_at|date:"Y-m-d" }}</span>
         </div>
         {% if user == comment.user %}
-        <button class="comment-delete-btn" onclick="deleteComment({{ comment.id }}, 'movie')" title="Delete comment">
+        <button class="comment-delete-btn" onclick="deleteComment({{ comment.id }}, 'book')" title="Delete comment">
             <i class="fa-solid fa-trash-can"></i>
         </button>
         {% endif %}

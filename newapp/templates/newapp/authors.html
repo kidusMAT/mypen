@@ -98,6 +98,21 @@
     </div>
 </div>
 
+<!-- Custom Deletion Modal -->
+<div class="modal-overlay" id="delete-modal-overlay" onclick="closeDeleteModal()">
+    <div class="premium-modal" onclick="event.stopPropagation()">
+        <div class="modal-icon-container">
+            <i class="fa-solid fa-trash-can"></i>
+        </div>
+        <h3>Delete Comment?</h3>
+        <p>This action cannot be undone. Are you sure you want to remove this comment?</p>
+        <div class="modal-actions">
+            <button class="modal-btn-cancel" onclick="closeDeleteModal()">Cancel</button>
+            <button class="modal-btn-confirm" id="confirm-delete-btn">Delete Now</button>
+        </div>
+    </div>
+</div>
+
 <script>
     function openCommentDrawer(username) {
         const overlay = document.getElementById('comment-drawer-overlay');
@@ -140,7 +155,11 @@
         })
             .then(res => res.json())
             .then(data => {
-                document.getElementById('comment-drawer-content').innerHTML = data.html;
+                if (data.success) {
+                    document.getElementById('comment-drawer-content').innerHTML = data.html;
+                    // Reset form is handled by the template reload, but let's be safe
+                    cancelReply();
+                }
             })
             .finally(() => {
                 if (submitBtn) {
@@ -148,6 +167,87 @@
                     submitBtn.disabled = false;
                 }
             });
+    }
+
+    function setReply(commentId, authorName) {
+        const parentInput = document.getElementById('parent-id-input');
+        const replyInfo = document.getElementById('reply-to-info');
+        const replyName = document.getElementById('reply-to-name');
+        const textarea = document.getElementById('drawer-comment-textarea');
+
+        if (parentInput && replyInfo && replyName) {
+            parentInput.value = commentId;
+            replyName.innerText = authorName;
+            replyInfo.style.display = 'block';
+            textarea.placeholder = `Reply to ${authorName}...`;
+            textarea.focus();
+
+            // Scroll to form
+            document.querySelector('.drawer-comment-form-container').scrollIntoView({ behavior: 'smooth' });
+        }
+    }
+
+    function cancelReply() {
+        const parentInput = document.getElementById('parent-id-input');
+        const replyInfo = document.getElementById('reply-to-info');
+        const textarea = document.getElementById('drawer-comment-textarea');
+
+        if (parentInput && replyInfo) {
+            parentInput.value = '';
+            replyInfo.style.display = 'none';
+            if (textarea) textarea.placeholder = "Add your comment...";
+        }
+    }
+    function deleteProfileComment(commentId) {
+        const modal = document.getElementById('delete-modal-overlay');
+        const confirmBtn = document.getElementById('confirm-delete-btn');
+        modal.classList.add('active');
+        confirmBtn.onclick = () => performDeletion(commentId);
+    }
+
+    function closeDeleteModal() {
+        document.getElementById('delete-modal-overlay').classList.remove('active');
+    }
+
+    function performDeletion(commentId) {
+        const confirmBtn = document.getElementById('confirm-delete-btn');
+        confirmBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Deleting...';
+        confirmBtn.disabled = true;
+
+        fetch(`/ajax/profile/comment/${commentId}/delete/`, {
+            method: 'POST',
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    document.getElementById('comment-drawer-content').innerHTML = data.html;
+                    closeDeleteModal();
+                }
+            })
+            .catch(err => console.error('Error deleting comment:', err))
+            .finally(() => {
+                confirmBtn.innerHTML = 'Delete Now';
+                confirmBtn.disabled = false;
+            });
+    }
+
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
     }
 </script>
 
@@ -565,6 +665,111 @@
         background: #111;
         color: white;
         border-color: #111;
+    }
+
+    /* Custom Modal Styles */
+    .modal-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100vw;
+        height: 100vh;
+        background: rgba(0, 0, 0, 0.4);
+        backdrop-filter: blur(8px);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        opacity: 0;
+        visibility: hidden;
+        transition: 0.3s;
+        z-index: 2000;
+    }
+
+    .modal-overlay.active {
+        opacity: 1;
+        visibility: visible;
+    }
+
+    .premium-modal {
+        background: white;
+        width: 100%;
+        max-width: 400px;
+        padding: 40px;
+        border-radius: 24px;
+        text-align: center;
+        box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+        transform: scale(0.9);
+        transition: 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+
+    .modal-overlay.active .premium-modal {
+        transform: scale(1);
+    }
+
+    .modal-icon-container {
+        width: 64px;
+        height: 64px;
+        background: #fee2e2;
+        color: #ef4444;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 24px;
+        font-size: 24px;
+    }
+
+    .premium-modal h3 {
+        font-size: 22px;
+        margin-bottom: 12px;
+        color: #111;
+    }
+
+    .premium-modal p {
+        color: #666;
+        font-size: 15px;
+        line-height: 1.6;
+        margin-bottom: 30px;
+    }
+
+    .modal-actions {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 12px;
+    }
+
+    .modal-btn-cancel {
+        padding: 12px;
+        background: #f3f4f6;
+        color: #4b5563;
+        border: none;
+        border-radius: 12px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: 0.2s;
+    }
+
+    .modal-btn-cancel:hover {
+        background: #e5e7eb;
+    }
+
+    .modal-btn-confirm {
+        padding: 12px;
+        background: #111;
+        color: white;
+        border: none;
+        border-radius: 12px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: 0.2s;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+    }
+
+    .modal-btn-confirm:hover {
+        background: #ef4444;
     }
 </style>
 {% endblock %}

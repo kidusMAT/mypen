@@ -12,7 +12,7 @@ class NewappConfig(AppConfig):
         username_field = User._meta.get_field('username')
         username_field.validators = [
             RegexValidator(
-                r'^[\w.@+- ]+$',
+                r'^[\w.@+ -]+$',
                 'Enter a valid username. This value may contain only letters, numbers, spaces and @/./+/-/_ characters.',
                 'invalid'
             ),

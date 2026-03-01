@@ -1,10 +1,10 @@
 {% extends "newapp/_base.html" %}
 
-{% block title %} {{ movie.title }} - Movie Review {% endblock %}
+{% block title %} {{ book_review.title }} - Book Review {% endblock %}
 
 {% block content %}
 <style>
-    .movie-detail-container {
+    .review-detail-container {
         max-width: 800px;
         margin: 40px auto;
         background: #fafafa;
@@ -119,62 +119,6 @@
         margin-bottom: 40px;
     }
 
-    .comment-card {
-        background: #f8f9fa;
-        padding: 20px;
-        border-radius: 8px;
-        border: 1px solid #f0f0f0;
-    }
-
-    .comment-header {
-        display: flex;
-        justify-content: space-between;
-        margin-bottom: 15px;
-        font-size: 0.95rem;
-    }
-
-    .comment-author {
-        font-weight: bold;
-        color: #333;
-        text-decoration: none;
-    }
-
-    .comment-author:hover {
-        color: #cf7c1c;
-        text-decoration: underline;
-    }
-
-    .comment-date {
-        color: #999;
-    }
-
-    .comment-content {
-        color: #555;
-        line-height: 1.6;
-        font-size: 1.05rem;
-    }
-
-    .add-comment-form {
-        display: flex;
-        flex-direction: column;
-        gap: 15px;
-    }
-
-    .add-comment-form textarea {
-        padding: 15px;
-        border: 1px solid #ddd;
-        border-radius: 8px;
-        min-height: 120px;
-        font-family: inherit;
-        font-size: 1rem;
-        resize: vertical;
-        outline: none;
-    }
-
-    .add-comment-form textarea:focus {
-        border-color: #cf7c1c;
-    }
-
     .submit-btn {
         background: #cf7c1c;
         color: white;
@@ -206,17 +150,17 @@
     }
 </style>
 
-<div class="movie-detail-container">
+<div class="review-detail-container">
     <div style="padding: 20px 30px 0 30px;">
         <a href="{% url 'movie_reviews' %}" class="back-link"><i class="fa-solid fa-arrow-left"></i> Back to the
             Reviews</a>
     </div>
 
     <!-- Move dynamic background logic here to avoid CSS formatter mangling tags in <style> -->
-    {% with id_mod=movie.id|add:0|stringformat:"d"|slice:"-1" %}
+    {% with id_mod=book_review.id|add:0|stringformat:"d"|slice:"-1" %}
     <div class="detail-header" style="
-        {% if movie.cover_image %}
-        background-image: url('{{ movie.cover_image.url }}');
+        {% if book_review.cover_image %}
+        background-image: url('{{ book_review.cover_image.url }}');
         {% elif id_mod == '0' or id_mod == '3' or id_mod == '6' or id_mod == '9' %}
         background: linear-gradient(135deg, #c05c00, #a64c01);
         {% elif id_mod == '1' or id_mod == '4' or id_mod == '7' %}
@@ -228,11 +172,12 @@
         {% endwith %}
         <div class="header-overlay"></div>
         <div class="header-content">
-            <h1>{{ movie.title }}</h1>
+            <h1>{{ book_review.title }}</h1>
+            <div style="font-size: 1.2rem; margin-top: 5px; opacity: 0.9;">by {{
+                book_review.author_name|default:"Unknown Author" }}</div>
             <div class="detail-meta">
-                <span class="genre-badge">{{ movie.genre|default:"Uncategorized" }}</span>
-                <span style="font-weight: bold; text-shadow: 1px 1px 2px rgba(0,0,0,0.5);">{{ movie.year|default:""
-                    }}</span>
+                <span class="genre-badge">{{ book_review.genre|default:"Uncategorized" }}</span>
+                <span style="font-weight: bold;">{{ book_review.year|default:"" }}</span>
             </div>
         </div>
     </div>
@@ -241,25 +186,26 @@
         <div class="rating-section">
             <div>
                 <div class="rating-score" id="rating-text">
-                    {{ movie.average_rating|floatformat:1 }} / 5 ({{ movie.rating_count }} ratings)
+                    {{ book_review.average_rating|floatformat:1 }} / 5 ({{ book_review.rating_count }} ratings)
                 </div>
                 <div class="stars" id="star-container">
                     {% for i in "12345" %}
-                    <i class="fa{% if forloop.counter <= movie.average_rating|default:0|add:0 %} fa-star{% elif forloop.counter|add:0.5 <= movie.average_rating|default:0 %} fa-star-half-stroke{% else %}-regular fa-star{% endif %} interactive-star"
-                        data-rating="{{ forloop.counter }}" onclick="rateMovie({{ forloop.counter }})"></i>
+                    <i class="fa{% if forloop.counter <= book_review.average_rating|default:0|add:0 %} fa-star{% elif forloop.counter|add:0.5 <= book_review.average_rating|default:0 %} fa-star-half-stroke{% else %}-regular fa-star{% endif %} interactive-star"
+                        data-rating="{{ forloop.counter }}" onclick="rateBook({{ forloop.counter }})"></i>
                     {% endfor %}
                 </div>
             </div>
             <div class="comment-count">
-                <i class="fa-regular fa-comment"></i> <span id="comments-total-count">{{ movie.comment_count }}</span>
+                <i class="fa-regular fa-comment"></i> <span id="comments-total-count">{{ book_review.comment_count
+                    }}</span>
             </div>
         </div>
 
         <div class="comments-section">
             <h3>Comments</h3>
             <div class="comment-list" id="comments-list">
-                {% for comment in movie.comments.all %}
-                {% include "newapp/partials/_movie_comment.html" %}
+                {% for comment in book_review.comments.all %}
+                {% include "newapp/partials/_book_comment.html" %}
                 {% empty %}
                 <p id="no-comments-msg" style="color: #999; font-style: italic;">No comments yet. Be the first to share
                     your thoughts!</p>
@@ -267,17 +213,17 @@
             </div>
 
             {% if user.is_authenticated %}
-            <form class="add-comment-form" id="comment-form">
+            <form id="comment-form" style="display: flex; flex-direction: column; gap: 15px;">
                 {% csrf_token %}
-                <textarea name="content" id="comment-content" placeholder="Write a comment..." required></textarea>
+                <textarea name="content" placeholder="Write a comment..." required
+                    style="padding: 15px; border: 1px solid #ddd; border-radius: 8px; min-height: 100px; font-family: inherit; resize: vertical; outline: none;"></textarea>
                 <button type="submit" class="submit-btn" id="submit-comment-btn">Post Comment</button>
             </form>
             {% else %}
-            <div
-                style="padding: 20px; background: #fff3e0; border-radius: 8px; color: #cf7c1c; border: 1px solid #ffe0b2;">
+            <div style="padding: 15px; background: #fff3e0; border-radius: 8px; color: #cf7c1c;">
                 <p style="margin: 0;"><a href="{% url 'account_login' %}?next={{ request.path }}"
-                        style="color: #c05c00; font-weight: bold; text-decoration: underline;">Log in</a> to post a
-                    comment and rate this movie.</p>
+                        style="color: #c05c00; font-weight: bold; text-decoration: underline;">Log in</a> to comment and
+                    rate.</p>
             </div>
             {% endif %}
         </div>
@@ -287,9 +233,9 @@
 <div style="display:none;">{% csrf_token %}</div>
 
 <script>
-    function rateMovie(rating) {
+    function rateBook(rating) {
         {% if not user.is_authenticated %}
-        alert("You must be logged in to rate.");
+        alert("Please log in to rate.");
         window.location.href = "{% url 'account_login' %}?next={{ request.path }}";
         return;
         {% endif %}
@@ -299,7 +245,7 @@
         formData.append('rating', rating);
         formData.append('csrfmiddlewaretoken', csrfToken);
 
-        fetch('{% url "ajax_rate_movie" movie.id %}', {
+        fetch('{% url "ajax_rate_book_review" book_review.id %}', {
             method: 'POST',
             body: formData,
             headers: { 'X-Requested-With': 'XMLHttpRequest' }
@@ -316,8 +262,7 @@
                         else star.className = 'fa-regular fa-star interactive-star';
                     });
                 }
-            })
-            .catch(err => console.error(err));
+            });
     }
 
     {% if user.is_authenticated %}
@@ -330,7 +275,7 @@
             submitBtn.innerText = 'Posting...';
 
             const formData = new FormData(this);
-            fetch('{% url "ajax_add_movie_comment" movie.id %}', {
+            fetch('{% url "ajax_add_book_comment" book_review.id %}', {
                 method: 'POST',
                 body: formData,
                 headers: { 'X-Requested-With': 'XMLHttpRequest' }

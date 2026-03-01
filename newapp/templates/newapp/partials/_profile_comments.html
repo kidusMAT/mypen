@@ -5,21 +5,141 @@
 
 <div class="drawer-comments-list" id="drawer-comments-list">
     {% for comment in comments %}
-    <div class="drawer-comment">
-        <div class="comment-author"><strong>{{ comment.author.username }}</strong></div>
-        <div class="comment-content">{{ comment.content }}</div>
-        <div class="comment-date">{{ comment.created_at|date:"M d, Y" }}</div>
+    <div class="comment-card" id="comment-{{ comment.id }}">
+        <div class="comment-header" style="display: flex; justify-content: space-between; align-items: center;">
+            <div>
+                <span class="comment-author">{{ comment.author.username }}</span>
+                <span class="comment-date">{{ comment.created_at|date:"Y-m-d" }}</span>
+            </div>
+            <div style="display: flex; gap: 8px;">
+                <button class="btn-reply-small" onclick="setReply('{{ comment.id }}', '{{ comment.author.username }}')"
+                    title="Reply">
+                    <i class="fa-solid fa-reply"></i>
+                </button>
+                {% if user == comment.author %}
+                <button class="comment-delete-btn" onclick="deleteProfileComment({{ comment.id }})"
+                    title="Delete comment">
+                    <i class="fa-solid fa-trash-can"></i>
+                </button>
+                {% endif %}
+            </div>
+        </div>
+        <div class="comment-content">
+            {{ comment.content|linebreaksbr }}
+        </div>
+
+        <!-- Replies -->
+        {% if comment.replies.all %}
+        <div class="comment-replies" style="margin-top: 15px; padding-left: 20px; border-left: 2px solid #f1f5f9;">
+            {% for reply in comment.replies.all %}
+            <div class="comment-card reply-card" id="comment-{{ reply.id }}"
+                style="padding: 15px; margin-bottom: 10px; background: #fff;">
+                <div class="comment-header" style="display: flex; justify-content: space-between; align-items: center;">
+                    <div>
+                        <span class="comment-author" style="font-size: 0.9rem;">{{ reply.author.username }}</span>
+                        <span class="comment-date" style="font-size: 0.8rem;">{{ reply.created_at|date:"Y-m-d" }}</span>
+                    </div>
+                    {% if user == reply.author %}
+                    <button class="comment-delete-btn" onclick="deleteProfileComment({{ reply.id }})"
+                        title="Delete reply" style="width: 28px; height: 28px; font-size: 0.8rem;">
+                        <i class="fa-solid fa-trash-can"></i>
+                    </button>
+                    {% endif %}
+                </div>
+                <div class="comment-content" style="font-size: 0.95rem;">
+                    {{ reply.content|linebreaksbr }}
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
     </div>
     {% empty %}
     <div class="no-comments-msg">No comments yet. Be the first to share your thoughts!</div>
     {% endfor %}
 </div>
 
+<style>
+    .drawer-comments-list {
+        display: flex;
+        flex-direction: column;
+        gap: 15px;
+    }
+
+    .comment-card {
+        margin-bottom: 0 !important;
+        /* Override style.css margin for drawer */
+    }
+
+    .btn-reply-small {
+        background: #f1f5f9;
+        border: none;
+        color: #64748b;
+        font-size: 0.85rem;
+        cursor: pointer;
+        padding: 6px 10px;
+        border-radius: 6px;
+        transition: 0.2s;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .btn-reply-small:hover {
+        background: #e2e8f0;
+        color: #cf7c1c;
+    }
+
+    .comment-replies {
+        margin-top: 15px;
+        padding-left: 20px;
+        border-left: 2px solid #f1f5f9;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .reply-card {
+        background: #ffffff !important;
+        padding: 15px !important;
+        border: 1px solid #f1f5f9 !important;
+        border-radius: 10px !important;
+    }
+
+    .reply-card .comment-author {
+        font-size: 0.9rem;
+    }
+
+    .reply-card .comment-date {
+        font-size: 0.8rem;
+    }
+
+    .reply-card .comment-content {
+        font-size: 0.95rem;
+    }
+
+    .reply-card .comment-delete-btn {
+        width: 28px !important;
+        height: 28px !important;
+        font-size: 0.8rem !important;
+    }
+</style>
+
 {% if user.is_authenticated %}
 <div class="drawer-comment-form-container">
-    <form onsubmit="submitCommentAjax(event, '{{ profile.user.username }}')" class="drawer-comment-form">
+    <div id="reply-to-info"
+        style="display: none; padding: 10px; background: #fff3e0; border-radius: 8px; margin-bottom: 10px; font-size: 13px; color: #cf7c1c; position: relative;">
+        <span>Replying to <strong id="reply-to-name"></strong></span>
+        <button onclick="cancelReply()"
+            style="position: absolute; right: 10px; top: 10px; background: none; border: none; cursor: pointer; color: #999;"><i
+                class="fa-solid fa-xmark"></i></button>
+    </div>
+    <form onsubmit="submitCommentAjax(event, '{{ profile.user.username }}')" class="drawer-comment-form"
+        id="drawer-main-form">
         {% csrf_token %}
-        <textarea name="content" placeholder="Add your comment..." required maxlength="500"></textarea>
+        <input type="hidden" name="parent_id" id="parent-id-input">
+        <textarea name="content" id="drawer-comment-textarea" placeholder="Add your comment..." required
+            maxlength="500"></textarea>
         <button type="submit" class="btn-submit-comment">Post Comment</button>
     </form>
 </div>

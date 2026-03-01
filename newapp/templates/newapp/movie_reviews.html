@@ -1,34 +1,39 @@
 {% extends "newapp/_base.html" %}
 
-{% block title %} Movie Reviews {% endblock %}
+{% block title %} Reviews {% endblock %}
 
 {% block content %}
 <style>
-    .movie-reviews-container {
-        max-width: 1000px;
+    .reviews-container {
+        max-width: 1300px;
         margin: 0 auto;
-        padding: 40px 20px;
+        padding: 60px 30px;
     }
 
     .header-section {
+        margin-bottom: 30px;
+    }
+
+    .header-main {
         display: flex;
         justify-content: space-between;
         align-items: center;
-        margin-bottom: 30px;
+        margin-bottom: 15px;
     }
 
     .header-titles h1 {
         font-family: 'Georgia', serif;
-        font-size: 2.5rem;
+        font-size: 2.8rem;
         color: #302419;
-        margin: 0 0 10px 0;
+        margin: 0 0 5px 0;
         display: flex;
         align-items: center;
-        gap: 10px;
+        gap: 15px;
     }
 
     .header-titles h1 i {
         color: #cf7c1c;
+        font-size: 2.2rem;
     }
 
     .header-titles p {
@@ -37,93 +42,575 @@
         margin: 0;
     }
 
-    .add-movie-btn {
+    .add-review-btn {
         background: #cf7c1c;
         color: white;
         border: none;
-        padding: 10px 20px;
-        border-radius: 5px;
+        padding: 12px 24px;
+        border-radius: 8px;
         font-weight: 600;
         cursor: pointer;
         display: flex;
         align-items: center;
         gap: 8px;
-        transition: background 0.2s;
+        transition: all 0.2s;
+        box-shadow: 0 4px 12px rgba(207, 124, 28, 0.2);
     }
 
-    .add-movie-btn:hover {
+    .add-review-btn:hover {
         background: #b56b16;
+        transform: translateY(-1px);
     }
 
-    .movies-grid {
+    /* Search Bar mockup style */
+    .search-wrapper {
+        margin-bottom: 25px;
+        position: relative;
+    }
+
+    .search-input {
+        width: 100%;
+        padding: 14px 20px 14px 50px;
+        border: 1px solid #eee;
+        border-radius: 10px;
+        font-size: 1rem;
+        outline: none;
+        transition: all 0.2s;
+        background: #fafafa;
+        color: #333;
+    }
+
+    .search-input:focus {
+        background: #fff;
+        border-color: #cf7c1c;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+    }
+
+    .search-icon {
+        position: absolute;
+        left: 20px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: #999;
+    }
+
+    /* Tab styles */
+    .nav-tabs {
+        display: flex;
+        gap: 10px;
+        margin-bottom: 30px;
+        background: #f0f0f0;
+        padding: 5px;
+        border-radius: 12px;
+        width: fit-content;
+    }
+
+    .nav-tab {
+        padding: 10px 20px;
+        border-radius: 8px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-weight: 600;
+        color: #666;
+        transition: all 0.2s;
+        border: none;
+        background: transparent;
+    }
+
+    .nav-tab.active {
+        background: white;
+        color: #333;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    }
+
+    .nav-tab i {
+        font-size: 0.9rem;
+    }
+
+    .tab-content {
+        display: none;
+    }
+
+    .tab-content.active {
+        display: block;
+    }
+
+    .reviews-grid {
         display: grid;
         grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
         gap: 20px;
     }
 
-    /* Assign background gradient based on child index */
-    .movies-grid>div:nth-child(3n+1) .card-top {
-        background: linear-gradient(135deg, #c05c00, #a64c01);
+    /* Forms */
+    .add-form {
+        display: none;
+        background: white;
+        padding: 30px;
+        border-radius: 12px;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+        margin-bottom: 30px;
+        border: 1px solid #eee;
     }
 
-    .movies-grid>div:nth-child(3n+2) .card-top {
-        background: linear-gradient(135deg, #d3205a, #99285f);
+    .add-form h3 {
+        font-family: 'Georgia', serif;
+        font-size: 1.5rem;
+        margin-top: 0;
+        margin-bottom: 20px;
+        color: #302419;
     }
 
-    .movies-grid>div:nth-child(3n) .card-top {
-        background: linear-gradient(135deg, #8139e6, #5d2b99);
+    .form-row {
+        display: flex;
+        gap: 15px;
+        margin-bottom: 20px;
+        flex-wrap: wrap;
+    }
+
+    .form-input {
+        flex: 1;
+        padding: 12px 15px;
+        border: 1px solid #ddd;
+        border-radius: 6px;
+        outline: none;
+        transition: border 0.2s;
+    }
+
+    .form-input:focus {
+        border-color: #cf7c1c;
+    }
+
+    .empty-msg {
+        text-align: center;
+        padding: 60px 20px;
+        background: #fff;
+        border-radius: 12px;
+        border: 1px dashed #ddd;
+        color: #999;
     }
 </style>
 
-<div class="movie-reviews-container">
+<div class="reviews-container">
     <div class="header-section">
-        <div class="header-titles">
-            <h1><i class="fa-solid fa-film"></i> Movie Reviews</h1>
-            <p>Rate, review, and discuss your favorite films</p>
+        <div class="header-main">
+            <div class="header-titles">
+                <h1>
+                    <i class="fa-solid fa-clapperboard"></i> Reviews
+                    <span
+                        style="font-size: 0.7rem; background: #ef4444; color: white; padding: 2px 8px; border-radius: 12px; vertical-align: middle; margin-left: 10px; font-family: sans-serif; display: inline-flex; align-items: center; gap: 5px; animation: pulse 2s infinite;">
+                        <span style="width: 6px; height: 6px; background: white; border-radius: 50%;"></span> LIVE
+                    </span>
+                </h1>
+                <style>
+                    @keyframes pulse {
+                        0% {
+                            transform: scale(1);
+                            opacity: 1;
+                        }
+
+                        50% {
+                            transform: scale(1.05);
+                            opacity: 0.8;
+                        }
+
+                        100% {
+                            transform: scale(1);
+                            opacity: 1;
+                        }
+                    }
+                </style>
+                <p id="header-desc">Rate, review, and discuss your favorite films</p>
+            </div>
+            <button class="add-review-btn" onclick="toggleAddForm()" id="main-add-btn">
+                <i class="fa-solid fa-plus"></i> Add Movie
+            </button>
         </div>
-        <button class="add-movie-btn" id="toggle-form-btn" onclick="toggleAddForm()">
-            <i class="fa-solid fa-plus"></i> Add Movie
+    </div>
+
+    <!-- Hidden CSRF token for global access -->
+    <div style="display:none;">{% csrf_token %}</div>
+
+    <!-- Search Mockup -->
+    <div class="search-wrapper">
+        <i class="fa-solid fa-magnifying-glass search-icon"></i>
+        <form action="" method="GET">
+            <input type="text" name="q" value="{{ query }}" class="search-input"
+                placeholder="Search movies and books by title, genre, or author...">
+        </form>
+    </div>
+
+    <!-- Tabbed Navigation -->
+    <div class="nav-tabs">
+        <button class="nav-tab active" onclick="switchTab('movies')" id="tab-btn-movies">
+            <i class="fa-solid fa-film"></i> Movies
+        </button>
+        <button class="nav-tab" onclick="switchTab('books')" id="tab-btn-books">
+            <i class="fa-solid fa-book"></i> Books
         </button>
     </div>
 
-    <form id="add-movie-form"
-        style="display: none; background: white; padding: 30px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); margin-bottom: 30px; border: 1px solid #eee;">
+    <!-- Add Movie Form -->
+    <form id="add-movie-form" class="add-form" enctype="multipart/form-data">
         {% csrf_token %}
-        <h3
-            style="font-family: 'Georgia', serif; font-size: 1.5rem; margin-top: 0; margin-bottom: 25px; color: #302419;">
-            Add a New Movie</h3>
-        <div style="display: flex; gap: 15px; margin-bottom: 25px; align-items: stretch; flex-wrap: wrap;">
-            <input type="text" name="title" placeholder="Movie title" required
-                style="flex: 2; padding: 12px 15px; border: 1px solid #e0e0e0; border-radius: 5px; min-width: 250px; outline: none; transition: border 0.2s;">
-            <input type="text" name="genre" placeholder="Genre"
-                style="flex: 1; padding: 12px 15px; border: 1px solid #e0e0e0; border-radius: 5px; min-width: 150px; outline: none;">
-            <input type="number" name="year" placeholder="Year"
-                style="flex: 1; padding: 12px 15px; border: 1px solid #e0e0e0; border-radius: 5px; min-width: 100px; outline: none;">
+        <h3>Add a New Movie</h3>
+        <div class="form-row">
+            <input type="text" name="title" class="form-input" placeholder="Movie title" required style="flex: 2;">
+            <input type="text" name="genre" class="form-input" placeholder="Genre">
+            <input type="number" name="year" class="form-input" placeholder="Year">
         </div>
-        <button type="submit" class="add-movie-btn" id="submit-movie-btn">Add Movie</button>
+        <div class="form-row">
+            <label style="font-size: 0.9rem; color: #666; width: 100%;">Cover Image (optional)</label>
+            <input type="file" name="cover_image" accept="image/*">
+        </div>
+        <button type="submit" class="add-review-btn" id="submit-movie-btn">Add Movie</button>
     </form>
 
-    <div class="movies-grid" id="movies-container">
-        {% for movie in movies %}
-        {% include "newapp/partials/_movie_card.html" %}
-        {% empty %}
-        <p style="color: #666; font-style: italic;" id="no-movies-msg">No movies added yet. Be the first to add one!</p>
-        {% endfor %}
+    <!-- Add Book Form -->
+    <form id="add-book-form" class="add-form" enctype="multipart/form-data">
+        {% csrf_token %}
+        <h3>Add a New Book Review</h3>
+        <div class="form-row">
+            <input type="text" name="title" class="form-input" placeholder="Book title" required style="flex: 2;">
+            <input type="text" name="author_name" class="form-input" placeholder="Author name" style="flex: 1.5;">
+        </div>
+        <div class="form-row">
+            <input type="text" name="genre" class="form-input" placeholder="Genre">
+            <input type="number" name="year" class="form-input" placeholder="Year">
+        </div>
+        <div class="form-row">
+            <label style="font-size: 0.9rem; color: #666; width: 100%;">Cover Image (optional)</label>
+            <input type="file" name="cover_image" accept="image/*">
+        </div>
+        <button type="submit" class="add-review-btn" id="submit-book-btn">Add Book</button>
+    </form>
+
+    <!-- Movie Tab Content -->
+    <div id="content-movies" class="tab-content active">
+        <div class="reviews-grid" id="movies-container">
+            {% for movie in movies %}
+            {% include "newapp/partials/_movie_card.html" %}
+            {% empty %}
+            <div class="empty-msg">
+                <i class="fa-solid fa-film" style="font-size: 2rem; margin-bottom: 10px;"></i>
+                <p>No movies found. {% if query %}Try another search!{% else %}Be the first to add one!{% endif %}</p>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- Book Tab Content -->
+    <div id="content-books" class="tab-content">
+        <div class="reviews-grid" id="books-container">
+            {% for book in books %}
+            {% include "newapp/partials/_book_review_card.html" with book_review=book %}
+            {% empty %}
+            <div class="empty-msg">
+                <i class="fa-solid fa-book" style="font-size: 2rem; margin-bottom: 10px;"></i>
+                <p>No book reviews found. {% if query %}Try another search!{% else %}Be the first to rate a book!{%
+                    endif %}</p>
+            </div>
+            {% endfor %}
+        </div>
     </div>
 </div>
 
 <script>
-    function toggleAddForm() {
-        const form = document.getElementById('add-movie-form');
-        const btn = document.getElementById('toggle-form-btn');
-        if (form.style.display === 'none') {
-            form.style.display = 'block';
-            btn.innerHTML = '<i class="fa-solid fa-xmark"></i> Cancel';
+    let activeTab = 'movies';
+    let isSubmitting = false;
+
+
+    function switchTab(tab) {
+        activeTab = tab;
+        document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+        document.getElementById(`tab-btn-${tab}`).classList.add('active');
+        document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+        document.getElementById(`content-${tab}`).classList.add('active');
+
+        const headerDesc = document.getElementById('header-desc');
+        const mainAddBtn = document.getElementById('main-add-btn');
+
+        if (tab === 'movies') {
+            headerDesc.innerText = 'Rate, review, and discuss your favorite films';
+            mainAddBtn.innerHTML = '<i class="fa-solid fa-plus"></i> Add Movie';
         } else {
-            form.style.display = 'none';
-            btn.innerHTML = '<i class="fa-solid fa-plus"></i> Add Movie';
+            headerDesc.innerText = 'Discover and discuss the best literature';
+            mainAddBtn.innerHTML = '<i class="fa-solid fa-plus"></i> Add Book';
+        }
+
+        document.getElementById('add-movie-form').style.display = 'none';
+        document.getElementById('add-book-form').style.display = 'none';
+        mainAddBtn.innerHTML = `<i class="fa-solid fa-plus"></i> Add ${tab === 'movies' ? 'Movie' : 'Book'}`;
+    }
+
+    function toggleAddForm() {
+        {% if not user.is_authenticated %}
+        alert("Please log in to add reviews.");
+        window.location.href = "{% url 'account_login' %}?next={{ request.path }}";
+        return;
+        {% endif %}
+
+        const movieForm = document.getElementById('add-movie-form');
+        const bookForm = document.getElementById('add-book-form');
+        const btn = document.getElementById('main-add-btn');
+
+        const activeForm = activeTab === 'movies' ? movieForm : bookForm;
+        const otherForm = activeTab === 'movies' ? bookForm : movieForm;
+
+        otherForm.style.display = 'none';
+
+        if (activeForm.style.display === 'block') {
+            activeForm.style.display = 'none';
+            btn.innerHTML = `<i class="fa-solid fa-plus"></i> Add ${activeTab === 'movies' ? 'Movie' : 'Book'}`;
+        } else {
+            activeForm.style.display = 'block';
+            activeForm.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            btn.innerHTML = '<i class="fa-solid fa-xmark"></i> Cancel';
         }
     }
+
+    // --- CARD INTERACTION FUNCTIONS ---
+
+    function toggleCardComments(id, type = 'movie') {
+        const section = document.getElementById(`${type}-comments-section-${id}`);
+        if (section.style.display === 'none') {
+            section.style.display = 'block';
+        } else {
+            section.style.display = 'none';
+        }
+    }
+
+    function rateMovieInline(id, rating) {
+        {% if not user.is_authenticated %}
+        alert("Please log in to rate.");
+        window.location.href = "{% url 'account_login' %}?next={{ request.path }}";
+        return;
+        {% endif %}
+
+        const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+        const formData = new FormData();
+        formData.append('rating', rating);
+        formData.append('csrfmiddlewaretoken', csrfToken);
+
+        fetch(`/ajax/reviews/movie/${id}/rate/`, {
+            method: 'POST',
+            body: formData,
+            headers: { 'X-Requested-With': 'XMLHttpRequest' }
+        })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    document.getElementById(`movie-rating-text-${id}`).innerText = `${data.average_rating.toFixed(1)} / 5 (${data.rating_count})`;
+                    const stars = document.querySelectorAll(`.card-stars-${id} i`);
+                    stars.forEach((star, index) => {
+                        const r = index + 1;
+                        if (r <= data.average_rating) star.className = 'fa-solid fa-star';
+                        else if (r - 0.5 <= data.average_rating) star.className = 'fa-solid fa-star-half-stroke';
+                        else star.className = 'fa-regular fa-star';
+                    });
+                }
+            });
+    }
+
+    function rateBookInline(id, rating) {
+        {% if not user.is_authenticated %}
+        alert("Please log in to rate.");
+        window.location.href = "{% url 'account_login' %}?next={{ request.path }}";
+        return;
+        {% endif %}
+
+        const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+        const formData = new FormData();
+        formData.append('rating', rating);
+        formData.append('csrfmiddlewaretoken', csrfToken);
+
+        fetch(`/ajax/reviews/book/${id}/rate/`, {
+            method: 'POST',
+            body: formData,
+            headers: { 'X-Requested-With': 'XMLHttpRequest' }
+        })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    document.getElementById(`book-rating-text-${id}`).innerText = `${data.average_rating.toFixed(1)} / 5 (${data.rating_count})`;
+                    const stars = document.querySelectorAll(`.card-stars-book-${id} i`);
+                    stars.forEach((star, index) => {
+                        const r = index + 1;
+                        if (r <= data.average_rating) star.className = 'fa-solid fa-star';
+                        else if (r - 0.5 <= data.average_rating) star.className = 'fa-solid fa-star-half-stroke';
+                        else star.className = 'fa-regular fa-star';
+                    });
+                }
+            });
+    }
+
+    function updateRatingHover(id, type, rating) {
+        const ratingBox = document.getElementById(`${type}-rating-box-${id}`);
+        const stars = document.querySelectorAll(`.card-stars-${type === 'book' ? 'book-' : ''}${id} i`);
+
+        const colors = [
+            'linear-gradient(135deg, #ef4444, #991b1b)', // 1: Red
+            'linear-gradient(135deg, #f97316, #b45309)', // 2: Orange
+            'linear-gradient(135deg, #f59e0b, #92400e)', // 3: Amber
+            'linear-gradient(135deg, #10b981, #065f46)', // 4: Emerald
+            'linear-gradient(135deg, #3b82f6, #1d4ed8)'  // 5: Blue
+        ];
+
+        if (ratingBox) {
+            ratingBox.style.background = colors[rating - 1];
+            ratingBox.style.boxShadow = '0 4px 12px rgba(0,0,0,0.15)';
+            const textEl = document.getElementById(`${type}-rating-text-${id}`);
+            if (textEl) textEl.style.color = '#fff';
+        }
+
+        stars.forEach((star, index) => {
+            if (index < rating) {
+                star.className = 'fa-solid fa-star';
+                star.style.color = '#fff';
+            } else {
+                star.className = 'fa-regular fa-star';
+                star.style.color = 'rgba(255,255,255,0.4)';
+            }
+        });
+    }
+
+    function resetRatingHover(id, type) {
+        const ratingBox = document.getElementById(`${type}-rating-box-${id}`);
+        const stars = document.querySelectorAll(`.card-stars-${type === 'book' ? 'book-' : ''}${id} i`);
+
+        if (ratingBox) {
+            ratingBox.style.background = 'transparent';
+            ratingBox.style.boxShadow = 'none';
+            const textEl = document.getElementById(`${type}-rating-text-${id}`);
+            if (textEl) textEl.style.color = '#888';
+        }
+
+        const textEl = document.getElementById(`${type}-rating-text-${id}`);
+        if (textEl) {
+            const currentRating = parseFloat(textEl.innerText.split(' / ')[0]) || 0;
+            stars.forEach((star, index) => {
+                const r = index + 1;
+                star.style.color = '#cf7c1c';
+                if (r <= currentRating) star.className = 'fa-solid fa-star';
+                else if (r - 0.5 <= currentRating) star.className = 'fa-solid fa-star-half-stroke';
+                else star.className = 'fa-regular fa-star';
+            });
+        }
+    }
+
+    function submitMovieCommentInline(id) {
+        if (isSubmitting) return;
+        const input = document.getElementById(`movie-comment-input-${id}`);
+        const content = input.value.trim();
+        if (!content) return;
+
+        isSubmitting = true;
+        const submitBtn = input.nextElementSibling;
+        const originalHtml = submitBtn.innerHTML;
+        submitBtn.disabled = true;
+        submitBtn.style.opacity = '0.5';
+
+        const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+        const formData = new FormData();
+        formData.append('content', content);
+        formData.append('csrfmiddlewaretoken', csrfToken);
+
+        fetch(`/ajax/reviews/movie/${id}/comment/`, {
+            method: 'POST',
+            body: formData,
+            headers: { 'X-Requested-With': 'XMLHttpRequest' }
+        })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    const list = document.getElementById(`movie-comments-list-${id}`);
+                    if (list.innerText.includes('No comments yet')) list.innerHTML = '';
+                    list.insertAdjacentHTML('afterbegin', data.html);
+                    document.getElementById(`movie-comment-count-${id}`).innerText = data.comment_count;
+                    input.value = '';
+                }
+            })
+            .finally(() => {
+                isSubmitting = false;
+                submitBtn.disabled = false;
+                submitBtn.style.opacity = '1';
+                submitBtn.innerHTML = originalHtml;
+            });
+    }
+
+    function submitBookCommentInline(id) {
+        if (isSubmitting) return;
+        const input = document.getElementById(`book-comment-input-${id}`);
+        const content = input.value.trim();
+        if (!content) return;
+
+        isSubmitting = true;
+        const submitBtn = input.nextElementSibling;
+        const originalHtml = submitBtn.innerHTML;
+        submitBtn.disabled = true;
+        submitBtn.style.opacity = '0.5';
+
+        const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+        const formData = new FormData();
+        formData.append('content', content);
+        formData.append('csrfmiddlewaretoken', csrfToken);
+
+        fetch(`/ajax/reviews/book/${id}/comment/`, {
+            method: 'POST',
+            body: formData,
+            headers: { 'X-Requested-With': 'XMLHttpRequest' }
+        })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    const list = document.getElementById(`book-comments-list-${id}`);
+                    if (list.innerText.includes('No comments yet')) list.innerHTML = '';
+                    list.insertAdjacentHTML('afterbegin', data.html);
+                    document.getElementById(`book-comment-count-${id}`).innerText = data.comment_count;
+                    input.value = '';
+                }
+            })
+            .finally(() => {
+                isSubmitting = false;
+                submitBtn.disabled = false;
+                submitBtn.style.opacity = '1';
+                submitBtn.innerHTML = originalHtml;
+            });
+    }
+
+    function deleteComment(commentId, type) {
+        if (!confirm('Are you sure you want to delete this comment?')) return;
+
+        const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+        const url = `/ajax/reviews/${type === 'movie' ? 'movie' : 'book'}/comment/${commentId}/delete/`;
+
+        fetch(url, {
+            method: 'POST',
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+                'X-CSRFToken': csrfToken
+            }
+        })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    const commentEl = document.getElementById(`${type}-comment-${commentId}`);
+                    if (commentEl) {
+                        commentEl.style.transition = 'opacity 0.3s, transform 0.3s';
+                        commentEl.style.opacity = '0';
+                        commentEl.style.transform = 'translateY(-10px)';
+                        setTimeout(() => commentEl.remove(), 300);
+                    }
+                    const countId = type === 'movie' ? `movie-comment-count-${data.movie_id}` : `book-comment-count-${data.book_review_id}`;
+                    const countEl = document.getElementById(countId);
+                    if (countEl) countEl.innerText = data.comment_count;
+                }
+            })
+            .catch(err => console.error('Error deleting comment:', err));
+    }
+
+    // --- FORM SUBMISSION ---
 
     document.getElementById('add-movie-form').addEventListener('submit', function (e) {
         e.preventDefault();
@@ -135,25 +622,48 @@
         fetch('{% url "ajax_add_movie" %}', {
             method: 'POST',
             body: formData,
-            headers: {
-                'X-Requested-With': 'XMLHttpRequest'
-            }
+            headers: { 'X-Requested-With': 'XMLHttpRequest' }
         })
-            .then(response => response.json())
+            .then(res => res.json())
             .then(data => {
                 if (data.success) {
-                    const noMoviesMsg = document.getElementById('no-movies-msg');
-                    if (noMoviesMsg) noMoviesMsg.remove();
-
-                    document.getElementById('movies-container').insertAdjacentHTML('afterbegin', data.html);
+                    const grid = document.getElementById('movies-container');
+                    if (grid.querySelector('.empty-msg')) grid.innerHTML = '';
+                    grid.insertAdjacentHTML('afterbegin', data.html);
                     this.reset();
                     toggleAddForm();
-                } else {
-                    alert('Error adding movie.');
                 }
             })
             .finally(() => {
                 submitBtn.innerText = 'Add Movie';
+                submitBtn.disabled = false;
+            });
+    });
+
+    document.getElementById('add-book-form').addEventListener('submit', function (e) {
+        e.preventDefault();
+        const formData = new FormData(this);
+        const submitBtn = document.getElementById('submit-book-btn');
+        submitBtn.innerText = 'Adding...';
+        submitBtn.disabled = true;
+
+        fetch('{% url "ajax_add_book_review" %}', {
+            method: 'POST',
+            body: formData,
+            headers: { 'X-Requested-With': 'XMLHttpRequest' }
+        })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    const grid = document.getElementById('books-container');
+                    if (grid.querySelector('.empty-msg')) grid.innerHTML = '';
+                    grid.insertAdjacentHTML('afterbegin', data.html);
+                    this.reset();
+                    toggleAddForm();
+                }
+            })
+            .finally(() => {
+                submitBtn.innerText = 'Add Book';
                 submitBtn.disabled = false;
             });
     });

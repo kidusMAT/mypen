@@ -1,21 +1,25 @@
-<!-- newapp/partials/_movie_card.html -->
-{% with id_mod=movie.id|add:0|stringformat:"d"|slice:"-1" %}
-<div class="movie-card" id="movie-card-{{ movie.id }}"
+<!-- newapp/partials/_book_review_card.html -->
+{% with id_mod=book_review.id|add:0|stringformat:"d"|slice:"-1" %}
+<div class="book-card" id="book-card-{{ book_review.id }}"
     style="border-radius: 12px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.06); transition: transform 0.2s, box-shadow 0.2s; border: 1px solid #eee; background: white; margin-bottom: 20px;">
     <!-- TOP SECTION -->
-    <div class="card-top random-bg-card" id="movie-card-top-{{ movie.id }}"
-        style="height: 160px; padding: 30px; display: flex; flex-direction: column; justify-content: flex-end; color: white; background-size: cover; background-position: center; position: relative; transition: background 0.4s; background: {% if movie.cover_image %}linear-gradient(to bottom, rgba(0,0,0,0), rgba(0,0,0,0.7)), url('{{ movie.cover_image.url }}'){% else %}{% if id_mod == '0' or id_mod == '3' or id_mod == '6' or id_mod == '9' %}linear-gradient(135deg, #cc5c11, #8f3d02){% elif id_mod == '1' or id_mod == '4' or id_mod == '7' %}linear-gradient(135deg, #c7215a, #941c4d){% else %}linear-gradient(135deg, #7b32f5, #5122a1){% endif %}{% endif %};">
+    <div class="card-top random-bg-card" id="book-card-top-{{ book_review.id }}"
+        style="height: 160px; padding: 30px; display: flex; flex-direction: column; justify-content: flex-end; color: white; background-size: cover; background-position: center; position: relative; transition: background 0.4s; background: {% if book_review.cover_image %}linear-gradient(to bottom, rgba(0,0,0,0), rgba(0,0,0,0.7)), url('{{ book_review.cover_image.url }}'){% else %}{% if id_mod == '0' or id_mod == '3' or id_mod == '6' or id_mod == '9' %}linear-gradient(135deg, #cc5c11, #8f3d02){% elif id_mod == '1' or id_mod == '4' or id_mod == '7' %}linear-gradient(135deg, #c7215a, #941c4d){% else %}linear-gradient(135deg, #7b32f5, #5122a1){% endif %}{% endif %};">
         <div style="position: relative; z-index: 1;">
-            <a href="{% url 'movie_detail' movie.id %}" style="text-decoration: none; color: inherit; display: block;">
+            <a href="{% url 'book_review_detail' book_review.id %}"
+                style="text-decoration: none; color: inherit; display: block;">
                 <h3 style="margin: 0; font-family: 'Georgia', serif; font-size: 1.4rem; font-weight: bold; text-shadow: 1px 1px 3px rgba(0,0,0,0.4); transition: color 0.2s;"
-                    onmouseover="this.style.color='#ffcc80'" onmouseout="this.style.color='inherit'">{{ movie.title }}
-                </h3>
+                    onmouseover="this.style.color='#ffcc80'" onmouseout="this.style.color='inherit'">{{
+                    book_review.title }}</h3>
             </a>
+            <div
+                style="margin-top: 5px; font-size: 0.85rem; font-style: italic; opacity: 0.95; text-shadow: 1px 1px 2px rgba(0,0,0,0.5);">
+                by {{ book_review.author_name|default:"Unknown Author" }}</div>
             <div style="margin-top: 8px; font-size: 0.8rem; display: flex; align-items: center; gap: 10px;">
                 <span
                     style="background: rgba(255,255,255,0.95); color: #333; padding: 2px 10px; border-radius: 10px; font-weight: 700;">{{
-                    movie.genre|default:"Uncategorized" }}</span>
-                <span style="font-weight: 600; text-shadow: 1px 1px 2px rgba(0,0,0,0.5);">{{ movie.year|default:""
+                    book_review.genre|default:"Uncategorized" }}</span>
+                <span style="font-weight: 600; text-shadow: 1px 1px 2px rgba(0,0,0,0.5);">{{ book_review.year|default:""
                     }}</span>
             </div>
         </div>
@@ -23,35 +27,35 @@
     <!-- BOTTOM SECTION -->
     <div class="card-bottom" style="padding: 15px 20px;">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
-            <div class="rating-box" id="movie-rating-box-{{ movie.id }}"
+            <div class="rating-box" id="book-rating-box-{{ book_review.id }}"
                 style="padding: 8px; border-radius: 8px; transition: all 0.3s ease;">
                 <div style="font-size: 0.8rem; color: #888; font-weight: 600; margin-bottom: 4px; transition: color 0.3s ease;"
-                    id="movie-rating-text-{{ movie.id }}">{{ movie.average_rating|floatformat:1 }} / 5 ({{
-                    movie.rating_count }})</div>
-                <div class="card-stars-{{ movie.id }}"
+                    id="book-rating-text-{{ book_review.id }}">{{ book_review.average_rating|floatformat:1 }} / 5 ({{
+                    book_review.rating_count }})</div>
+                <div class="card-stars-book-{{ book_review.id }}"
                     style="color: #cf7c1c; font-size: 1.1rem; display: flex; gap: 2px;">
                     {% for i in "12345" %}<i
-                        class="fa{% if forloop.counter <= movie.average_rating|default:0|add:0 %} fa-star{% elif forloop.counter|add:0.5 <= movie.average_rating|default:0 %} fa-star-half-stroke{% else %}-regular fa-star{% endif %}"
+                        class="fa{% if forloop.counter <= book_review.average_rating|default:0|add:0 %} fa-star{% elif forloop.counter|add:0.5 <= book_review.average_rating|default:0 %} fa-star-half-stroke{% else %}-regular fa-star{% endif %}"
                         style="cursor: pointer; transition: transform 0.1s;"
-                        onmouseover="this.style.transform='scale(1.2)'; updateRatingHover({{ movie.id }}, 'movie', {{ forloop.counter }})"
-                        onmouseout="this.style.transform='scale(1)'; resetRatingHover({{ movie.id }}, 'movie')"
-                        onclick="rateMovieInline({{ movie.id }}, {{ forloop.counter }})"></i>{% endfor %}
+                        onmouseover="this.style.transform='scale(1.2)'; updateRatingHover({{ book_review.id }}, 'book', {{ forloop.counter }})"
+                        onmouseout="this.style.transform='scale(1)'; resetRatingHover({{ book_review.id }}, 'book')"
+                        onclick="rateBookInline({{ book_review.id }}, {{ forloop.counter }})"></i>{% endfor %}
                 </div>
             </div>
-            <button onclick="toggleCardComments({{ movie.id }})"
+            <button onclick="toggleCardComments({{ book_review.id }}, 'book')"
                 style="background: #f5f5f5; border: 1px solid #eee; padding: 8px 12px; border-radius: 20px; font-size: 0.85rem; color: #666; cursor: pointer; display: flex; align-items: center; gap: 6px; transition: all 0.2s;"
                 onmouseover="this.style.background='#eee'; this.style.color='#333'"
                 onmouseout="this.style.background='#f5f5f5'; this.style.color='#666'">
-                <i class="fa-regular fa-comment"></i><span id="movie-comment-count-{{ movie.id }}">{{
-                    movie.comment_count }}+</span>
+                <i class="fa-regular fa-comment"></i><span id="book-comment-count-{{ book_review.id }}">{{
+                    book_review.comment_count }}+</span>
             </button>
         </div>
         <!-- QUICK COMMENT SECTION -->
-        <div id="movie-comments-section-{{ movie.id }}"
+        <div id="book-comments-section-{{ book_review.id }}"
             style="display: none; border-top: 1px solid #f0f0f0; padding-top: 15px; margin-top: 10px;">
             <div style="max-height: 150px; overflow-y: auto; margin-bottom: 15px; display: flex; flex-direction: column; gap: 8px;"
-                id="movie-comments-list-{{ movie.id }}">
-                {% for comment in movie.comments.all|slice:":3" %}
+                id="book-comments-list-{{ book_review.id }}">
+                {% for comment in book_review.comments.all|slice:":3" %}
                 <div style="background: #f9fafb; padding: 8px 12px; border-radius: 8px; font-size: 0.85rem;">
                     <div style="display: flex; justify-content: space-between; margin-bottom: 3px;"><strong>{{
                             comment.user.username }}</strong><span style="color: #999; font-size: 0.75rem;">{{
@@ -63,11 +67,11 @@
                     comments yet</div>{% endfor %}
             </div>
             {% if user.is_authenticated %}<div style="display: flex; gap: 8px;">
-                <input type="text" id="movie-comment-input-{{ movie.id }}" placeholder="Add a comment..."
+                <input type="text" id="book-comment-input-{{ book_review.id }}" placeholder="Add a comment..."
                     style="flex: 1; padding: 8px 12px; border: 1px solid #ddd; border-radius: 20px; font-size: 0.85rem; outline: none; transition: border-color 0.2s;"
                     onfocus="this.style.borderColor='#cf7c1c'" onblur="this.style.borderColor='#ddd'"
-                    onkeypress="if(event.key === 'Enter') submitMovieCommentInline({{ movie.id }})">
-                <button onclick="submitMovieCommentInline({{ movie.id }})"
+                    onkeypress="if(event.key === 'Enter') submitBookCommentInline({{ book_review.id }})">
+                <button onclick="submitBookCommentInline({{ book_review.id }})"
                     style="background: #cf7c1c; color: white; border: none; width: 34px; height: 34px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: background 0.2s;"><i
                         class="fa-solid fa-paper-plane" style="font-size: 0.8rem;"></i></button>
             </div>{% else %}<p style="font-size: 0.75rem; color: #888; text-align: center; margin: 0;"><a

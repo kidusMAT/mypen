@@ -3652,6 +3652,115 @@ footer .lower p {
     background: linear-gradient(135deg, #881337 0%, #4c0519 100%);
 }
 
+/* New Premium Gradients for Randomization */
+.bg-grad-1 {
+    background: linear-gradient(135deg, #6366f1 0%, #a855f7 100%);
+}
+
+.bg-grad-2 {
+    background: linear-gradient(135deg, #f97316 0%, #db2777 100%);
+}
+
+.bg-grad-3 {
+    background: linear-gradient(135deg, #0ea5e9 0%, #2563eb 100%);
+}
+
+.bg-grad-4 {
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+}
+
+.bg-grad-5 {
+    background: linear-gradient(135deg, #fb7185 0%, #e11d48 100%);
+}
+
+.bg-grad-6 {
+    background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+}
+
+.bg-grad-7 {
+    background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+}
+
+.bg-grad-8 {
+    background: linear-gradient(135deg, #4f46e5 0%, #3730a3 100%);
+}
+
+.bg-grad-9 {
+    background: linear-gradient(135deg, #14b8a6 0%, #0d9488 100%);
+}
+
+.bg-grad-10 {
+    background: linear-gradient(135deg, #64748b 0%, #334155 100%);
+}
+
+.bg-grad-11 {
+    background: linear-gradient(135deg, #dc2626 0%, #991b1b 100%);
+}
+
+.bg-grad-12 {
+    background: linear-gradient(135deg, #a78bfa 0%, #7c3aed 100%);
+}
+
+/* Enhanced Comment Styles */
+.comment-card {
+    background: #f8fafc;
+    padding: 24px;
+    border-radius: 12px;
+    border: 1px solid #f1f5f9;
+    margin-bottom: 20px;
+    transition: transform 0.2s;
+}
+
+.comment-card:hover {
+    background: #f1f5f9;
+}
+
+.comment-header {
+    margin-bottom: 12px;
+    font-size: 0.95rem;
+}
+
+.comment-author {
+    font-weight: 700;
+    color: #1e293b;
+    text-decoration: none;
+    margin-right: 12px;
+}
+
+.comment-date {
+    color: #94a3b8;
+    font-size: 0.85rem;
+}
+
+.comment-content {
+    color: #475569;
+    line-height: 1.6;
+    font-size: 1.05rem;
+}
+
+.comment-delete-btn {
+    background: #fee2e2;
+    border: none;
+    color: #ef4444;
+    cursor: pointer;
+    font-size: 0.9rem;
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+    opacity: 0.8;
+}
+
+.comment-delete-btn:hover {
+    background: #fecaca;
+    color: #b91c1c;
+    opacity: 1;
+    transform: scale(1.05);
+}
+
 .card-header-vibrant::after {
     content: '';
     position: absolute;
@@ -3735,8 +3844,8 @@ footer .lower p {
 }
 
 .card-body-content {
-    padding: 25px;
-    /* Balanced padding */
+    padding: 35px;
+    /* Increased padding */
     flex: 1;
     display: flex;
     flex-direction: column;

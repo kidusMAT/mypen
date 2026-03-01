@@ -1,6 +1,7 @@
 from django.shortcuts import render, get_object_or_404, redirect, HttpResponse
 from django.http import JsonResponse
 from django.contrib.auth.decorators import login_required
+from django.contrib.auth.models import User
 from django.views.decorators.http import require_POST
 import json
 from django.core.paginator import Paginator
@@ -934,10 +935,22 @@ def save_poem_ajax(request, poem_id):
     except Exception as e:
         return JsonResponse({'status': 'error', 'message': str(e)}, status=400)
 
-def movie_reviews_page(request):
-    from .models import Movie
+def reviews_page(request):
+    from .models import Movie, BookReview
+    query = request.GET.get('q', '')
+    
     movies = Movie.objects.all().order_by('-created_at')
-    return render(request, 'newapp/movie_reviews.html', {'movies': movies})
+    books = BookReview.objects.all().order_by('-created_at')
+    
+    if query:
+        movies = movies.filter(Q(title__icontains=query) | Q(genre__icontains=query))
+        books = books.filter(Q(title__icontains=query) | Q(genre__icontains=query) | Q(author_name__icontains=query))
+    
+    return render(request, 'newapp/movie_reviews.html', {
+        'movies': movies,
+        'books': books,
+        'query': query
+    })
 
 def movie_detail_page(request, movie_id):
     from .models import Movie
@@ -1011,6 +1024,78 @@ def ajax_rate_movie(request, movie_id):
             pass
     return JsonResponse({'success': False})
 
+def book_review_detail_page(request, book_review_id):
+    from .models import BookReview
+    book_review = get_object_or_404(BookReview, id=book_review_id)
+    return render(request, 'newapp/book_review_detail.html', {'book_review': book_review})
+
+@login_required
+def ajax_add_book_review(request):
+    if request.method == 'POST':
+        from .models import BookReview
+        title = request.POST.get('title')
+        author_name = request.POST.get('author_name')
+        genre = request.POST.get('genre')
+        year = request.POST.get('year')
+        cover_image = request.FILES.get('cover_image')
+        
+        if title:
+            try:
+                year_int = int(year) if year else None
+            except ValueError:
+                year_int = None
+                
+            book_review = BookReview.objects.create(
+                title=title,
+                author_name=author_name,
+                genre=genre,
+                year=year_int,
+                added_by=request.user,
+                cover_image=cover_image
+            )
+            html = render_to_string('newapp/partials/_book_review_card.html', {'book_review': book_review}, request=request)
+            return JsonResponse({'success': True, 'html': html})
+    return JsonResponse({'success': False})
+
+@login_required
+def ajax_add_book_comment(request, book_review_id):
+    if request.method == 'POST':
+        from .models import BookReview, BookReviewComment
+        book_review = get_object_or_404(BookReview, id=book_review_id)
+        content = request.POST.get('content')
+        if content:
+            comment = BookReviewComment.objects.create(
+                book_review=book_review,
+                user=request.user,
+                content=content
+            )
+            html = render_to_string('newapp/partials/_book_comment.html', {'comment': comment}, request=request)
+            return JsonResponse({'success': True, 'html': html, 'comment_count': book_review.comments.count()})
+    return JsonResponse({'success': False})
+
+@login_required
+def ajax_rate_book_review(request, book_review_id):
+    if request.method == 'POST':
+        from .models import BookReview, BookReviewRating
+        book_review = get_object_or_404(BookReview, id=book_review_id)
+        rating_val = request.POST.get('rating')
+        try:
+            rating_val = int(rating_val)
+            if 1 <= rating_val <= 5:
+                rating, created = BookReviewRating.objects.update_or_create(
+                    book_review=book_review,
+                    user=request.user,
+                    defaults={'rating': rating_val}
+                )
+                return JsonResponse({
+                    'success': True, 
+                    'average_rating': round(book_review.average_rating, 1),
+                    'rating_count': book_review.ratings.count()
+                })
+        except ValueError:
+            pass
+    return JsonResponse({'success': False})
+
 # --- RECOVERED PROFILE VIEWS ---
 from django.core.paginator import Paginator
 from django.template.loader import render_to_string
@@ -1039,16 +1124,33 @@ def add_profile_comment(request, username):
     user_prof = get_object_or_404(User, username=username)
     profile = get_object_or_404(AuthorProfile, user=user_prof)
     content = request.POST.get('content')
+    parent_id = request.POST.get('parent_id')
+    
     if content:
-        ProfileComment.objects.create(profile=profile, author=request.user, content=content)
+        parent = None
+        if parent_id:
+            parent = ProfileComment.objects.get(id=parent_id)
+            
+        ProfileComment.objects.create(
+            profile=profile, 
+            author=request.user, 
+            content=content,
+            parent=parent
+        )
+    
+    if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+        comments = profile.comments.filter(parent=None).all()
+        html = render_to_string('newapp/partials/_profile_comments.html', {'comments': comments, 'profile': profile}, request=request)
+        return JsonResponse({'success': True, 'html': html})
+        
     return redirect('profile_view', username=username)
 
 def get_profile_comments_ajax(request, username):
     user_prof = get_object_or_404(User, username=username)
     profile = get_object_or_404(AuthorProfile, user=user_prof)
-    comments = profile.comments.all()
+    comments = profile.comments.filter(parent=None).all()
     html = render_to_string('newapp/partials/_profile_comments.html', {'comments': comments, 'profile': profile}, request=request)
-    return JsonResponse({'html': html})
+    return JsonResponse({'success': True, 'html': html})
 
 def authors_list(request):
     profiles = AuthorProfile.objects.all()
@@ -1134,4 +1236,37 @@ def add_confession_comment_ajax(request, confession_id):
         html = render_to_string('newapp/partials/_confession_comment.html', {'comment': comment}, request=request)
         return JsonResponse({'success': True, 'html': html})
     return JsonResponse({'success': False})
+
+@login_required
+@require_POST
+def ajax_delete_movie_comment(request, comment_id):
+    from .models import MovieComment
+    comment = get_object_or_404(MovieComment, id=comment_id, user=request.user)
+    movie = comment.movie
+    movie_id = movie.id
+    comment.delete()
+    return JsonResponse({'success': True, 'comment_count': movie.comments.count(), 'movie_id': movie_id})
+
+@login_required
+@require_POST
+def ajax_delete_book_comment(request, comment_id):
+    from .models import BookReviewComment
+    comment = get_object_or_404(BookReviewComment, id=comment_id, user=request.user)
+    book_review = comment.book_review
+    book_review_id = book_review.id
+    comment.delete()
+    return JsonResponse({'success': True, 'comment_count': book_review.comments.count(), 'book_review_id': book_review_id})
+
+@login_required
+@require_POST
+def ajax_delete_profile_comment(request, comment_id):
+    from .models import ProfileComment
+    comment = get_object_or_404(ProfileComment, id=comment_id, author=request.user)
+    profile = comment.profile
+    comment.delete()
+    
+    # Return updated list
+    comments = profile.comments.filter(parent=None).all()
+    html = render_to_string('newapp/partials/_profile_comments.html', {'comments': comments, 'profile': profile}, request=request)
+    return JsonResponse({'success': True, 'html': html})
 

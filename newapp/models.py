@@ -31,6 +31,7 @@ class ProfileComment(models.Model):
     profile = models.ForeignKey(AuthorProfile, related_name='comments', on_delete=models.CASCADE)
     author = models.ForeignKey(User, on_delete=models.CASCADE)
     content = models.TextField()
+    parent = models.ForeignKey('self', null=True, blank=True, related_name='replies', on_delete=models.CASCADE)
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
@@ -266,3 +267,53 @@ class MovieRating(models.Model):
 
     def __str__(self):
         return f"{self.user.username} rated {self.movie.title} {self.rating}"
+
+class BookReview(models.Model):
+    title = models.CharField(max_length=200)
+    author_name = models.CharField(max_length=200, blank=True)
+    genre = models.CharField(max_length=100, blank=True)
+    year = models.PositiveIntegerField(blank=True, null=True)
+    added_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, related_name='added_book_reviews')
+    cover_image = models.ImageField(upload_to='book_review_covers/', blank=True, null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return self.title
+
+    @property
+    def average_rating(self):
+        ratings = self.ratings.all()
+        if ratings:
+            return sum(r.rating for r in ratings) / len(ratings)
+        return 0
+
+    @property
+    def rating_count(self):
+        return self.ratings.count()
+
+    @property
+    def comment_count(self):
+        return self.comments.count()
+
+class BookReviewComment(models.Model):
+    book_review = models.ForeignKey(BookReview, related_name='comments', on_delete=models.CASCADE)
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    content = models.TextField()
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"Comment by {self.user.username} on {self.book_review.title}"
+
+class BookReviewRating(models.Model):
+    book_review = models.ForeignKey(BookReview, related_name='ratings', on_delete=models.CASCADE)
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    rating = models.PositiveIntegerField(choices=[(i, str(i)) for i in range(1, 6)])
+
+    class Meta:
+        unique_together = ('book_review', 'user')
+
+    def __str__(self):
+        return f"{self.user.username} rated {self.book_review.title} {self.rating}"

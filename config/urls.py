@@ -16,7 +16,7 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path, include
-from newapp.views import index, scripts , books , poems, write, write_chapter , create_content, discover, dashboard, manage_book, add_chapter, save_chapter_ajax, add_chapter_ajax, update_book_metadata_ajax, view_book_public, delete_book, read_chapter, about, contact, privacy, terms, toggle_like_chapter, toggle_bookmark_book, toggle_like_book, writing_tips, contests, write_script, save_script_ajax, create_script_ajax, read_script, read_poem, coming_soon, write_poem, create_poem_ajax, save_poem_ajax, toggle_like_script, toggle_bookmark_script, toggle_like_poem, toggle_bookmark_poem, delete_book_ajax, submit_contest_entry, update_phone_number, movie_reviews_page, movie_detail_page, ajax_add_movie, ajax_add_movie_comment, ajax_rate_movie, profile_view, edit_profile, add_profile_comment, get_profile_comments_ajax, authors_list, confessions_page, get_confessions_ajax, add_confession_ajax, toggle_like_confession, add_confession_comment_ajax
+from newapp.views import index, scripts , books , poems, write, write_chapter , create_content, discover, dashboard, manage_book, add_chapter, save_chapter_ajax, add_chapter_ajax, update_book_metadata_ajax, view_book_public, delete_book, read_chapter, about, contact, privacy, terms, toggle_like_chapter, toggle_bookmark_book, toggle_like_book, writing_tips, contests, write_script, save_script_ajax, create_script_ajax, read_script, read_poem, coming_soon, write_poem, create_poem_ajax, save_poem_ajax, toggle_like_script, toggle_bookmark_script, toggle_like_poem, toggle_bookmark_poem, delete_book_ajax, submit_contest_entry, update_phone_number, reviews_page, movie_detail_page, ajax_add_movie, ajax_add_movie_comment, ajax_rate_movie, ajax_delete_movie_comment, book_review_detail_page, ajax_add_book_review, ajax_add_book_comment, ajax_rate_book_review, ajax_delete_book_comment, ajax_delete_profile_comment, profile_view, edit_profile, add_profile_comment, get_profile_comments_ajax, authors_list, confessions_page, get_confessions_ajax, add_confession_ajax, toggle_like_confession, add_confession_comment_ajax
 
 
 urlpatterns = [
@@ -81,12 +81,19 @@ urlpatterns = [
     path('ajax/confessions/<int:confession_id>/like/', toggle_like_confession, name='toggle_like_confession'),
     path('ajax/confessions/<int:confession_id>/comment/', add_confession_comment_ajax, name='add_confession_comment_ajax'),
     
-    # Movie Reviews
-    path('reviews/', movie_reviews_page, name='movie_reviews'),
-    path('reviews/<int:movie_id>/', movie_detail_page, name='movie_detail'),
-    path('ajax/reviews/add/', ajax_add_movie, name='ajax_add_movie'),
-    path('ajax/reviews/<int:movie_id>/comment/', ajax_add_movie_comment, name='ajax_add_movie_comment'),
-    path('ajax/reviews/<int:movie_id>/rate/', ajax_rate_movie, name='ajax_rate_movie'),
+    # Movie & Book Reviews
+    path('reviews/', reviews_page, name='movie_reviews'),
+    path('reviews/movie/<int:movie_id>/', movie_detail_page, name='movie_detail'),
+    path('reviews/book/<int:book_review_id>/', book_review_detail_page, name='book_review_detail'),
+    path('ajax/reviews/movie/add/', ajax_add_movie, name='ajax_add_movie'),
+    path('ajax/reviews/book/add/', ajax_add_book_review, name='ajax_add_book_review'),
+    path('ajax/reviews/movie/<int:movie_id>/comment/', ajax_add_movie_comment, name='ajax_add_movie_comment'),
+    path('ajax/reviews/book/<int:book_review_id>/comment/', ajax_add_book_comment, name='ajax_add_book_comment'),
+    path('ajax/reviews/movie/<int:movie_id>/rate/', ajax_rate_movie, name='ajax_rate_movie'),
+    path('ajax/reviews/book/<int:book_review_id>/rate/', ajax_rate_book_review, name='ajax_rate_book_review'),
+    path('ajax/reviews/movie/comment/<int:comment_id>/delete/', ajax_delete_movie_comment, name='ajax_delete_movie_comment'),
+    path('ajax/reviews/book/comment/<int:comment_id>/delete/', ajax_delete_book_comment, name='ajax_delete_book_comment'),
+    path('ajax/profile/comment/<int:comment_id>/delete/', ajax_delete_profile_comment, name='ajax_delete_profile_comment'),
 ]
 
 
