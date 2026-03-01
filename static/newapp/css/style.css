@@ -2139,7 +2139,7 @@ footer .lower p {
         flex-wrap: wrap;
         padding: 10px;
         gap: 10px;
-        justify-content: center;
+        justify-content: space-between;
     }
 
     .headeded ul {
@@ -2210,7 +2210,8 @@ footer .lower p {
         flex-wrap: wrap;
         justify-content: center;
         gap: 5px;
-        margin-bottom: 10px;
+        order: 3;
+        margin-top: 5px;
     }
 
     .writeing-section {

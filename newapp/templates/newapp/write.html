@@ -28,7 +28,17 @@
                 {% endif %}
             </li>
         </ul>
-        <div class="desktop-header-spacer" style="flex: 1;"></div>
+        <div class="mode-tabs-container">
+            <a href="javascript:void(0)" class="mode-tab active" id="btn-story" onclick="switchMode('story')">
+                <i class="fa-solid fa-book-open"></i> Story
+            </a>
+            <a href="javascript:void(0)" class="mode-tab" id="btn-poem" onclick="switchMode('poem')">
+                <i class="fa-solid fa-feather-pointed"></i> Poem
+            </a>
+            <a href="javascript:void(0)" class="mode-tab" id="btn-script" onclick="switchMode('script')">
+                <i class="fa-solid fa-clapperboard"></i> Script
+            </a>
+        </div>
         <ul>
 
             <li><a href="javascript:void(0)" onclick="submitActiveForm('save_draft')" class="save"><i
@@ -48,18 +58,6 @@
         </div>
 
         <div class="editor-toolbar" id="editor-toolbar">
-            <div class="mode-tabs-container">
-                <a href="javascript:void(0)" class="mode-tab active" id="btn-story" onclick="switchMode('story')">
-                    <i class="fa-solid fa-book-open"></i> Story
-                </a>
-                <a href="javascript:void(0)" class="mode-tab" id="btn-poem" onclick="switchMode('poem')">
-                    <i class="fa-solid fa-feather-pointed"></i> Poem
-                </a>
-                <a href="javascript:void(0)" class="mode-tab" id="btn-script" onclick="switchMode('script')">
-                    <i class="fa-solid fa-clapperboard"></i> Script
-                </a>
-            </div>
-
             <div class="customize">
                 <div class="texts">
                     <input type="checkbox" id="check-bold" class="tool-btn-input">
