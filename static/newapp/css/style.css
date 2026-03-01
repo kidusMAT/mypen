@@ -3662,7 +3662,7 @@ html {
 
 .card-metrics-footer {
     display: none;
-    margin-top: 20px;
+    margin-top: auto;
     padding-top: 15px;
     border-top: 1px solid rgba(0, 0, 0, 0.04);
     justify-content: flex-start;
