@@ -1,0 +1,102 @@
+{% extends "account/base.html" %}
+{% load i18n %}
+{% load allauth %}
+{% load socialaccount %}
+
+{% block head_title %}
+{% trans "Account Connections" %}
+{% endblock head_title %}
+
+{% block account_content %}
+<h1>{% trans "Account Connections" %}</h1>
+
+{% if form.accounts %}
+<p>{% blocktrans %}You can sign in to your account using any of the following third party accounts:{% endblocktrans %}
+</p>
+
+<form method="post" action="{% url 'socialaccount_connections' %}">
+    {% csrf_token %}
+    <fieldset>
+        {% if form.non_field_errors %}
+        <div id="errorMsg">{{ form.non_field_errors }}</div>
+        {% endif %}
+
+        {% for base_account in form.accounts %}
+        {% with base_account.get_provider_account as account %}
+        <div class="connection-item">
+            <label for="id_account_{{ base_account.id }}">
+                <input id="id_account_{{ base_account.id }}" type="radio" name="account"
+                    value="{{ base_account.id }}" />
+                <span class="provider-icon {{ account.get_brand.id }}">
+                    {% if account.get_brand.id == 'google' %}
+                    <img src="https://upload.wikimedia.org/wikipedia/commons/c/c1/Google_%22G%22_Logo.svg"
+                        style="width: 20px;">
+                    {% endif %}
+                </span>
+                <span class="account-details">
+                    <span class="brand-name">{{ account.get_brand.name }}</span>
+                    <span class="account-display">{{ account }}</span>
+                </span>
+            </label>
+        </div>
+        {% endwith %}
+        {% endfor %}
+
+        <div>
+            <button type="submit">{% trans "Remove" %}</button>
+        </div>
+    </fieldset>
+</form>
+{% else %}
+<p>{% trans "You currently have no social accounts connected." %}</p>
+{% endif %}
+
+<h2 style="margin-top: 40px;">{% trans "Add a Third Party Account" %}</h2>
+<div class="socialaccount_providers">
+    {% include "socialaccount/snippets/provider_list.html" with process="connect" %}
+</div>
+
+{% include "socialaccount/snippets/login_extra.html" %}
+
+<style>
+    .connection-item label {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+        padding: 20px;
+        border: 2px solid #ebedee;
+        border-radius: 16px;
+        margin-bottom: 12px;
+        cursor: pointer;
+        transition: 0.3s;
+        text-align: left;
+    }
+
+    .connection-item label:hover {
+        border-color: #D48C11;
+        background: #fbf9f6;
+    }
+
+    .connection-item input[type="radio"] {
+        width: 20px !important;
+        height: 20px;
+        accent-color: #D48C11;
+    }
+
+    .account-details {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .brand-name {
+        font-weight: 700;
+        color: #302419;
+        font-size: 1rem;
+    }
+
+    .account-display {
+        color: #7a736d;
+        font-size: 0.85rem;
+    }
+</style>
+{% endblock account_content %}

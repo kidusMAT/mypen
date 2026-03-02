@@ -8,8 +8,25 @@
                 <i class="fa-solid fa-book-open"></i>
                 <span>Mypen</span>
             </div>
-            {% block account_content %}
-            {% endblock %}
+            {% if user.is_authenticated %}
+            <div class="account-nav">
+                <ul>
+                    <li><a href="{% url 'account_email' %}"><i class="fa-solid fa-envelope"></i> {% trans "Change Email"
+                            %}</a></li>
+                    <li><a href="{% url 'account_change_password' %}"><i class="fa-solid fa-lock"></i> {% trans "Change
+                            Password" %}</a></li>
+                    <li><a href="{% url 'socialaccount_connections' %}"><i class="fa-solid fa-link"></i> {% trans
+                            "Account Connections" %}</a></li>
+                    <li><a href="{% url 'account_logout' %}"><i class="fa-solid fa-right-from-bracket"></i> {% trans
+                            "Sign Out" %}</a></li>
+                </ul>
+            </div>
+            {% endif %}
+
+            <div class="account-inner-content">
+                {% block account_content %}
+                {% endblock %}
+            </div>
         </div>
     </div>
 </div>
@@ -18,11 +35,10 @@
     .account_body_wrapper {
         background: radial-gradient(circle at top right, #fdfbfb 0%, #ebedee 100%);
         min-height: 85vh;
-        /* Increased height */
         display: flex;
         align-items: center;
         justify-content: center;
-        padding: 40px 20px;
+        padding: 60px 20px;
     }
 
     .account-container {
@@ -30,24 +46,22 @@
         justify-content: center;
         align-items: center;
         width: 100%;
-        max-width: 500px;
-        /* Slightly wider */
+        max-width: 800px;
+        /* Wider for potential side-by-side or better focus */
     }
 
     .account-card {
         background: #fff;
-        padding: 40px;
-        /* More padding */
+        padding: 0;
+        /* Remove default padding for internal layout */
         border-radius: 24px;
-        /* Softer rounded corners */
         box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.15);
-        /* More modern shadow */
         width: 100%;
-        text-align: center;
         border: 1px solid rgba(212, 140, 17, 0.1);
-        /* Subtle gold border */
         position: relative;
         overflow: hidden;
+        display: flex;
+        flex-direction: column;
     }
 
     /* Top accent line */
@@ -59,6 +73,7 @@
         width: 100%;
         height: 6px;
         background: linear-gradient(90deg, #D48C11, #f3c677);
+        z-index: 10;
     }
 
     .auth-header {
@@ -66,7 +81,7 @@
         align-items: center;
         justify-content: center;
         gap: 12px;
-        margin-bottom: 30px;
+        padding: 30px 40px 10px;
         font-family: Georgia, serif;
         font-size: 28px;
         font-weight: 700;
@@ -78,29 +93,77 @@
         font-size: 24px;
     }
 
-    .account-card h1 {
+    /* Account Navigation Styling */
+    .account-nav {
+        background: #fbf9f6;
+        border-bottom: 1px solid #ebedee;
+        padding: 10px 40px;
+    }
+
+    .account-nav ul {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+        display: flex;
+        gap: 20px;
+        overflow-x: auto;
+        scrollbar-width: none;
+    }
+
+    .account-nav ul::-webkit-scrollbar {
+        display: none;
+    }
+
+    .account-nav li a {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 12px 0;
+        color: #7a736d;
+        text-decoration: none;
+        font-size: 0.9rem;
+        font-weight: 600;
+        transition: all 0.3s;
+        white-space: nowrap;
+        border-bottom: 2px solid transparent;
+    }
+
+    .account-nav li a:hover,
+    .account-nav li a.active {
+        color: #D48C11;
+        border-bottom-color: #D48C11;
+    }
+
+    .account-inner-content {
+        padding: 40px;
+        text-align: center;
+    }
+
+    .account-inner-content h1 {
         font-family: Georgia, serif;
         color: #302419;
-        font-size: 2rem;
+        font-size: 2.2rem;
         margin-bottom: 0.75rem;
         font-weight: 800;
     }
 
-    .account-card p {
+    .account-inner-content p {
         color: #7a736d;
-        margin-bottom: 2.5rem;
+        margin-bottom: 2rem;
         font-family: system-ui, sans-serif;
         line-height: 1.5;
     }
 
-    .account-card form {
+    .account-inner-content form {
         display: flex;
         flex-direction: column;
         gap: 1.25rem;
         text-align: left;
+        max-width: 450px;
+        margin: 0 auto;
     }
 
-    .account-card label {
+    .account-inner-content label {
         font-family: system-ui, sans-serif;
         font-weight: 600;
         color: #302419;
@@ -109,13 +172,13 @@
         margin-bottom: 0.5rem;
     }
 
-    .account-card input[type="text"],
-    .account-card input[type="password"],
-    .account-card input[type="email"],
-    .account-card input[type="url"] {
+    .account-inner-content input[type="text"],
+    .account-inner-content input[type="password"],
+    .account-inner-content input[type="email"],
+    .account-inner-content input[type="url"] {
         width: 100%;
         padding: 14px 18px;
-        border-radius: 10px;
+        border-radius: 12px;
         border: 2px solid #ebedee;
         background: #fbf9f6;
         font-family: system-ui, sans-serif;
@@ -123,19 +186,19 @@
         transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
     }
 
-    .account-card input:focus {
+    .account-inner-content input:focus {
         outline: none;
         border-color: #D48C11;
         background: #fff;
         box-shadow: 0 0 0 4px rgba(212, 140, 17, 0.1);
     }
 
-    .account-card button,
-    .account-card input[type="submit"] {
+    .account-inner-content button,
+    .account-inner-content input[type="submit"] {
         background: #D48C11;
         color: #fff;
         padding: 16px;
-        border-radius: 10px;
+        border-radius: 12px;
         border: none;
         font-weight: 700;
         font-size: 1.05rem;

@@ -1,0 +1,131 @@
+{% extends "account/base.html" %}
+{% load i18n %}
+{% load allauth %}
+
+{% block head_title %}
+{% trans "Email Addresses" %}
+{% endblock head_title %}
+
+{% block account_content %}
+<h1>{% trans "Email Addresses" %}</h1>
+
+{% if user.emailaddress_set.all %}
+<p>{% trans "The following email addresses are associated with your account:" %}</p>
+
+<form action="{% url 'account_email' %}" class="email_list" method="post">
+    {% csrf_token %}
+    <fieldset class="blockLabels">
+        {% for emailaddress in user.emailaddress_set.all %}
+        <div class="ctrlHolder">
+            <label for="email_radio_{{forloop.counter}}" class="{% if emailaddress.primary %}primary{% endif %}">
+                <input id="email_radio_{{forloop.counter}}" type="radio" name="email" {% if emailaddress.primary or
+                    user.emailaddress_set.count==1 %}checked="checked" {% endif %} value="{{emailaddress.email}}" />
+                {{ emailaddress.email }}
+                {% if emailaddress.verified %}
+                <span class="verified">{% trans "Verified" %}</span>
+                {% else %}
+                <span class="unverified">{% trans "Unverified" %}</span>
+                {% endif %}
+                {% if emailaddress.primary %}<span class="primary">{% trans "Primary" %}</span>{% endif %}
+            </label>
+        </div>
+        {% endfor %}
+
+        <div class="buttonHolder">
+            <button class="secondaryAction" type="submit" name="action_primary">{% trans "Make Primary" %}</button>
+            <button class="secondaryAction" type="submit" name="action_send">{% trans "Re-send Verification" %}</button>
+            <button class="primaryAction" type="submit" name="action_remove">{% trans "Remove" %}</button>
+        </div>
+    </fieldset>
+</form>
+{% else %}
+<p><strong>{% trans "Warning:" %}</strong> {% trans "You currently do not have any e-mail address set up. You should
+    really add an e-mail address so you can receive notifications, reset your password, etc." %}</p>
+{% endif %}
+
+<h2>{% trans "Add Email Address" %}</h2>
+<form method="post" action="{% url 'account_email' %}" class="add_email">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <button name="action_add" type="submit">{% trans "Add Email" %}</button>
+</form>
+
+<style>
+    .email_list label {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 15px;
+        border: 2px solid #ebedee;
+        border-radius: 12px;
+        margin-bottom: 10px;
+        cursor: pointer;
+        transition: 0.3s;
+    }
+
+    .email_list label:hover {
+        border-color: #D48C11;
+        background: #fbf9f6;
+    }
+
+    .email_list input[type="radio"] {
+        width: 20px !important;
+        height: 20px;
+        accent-color: #D48C11;
+    }
+
+    .email_list .verified,
+    .email_list .primary {
+        font-size: 11px;
+        padding: 2px 8px;
+        border-radius: 20px;
+        font-weight: 700;
+        text-transform: uppercase;
+    }
+
+    .email_list .verified {
+        background: #dcfce7;
+        color: #166534;
+    }
+
+    .email_list .unverified {
+        background: #fee2e2;
+        color: #991b1b;
+        font-size: 11px;
+        padding: 2px 8px;
+        border-radius: 20px;
+        font-weight: 700;
+    }
+
+    .email_list .primary {
+        background: #fef9c3;
+        color: #854d0e;
+    }
+
+    .buttonHolder {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        margin-top: 20px;
+        margin-bottom: 40px;
+    }
+
+    .buttonHolder button {
+        flex: 1;
+        min-width: 140px;
+        margin-top: 0 !important;
+    }
+
+    .secondaryAction {
+        background: #fff !important;
+        color: #302419 !important;
+        border: 2px solid #ebedee !important;
+        box-shadow: none !important;
+    }
+
+    .secondaryAction:hover {
+        border-color: #D48C11 !important;
+        transform: translateY(-2px);
+    }
+</style>
+{% endblock account_content %}
