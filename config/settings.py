@@ -23,9 +23,14 @@ ALLOWED_HOSTS = [
     '.now.sh',
 ]
 # Allow any custom domain from env
-CUSTOM_DOMAIN = os.getenv('VERCEL_URL', '')
-if CUSTOM_DOMAIN:
-    ALLOWED_HOSTS.append(CUSTOM_DOMAIN)
+VERCEL_URL = os.getenv('VERCEL_URL')
+if VERCEL_URL:
+    ALLOWED_HOSTS.append(VERCEL_URL)
+
+CSRF_TRUSTED_ORIGINS = [
+    'https://*.vercel.app',
+    'https://*.now.sh',
+]
 
 
 # Application definition
