@@ -17,6 +17,12 @@
                 <i class="fa-regular fa-comment"></i>
                 <span>{{ confession.comments.count }}</span>
             </button>
+            {% if user.is_staff or user == confession.user %}
+            <button class="action-btn delete-btn" onclick="deleteConfession({{ confession.id }})"
+                title="Delete Confession">
+                <i class="fa-solid fa-trash-can"></i>
+            </button>
+            {% endif %}
         </div>
     </div>
 
@@ -24,8 +30,17 @@
     <div class="confession-comments-section" id="comments-section-{{ confession.id }}" style="display: none;">
         <div class="comments-list" id="comments-list-{{ confession.id }}">
             {% for comment in confession.comments.all %}
-            <div class="confession-comment">
-                <p>{{ comment.content }}</p>
+            <div class="confession-comment" id="confession-comment-{{ comment.id }}">
+                <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                    <p>{{ comment.content }}</p>
+                    {% if user.is_staff or user == comment.user %}
+                    <button class="comment-delete-btn"
+                        onclick="deleteConfessionComment({{ comment.id }}, {{ confession.id }})" title="Delete Comment"
+                        style="background:none; border:none; color:#aaa; cursor:pointer; font-size: 0.8rem; padding: 0 5px;">
+                        <i class="fa-solid fa-trash-can"></i>
+                    </button>
+                    {% endif %}
+                </div>
                 <span class="comment-time">{{ comment.created_at|timesince }} ago</span>
             </div>
             {% empty %}

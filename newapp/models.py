@@ -89,6 +89,7 @@ class Chapter(models.Model):
     # Metrics
     views = models.PositiveIntegerField(default=0)
     likes = models.ManyToManyField(User, related_name='liked_chapters', blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
     last_saved = models.DateTimeField(auto_now=True)
 
     class Meta:
@@ -96,6 +97,13 @@ class Chapter(models.Model):
 
     def __str__(self):
         return f"{self.book.title} - {self.title}"
+
+    @property
+    def is_updated(self):
+        # Updated if last_saved is more than 2 minutes after created_at
+        # (Allows small buffer for initial creation/publishing)
+        from datetime import timedelta
+        return self.last_saved > self.created_at + timedelta(minutes=2)
 
 # Create your models here.
 
@@ -198,6 +206,7 @@ class ContactMessage(models.Model):
         return f"Message from {self.name} ({self.email})"
 
 class Confession(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True)
     content = models.TextField(max_length=500)
     created_at = models.DateTimeField(auto_now_add=True)
     likes = models.ManyToManyField(User, related_name='liked_confessions', blank=True)
@@ -210,6 +219,7 @@ class Confession(models.Model):
 
 class ConfessionComment(models.Model):
     confession = models.ForeignKey(Confession, related_name='comments', on_delete=models.CASCADE)
+    user = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True)
     content = models.TextField()
     created_at = models.DateTimeField(auto_now_add=True)
 

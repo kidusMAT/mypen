@@ -3889,7 +3889,10 @@ footer .lower p {
     text-overflow: ellipsis;
     display: -webkit-box;
     -webkit-line-clamp: 3;
+    line-clamp: 3;
     -webkit-box-orient: vertical;
+    overflow-wrap: break-word;
+    word-wrap: break-word;
 }
 
 /* --- Contact Page Enhancements --- */
@@ -4361,6 +4364,7 @@ html {
 
     .profile-desc {
         margin: 0 auto 40px;
+        max-width: 100%;
     }
 
     .profile-card {

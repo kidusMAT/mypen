@@ -16,7 +16,7 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path, include
-from newapp.views import index, scripts , books , poems, write, write_chapter , create_content, discover, dashboard, manage_book, add_chapter, save_chapter_ajax, add_chapter_ajax, update_book_metadata_ajax, view_book_public, delete_book, read_chapter, about, contact, privacy, terms, toggle_like_chapter, toggle_bookmark_book, toggle_like_book, writing_tips, contests, write_script, save_script_ajax, create_script_ajax, read_script, read_poem, coming_soon, write_poem, create_poem_ajax, save_poem_ajax, toggle_like_script, toggle_bookmark_script, toggle_like_poem, toggle_bookmark_poem, delete_book_ajax, submit_contest_entry, update_phone_number, reviews_page, movie_detail_page, ajax_add_movie, ajax_add_movie_comment, ajax_rate_movie, ajax_delete_movie_comment, book_review_detail_page, ajax_add_book_review, ajax_add_book_comment, ajax_rate_book_review, ajax_delete_book_comment, ajax_delete_profile_comment, profile_view, edit_profile, add_profile_comment, get_profile_comments_ajax, authors_list, confessions_page, get_confessions_ajax, add_confession_ajax, toggle_like_confession, add_confession_comment_ajax
+from newapp.views import index, scripts , books , poems, write, write_chapter , create_content, discover, dashboard, manage_book, add_chapter, save_chapter_ajax, add_chapter_ajax, update_book_metadata_ajax, view_book_public, delete_book, read_chapter, about, contact, privacy, terms, toggle_like_chapter, toggle_bookmark_book, toggle_like_book, writing_tips, contests, write_script, save_script_ajax, create_script_ajax, read_script, read_poem, coming_soon, write_poem, create_poem_ajax, save_poem_ajax, toggle_like_script, toggle_bookmark_script, toggle_like_poem, toggle_bookmark_poem, delete_book_ajax, submit_contest_entry, update_phone_number, reviews_page, movie_detail_page, ajax_add_movie, ajax_add_movie_comment, ajax_rate_movie, ajax_delete_movie_comment, book_review_detail_page, ajax_add_book_review, ajax_add_book_comment, ajax_rate_book_review, ajax_delete_book_comment, ajax_delete_profile_comment, profile_view, edit_profile, add_profile_comment, get_profile_comments_ajax, authors_list, confessions_page, get_confessions_ajax, add_confession_ajax, toggle_like_confession, add_confession_comment_ajax, ajax_delete_confession, ajax_delete_confession_comment, ajax_delete_movie, ajax_delete_book_review
 
 
 urlpatterns = [
@@ -80,6 +80,8 @@ urlpatterns = [
     path('ajax/confessions/add/', add_confession_ajax, name='add_confession_ajax'),
     path('ajax/confessions/<int:confession_id>/like/', toggle_like_confession, name='toggle_like_confession'),
     path('ajax/confessions/<int:confession_id>/comment/', add_confession_comment_ajax, name='add_confession_comment_ajax'),
+    path('ajax/confessions/<int:confession_id>/delete/', ajax_delete_confession, name='ajax_delete_confession'),
+    path('ajax/confessions/comment/<int:comment_id>/delete/', ajax_delete_confession_comment, name='ajax_delete_confession_comment'),
     
     # Movie & Book Reviews
     path('reviews/', reviews_page, name='movie_reviews'),
@@ -93,6 +95,8 @@ urlpatterns = [
     path('ajax/reviews/book/<int:book_review_id>/rate/', ajax_rate_book_review, name='ajax_rate_book_review'),
     path('ajax/reviews/movie/comment/<int:comment_id>/delete/', ajax_delete_movie_comment, name='ajax_delete_movie_comment'),
     path('ajax/reviews/book/comment/<int:comment_id>/delete/', ajax_delete_book_comment, name='ajax_delete_book_comment'),
+    path('ajax/movie/<int:movie_id>/delete/', ajax_delete_movie, name='ajax_delete_movie'),
+    path('ajax/book-review/<int:review_id>/delete/', ajax_delete_book_review, name='ajax_delete_book_review'),
     path('ajax/profile/comment/<int:comment_id>/delete/', ajax_delete_profile_comment, name='ajax_delete_profile_comment'),
 ]
 

@@ -10,10 +10,21 @@
                     onmouseover="this.style.color='#ffcc80'" onmouseout="this.style.color='inherit'">{{ movie.title }}
                 </h3>
             </a>
-            <div style="margin-top: 8px; font-size: 0.8rem; display: flex; align-items: center; gap: 10px;">
-                <span
-                    style="background: rgba(255,255,255,0.95); color: #333; padding: 2px 10px; border-radius: 10px; font-weight: 700;">{{ movie.genre|default:"Uncategorized" }}</span>
-                <span style="font-weight: 600; text-shadow: 1px 1px 2px rgba(0,0,0,0.5);">{{ movie.year|default:"" }}</span>
+            <div
+                style="margin-top: 8px; font-size: 0.8rem; display: flex; align-items: center; justify-content: space-between;">
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <span
+                        style="background: rgba(255,255,255,0.95); color: #333; padding: 2px 10px; border-radius: 10px; font-weight: 700;">{{ movie.genre|default:"Uncategorized" }}</span>
+                    <span style="font-weight: 600; text-shadow: 1px 1px 2px rgba(0,0,0,0.5);">{{ movie.year|default:"" }}</span>
+                </div>
+                {% if user.is_staff or user == movie.added_by %}
+                <button onclick="deleteMovie({{ movie.id }})"
+                    style="background: rgba(255,0,0,0.2); border: none; color: white; width: 28px; height: 28px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: 0.2s;"
+                    onmouseover="this.style.background='rgba(255,0,0,0.4)'"
+                    onmouseout="this.style.background='rgba(255,0,0,0.2)'" title="Delete Movie">
+                    <i class="fa-solid fa-trash-can" style="font-size: 0.8rem;"></i>
+                </button>
+                {% endif %}
             </div>
         </div>
     </div>
@@ -48,8 +59,21 @@
                 id="movie-comments-list-{{ movie.id }}">
                 {% for comment in movie.comments.all|slice:":3" %}
                 <div id="movie-comment-{{ comment.id }}"
-                    style="background: #f9fafb; padding: 8px 12px; border-radius: 8px; font-size: 0.85rem;">
-                    <div style="display: flex; justify-content: space-between; margin-bottom: 3px;"><strong>{{ comment.user.username }}</strong><span style="color: #999; font-size: 0.75rem;">{{ comment.created_at|date:"M d" }}</span></div>
+                    style="background: #f9fafb; padding: 8px 12px; border-radius: 8px; font-size: 0.85rem; position: relative;">
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 3px;">
+                        <strong>{{ comment.user.username }}</strong>
+                        <div style="display: flex; align-items: center; gap: 8px;">
+                            <span style="color: #999; font-size: 0.75rem;">{{ comment.created_at|date:"M d" }}</span>
+                            {% if user.is_staff or user == comment.user %}
+                            <button onclick="deleteComment({{ comment.id }}, 'movie')"
+                                style="background: none; border: none; color: #ccc; cursor: pointer; padding: 0; font-size: 0.75rem;"
+                                onmouseover="this.style.color='#ef4444'" onmouseout="this.style.color='#ccc'"
+                                title="Delete comment">
+                                <i class="fa-solid fa-trash-can"></i>
+                            </button>
+                            {% endif %}
+                        </div>
+                    </div>
                     <div style="color: #555;">{{ comment.content }}</div>
                 </div>
                 {% empty %}<div

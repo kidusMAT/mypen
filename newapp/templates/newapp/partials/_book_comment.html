@@ -5,7 +5,7 @@
             <span class="comment-author">{{ comment.user.username }}</span>
             <span class="comment-date">{{ comment.created_at|date:"Y-m-d" }}</span>
         </div>
-        {% if user == comment.user %}
+        {% if user.is_staff or user == comment.user %}
         <button class="comment-delete-btn" onclick="deleteComment({{ comment.id }}, 'book')" title="Delete comment">
             <i class="fa-solid fa-trash-can"></i>
         </button>

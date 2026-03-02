@@ -180,7 +180,7 @@ from django.contrib.auth.models import User
 from django.db.models import Sum
 
 def index(request):
-    handpicked_books = Book.objects.filter(handpicked=True).annotate(
+    handpicked_books = Book.objects.filter(handpicked=True, status__in=['PUBLISHED', 'FINISHED']).annotate(
         total_likes=Count('likes'),
         total_chapters=Count('chapters')
     ).prefetch_related('likes', 'bookmarks').order_by('-created_at', '-id')[:8]
@@ -487,13 +487,15 @@ def discover(request):
     query = request.GET.get('q')
     if query:
         trending_books = Book.objects.filter(
-            Q(title__icontains=query) | 
-            Q(author__username__icontains=query) |
-            Q(genre__icontains=query)
+            Q(status__in=['PUBLISHED', 'FINISHED']) & (
+                Q(title__icontains=query) | 
+                Q(author__username__icontains=query) |
+                Q(genre__icontains=query)
+            )
         ).annotate(total_likes=Count('likes')).order_by('-views', '-total_likes', '-id')
     else:
         # Get top 4 trending books
-        trending_books = Book.objects.annotate(
+        trending_books = Book.objects.filter(status__in=['PUBLISHED', 'FINISHED']).annotate(
             total_likes=Count('likes')
         ).order_by('-views', '-total_likes', '-id')[:4]
     
@@ -1264,7 +1266,8 @@ def get_confessions_ajax(request):
 def add_confession_ajax(request):
     content = request.POST.get('content')
     if content:
-        confession = Confession.objects.create(content=content)
+        user = request.user if request.user.is_authenticated else None
+        confession = Confession.objects.create(content=content, user=user)
         if request.user.is_authenticated:
             confession.is_liked = False
         html = render_to_string('newapp/partials/_confession_list.html', {'confessions': [confession]}, request=request)
@@ -1289,8 +1292,12 @@ def add_confession_comment_ajax(request, confession_id):
     confession = get_object_or_404(Confession, id=confession_id)
     content = request.POST.get('content')
     if content:
-        comment = ConfessionComment.objects.create(confession=confession, content=content)
-        html = render_to_string('newapp/partials/_confession_comment.html', {'comment': comment}, request=request)
+        comment = ConfessionComment.objects.create(
+            confession=confession, 
+            content=content,
+            user=request.user
+        )
+        html = render_to_string('newapp/partials/_confession_list.html', {'confessions': [confession]}, request=request)
         return JsonResponse({'success': True, 'html': html})
     return JsonResponse({'success': False})
 
@@ -1298,7 +1305,9 @@ def add_confession_comment_ajax(request, confession_id):
 @require_POST
 def ajax_delete_movie_comment(request, comment_id):
     from .models import MovieComment
-    comment = get_object_or_404(MovieComment, id=comment_id, user=request.user)
+    comment = get_object_or_404(MovieComment, id=comment_id)
+    if comment.user != request.user and not request.user.is_staff:
+        return JsonResponse({'success': False, 'message': 'Permission denied.'}, status=403)
     movie = comment.movie
     movie_id = movie.id
     comment.delete()
@@ -1308,7 +1317,9 @@ def ajax_delete_movie_comment(request, comment_id):
 @require_POST
 def ajax_delete_book_comment(request, comment_id):
     from .models import BookReviewComment
-    comment = get_object_or_404(BookReviewComment, id=comment_id, user=request.user)
+    comment = get_object_or_404(BookReviewComment, id=comment_id)
+    if comment.user != request.user and not request.user.is_staff:
+        return JsonResponse({'success': False, 'message': 'Permission denied.'}, status=403)
     book_review = comment.book_review
     book_review_id = book_review.id
     comment.delete()
@@ -1318,12 +1329,52 @@ def ajax_delete_book_comment(request, comment_id):
 @require_POST
 def ajax_delete_profile_comment(request, comment_id):
     from .models import ProfileComment
-    comment = get_object_or_404(ProfileComment, id=comment_id, author=request.user)
+    comment = get_object_or_404(ProfileComment, id=comment_id)
+    if comment.author != request.user and not request.user.is_staff:
+        return JsonResponse({'success': False, 'message': 'Permission denied.'}, status=403)
     profile = comment.profile
     comment.delete()
     
-    # Return updated list
-    comments = profile.comments.filter(parent=None).all()
+    # We need to re-fetch comments to render partial correctly
+    comments = profile.received_comments.all().order_by('-created_at')
     html = render_to_string('newapp/partials/_profile_comments.html', {'comments': comments, 'profile': profile}, request=request)
     return JsonResponse({'success': True, 'html': html})
 
+@login_required
+@require_POST
+def ajax_delete_confession(request, confession_id):
+    confession = get_object_or_404(Confession, id=confession_id)
+    if confession.user != request.user and not request.user.is_staff:
+        return JsonResponse({'success': False, 'message': 'Permission denied.'}, status=403)
+    confession.delete()
+    return JsonResponse({'success': True})
+
+@login_required
+@require_POST
+def ajax_delete_confession_comment(request, comment_id):
+    comment = get_object_or_404(ConfessionComment, id=comment_id)
+    if comment.user != request.user and not request.user.is_staff:
+        return JsonResponse({'success': False, 'message': 'Permission denied.'}, status=403)
+    confession_id = comment.confession.id
+    comment.delete()
+    return JsonResponse({'success': True, 'confession_id': confession_id})
+
+@login_required
+@require_POST
+def ajax_delete_movie(request, movie_id):
+    from .models import Movie
+    movie = get_object_or_404(Movie, id=movie_id)
+    if movie.added_by != request.user and not request.user.is_staff:
+        return JsonResponse({'success': False, 'message': 'Permission denied.'}, status=403)
+    movie.delete()
+    return JsonResponse({'success': True})
+
+@login_required
+@require_POST
+def ajax_delete_book_review(request, review_id):
+    from .models import BookReview
+    review = get_object_or_404(BookReview, id=review_id)
+    if review.added_by != request.user and not request.user.is_staff:
+        return JsonResponse({'success': False, 'message': 'Permission denied.'}, status=403)
+    review.delete()
+    return JsonResponse({'success': True})

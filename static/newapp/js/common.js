@@ -14,32 +14,6 @@ function getCookie(name) {
     return cookieValue;
 }
 
-// Toast Notification System
-function showToast(message, type = 'success', duration = 3000) {
-    const container = document.getElementById('toast-container');
-    if (!container) return;
-
-    const toast = document.createElement('div');
-    toast.className = `toast ${type}`;
-
-    let icon = 'checkmark-circle';
-    if (type === 'error') icon = 'alert-circle';
-    if (type === 'info') icon = 'information-circle';
-
-    toast.innerHTML = `
-        <ion-icon name="${icon}"></ion-icon>
-        <span>${message}</span>
-    `;
-
-    container.appendChild(toast);
-
-    // Auto remove
-    setTimeout(() => {
-        toast.classList.add('fade-out');
-        setTimeout(() => toast.remove(), 300);
-    }, duration);
-}
-
 // Deletion Logic
 let bookToDelete = null;
 
@@ -96,4 +70,219 @@ async function confirmDeleteBook() {
         console.error("Delete failed:", error);
         showToast("Request failed. Please check your connection.", "error");
     }
+}
+
+async function deleteComment(commentId, type) {
+    const confirmed = await showCustomConfirm({
+        title: 'Delete Comment',
+        message: 'Are you sure you want to delete this comment?',
+        type: 'danger',
+        confirmText: 'Delete'
+    });
+    if (!confirmed) return;
+
+    const csrfToken = getCookie('csrftoken');
+    const url = `/ajax/reviews/${type === 'movie' ? 'movie' : 'book'}/comment/${commentId}/delete/`;
+
+    fetch(url, {
+        method: 'POST',
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest',
+            'X-CSRFToken': csrfToken
+        }
+    })
+        .then(res => res.json())
+        .then(data => {
+            if (data.success) {
+                const commentEl = document.getElementById(`${type}-comment-${commentId}`);
+                if (commentEl) {
+                    commentEl.style.transition = 'opacity 0.3s, transform 0.3s';
+                    commentEl.style.opacity = '0';
+                    commentEl.style.transform = 'translateY(-10px)';
+                    setTimeout(() => commentEl.remove(), 300);
+                }
+
+                // Update counts (works for both list and detail pages if IDs match)
+                const countId = type === 'movie' ? `movie-comment-count-${data.movie_id}` : `book-comment-count-${data.book_review_id}`;
+                const countEl = document.getElementById(countId);
+                if (countEl) countEl.innerText = data.comment_count;
+
+                const totalCountEl = document.getElementById('comments-total-count');
+                if (totalCountEl) totalCountEl.innerText = data.comment_count;
+
+                showToast("Comment deleted", "info");
+            }
+        })
+        .catch(err => console.error('Error deleting comment:', err));
+}
+
+async function deleteProfileComment(commentId) {
+    const confirmed = await showCustomConfirm({
+        title: 'Delete Comment',
+        message: 'Are you sure you want to delete this profile comment?',
+        type: 'danger',
+        confirmText: 'Delete'
+    });
+    if (!confirmed) return;
+
+    const csrfToken = getCookie('csrftoken');
+    fetch(`/ajax/profile/comment/${commentId}/delete/`, {
+        method: 'POST',
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest',
+            'X-CSRFToken': csrfToken
+        }
+    })
+        .then(res => res.json())
+        .then(data => {
+            if (data.success) {
+                // Profile comment deletion returns the updated HTML of the comment list
+                const container = document.getElementById('drawer-comments-list');
+                if (container) {
+                    container.innerHTML = data.html;
+                }
+                showToast("Comment deleted", "info");
+            }
+        });
+}
+
+async function deleteConfession(id) {
+    const confirmed = await showCustomConfirm({
+        title: 'Delete Confession',
+        message: 'Are you sure you want to delete this confession?',
+        type: 'danger',
+        confirmText: 'Delete'
+    });
+    if (!confirmed) return;
+
+    const csrfToken = getCookie('csrftoken');
+    fetch(`/ajax/confessions/${id}/delete/`, {
+        method: 'POST',
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest',
+            'X-CSRFToken': csrfToken
+        }
+    })
+        .then(res => res.json())
+        .then(data => {
+            if (data.success) {
+                const el = document.getElementById(`confession-${id}`);
+                if (el) {
+                    el.style.opacity = '0';
+                    el.style.transform = 'scale(0.9)';
+                    el.style.transition = '0.3s';
+                    setTimeout(() => el.remove(), 300);
+                }
+                showToast("Confession deleted", "info");
+            } else {
+                showToast(data.message || 'Error deleting confession', 'error');
+            }
+        });
+}
+
+async function deleteConfessionComment(commentId, confessionId) {
+    const confirmed = await showCustomConfirm({
+        title: 'Delete Comment',
+        message: 'Are you sure you want to delete this comment?',
+        type: 'danger',
+        confirmText: 'Delete'
+    });
+    if (!confirmed) return;
+
+    const csrfToken = getCookie('csrftoken');
+    fetch(`/ajax/confessions/comment/${commentId}/delete/`, {
+        method: 'POST',
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest',
+            'X-CSRFToken': csrfToken
+        }
+    })
+        .then(res => res.json())
+        .then(data => {
+            if (data.success) {
+                const el = document.getElementById(`confession-comment-${commentId}`);
+                if (el) {
+                    el.style.opacity = '0';
+                    el.style.transition = '0.3s';
+                    setTimeout(() => el.remove(), 300);
+                }
+                showToast("Comment deleted", "info");
+            } else {
+                showToast(data.message || 'Error deleting comment', 'error');
+            }
+        });
+}
+
+async function deleteMovie(id) {
+    const confirmed = await showCustomConfirm({
+        title: 'Delete Movie',
+        message: 'Are you sure you want to delete this movie review?',
+        type: 'danger',
+        confirmText: 'Delete'
+    });
+    if (!confirmed) return;
+
+    const csrfToken = getCookie('csrftoken');
+    fetch(`/ajax/movie/${id}/delete/`, {
+        method: 'POST',
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest',
+            'X-CSRFToken': csrfToken
+        }
+    })
+        .then(res => res.json())
+        .then(data => {
+            if (data.success) {
+                const el = document.getElementById(`movie-card-${id}`);
+                if (el) {
+                    el.style.opacity = '0';
+                    el.style.transform = 'scale(0.9)';
+                    el.style.transition = '0.3s';
+                    setTimeout(() => el.remove(), 300);
+                } else if (window.location.pathname.includes(`/reviews/movie/${id}/`)) {
+                    showToast("Movie deleted. Redirecting...", "info");
+                    setTimeout(() => window.location.href = '/reviews/', 1000);
+                }
+                showToast("Movie deleted", "info");
+            } else {
+                showToast(data.message || 'Error deleting movie', 'error');
+            }
+        });
+}
+
+async function deleteBookReview(id) {
+    const confirmed = await showCustomConfirm({
+        title: 'Delete Review',
+        message: 'Are you sure you want to delete this book review?',
+        type: 'danger',
+        confirmText: 'Delete'
+    });
+    if (!confirmed) return;
+
+    const csrfToken = getCookie('csrftoken');
+    fetch(`/ajax/book-review/${id}/delete/`, {
+        method: 'POST',
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest',
+            'X-CSRFToken': csrfToken
+        }
+    })
+        .then(res => res.json())
+        .then(data => {
+            if (data.success) {
+                const el = document.getElementById(`book-card-${id}`);
+                if (el) {
+                    el.style.opacity = '0';
+                    el.style.transform = 'scale(0.9)';
+                    el.style.transition = '0.3s';
+                    setTimeout(() => el.remove(), 300);
+                } else if (window.location.pathname.includes(`/reviews/book/${id}/`)) {
+                    showToast("Review deleted. Redirecting...", "info");
+                    setTimeout(() => window.location.href = '/reviews/', 1000);
+                }
+                showToast("Book review deleted", "info");
+            } else {
+                showToast(data.message || 'Error deleting review', 'error');
+            }
+        });
 }
