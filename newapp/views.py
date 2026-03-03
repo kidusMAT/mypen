@@ -17,6 +17,7 @@ def coming_soon(request):
     return render(request, 'newapp/coming_soon.html', {'feature': feature})
 
 
+@login_required
 def create_content(request):
     if request.method == 'POST':
         print(f"DEBUG: create_content POST: {request.POST}")
@@ -125,6 +126,7 @@ def delete_book_ajax(request, book_id):
 
 
 
+@login_required
 def write_chapter(request, chapter_id):
     chapter = get_object_or_404(Chapter, id=chapter_id, book__author=request.user)
     

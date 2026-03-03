@@ -5521,10 +5521,14 @@ body.poem-mode .formcont {
     z-index: 2000;
     transition: right 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);
     backdrop-filter: blur(10px);
+    visibility: hidden;
+    pointer-events: none;
 }
 
 .mobile-nav-overlay.active {
     right: 0;
+    visibility: visible;
+    pointer-events: auto;
 }
 
 .mobile-nav-content {
