@@ -21,12 +21,16 @@
     padding: 0;
 }
 
+html,
+body {
+    overflow-x: hidden;
+}
+
 html {
     scroll-behavior: smooth;
 }
 
 body {
-    overflow-x: hidden;
     background-color: var(--bg-main);
     color: var(--text-main);
     font-family: system-ui, -apple-system, sans-serif;
