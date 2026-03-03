@@ -286,3 +286,28 @@ async function deleteBookReview(id) {
             }
         });
 }
+// --- Global Reveal Animations ---
+window.initRevealAnimations = function (container = document) {
+    const reveals = container.querySelectorAll('.reveal, .reveal-left, .reveal-right, .reveal-scale');
+
+    const revealObserver = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                entry.target.classList.add('active');
+                revealObserver.unobserve(entry.target);
+            }
+        });
+    }, {
+        threshold: 0.1,
+        rootMargin: '0px 0px -50px 0px'
+    });
+
+    reveals.forEach(reveal => {
+        revealObserver.observe(reveal);
+    });
+};
+
+// Initialize on DOM load
+document.addEventListener('DOMContentLoaded', () => {
+    window.initRevealAnimations();
+});

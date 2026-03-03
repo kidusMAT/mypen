@@ -4,19 +4,23 @@
 {% block title%} Story Landing Pure CSS {% endblock %}
 
 {% block content %}
-<section class="first">
-    <div class="top">
+<div class="scroll-progress-container">
+    <div class="scroll-progress-bar" id="progressBar"></div>
+</div>
+
+<section class="first reveal">
+    <div class="top reveal-scale delay-100">
         <h1>Write Your Story,<span> Share Your World</span> </h1>
     </div>
-    <div class="mid">
+    <div class="mid reveal delay-200">
         <p>A beautiful space for writers, storytellers, and dreamers. Create and publish stories, books, and scripts
             that captivate readers worldwide.</p>
     </div>
-    <div class="btns">
+    <div class="btns reveal delay-300">
         <a href="/write/new/" class="swf">Start Writing Free</a>
         <a href="/discover/" class="es">Explore Stories</a>
     </div>
-    <div class="statstics">
+    <div class="statstics reveal delay-400">
         <div>
             <p class="nums">{{ writers_count|default:"0"|format_stats }}</p>
             <p class="labels">Writers</p>
@@ -31,32 +35,41 @@
         </div>
     </div>
 </section>
-<section class="second">
+<section class="second reveal">
 
-    <h1>Explore by Genre</h1>
-    <p class="sy">Discover stories across every genre and style</p>
+    <h1 class="reveal-scale">Explore by Genre</h1>
+    <p class="sy reveal delay-100">Discover stories across every genre and style</p>
     <div class="listed">
-        <div onclick="window.location.href='/books/?genre=Fiction';" style="cursor: pointer;">
+        <div onclick="window.location.href='/books/?genre=Fiction';" style="cursor: pointer;"
+            class="reveal-scale delay-100">
             <p class="icons"><i class="fa-solid fa-book-open" style="color: #8B5CF6;"></i></p>
             <p class="titles">Fiction</p>
             <p class="numbers">{{ genre_counts.Fiction|default:"15.2k" }} stories</p>
         </div>
-        <div onclick="window.location.href='/scripts/';" style="cursor: pointer;">
+        <div onclick="window.location.href='/scripts/';" style="cursor: pointer;" class="reveal-scale delay-200">
             <p class="icons"><i class="fa-solid fa-scroll" style="color: #d946ef;"></i></p>
             <p class="titles">Scripts</p>
             <p class="numbers">{{ genre_counts.Scripts|default:"8.4k" }} stories</p>
         </div>
-        <div onclick="window.location.href='/books/?genre=Fantasy';" style="cursor: pointer;">
+        <div onclick="window.location.href='/poems/';" style="cursor: pointer;" class="reveal-scale delay-300">
+            <p class="icons"><i class="fa-solid fa-feather-pointed" style="color: #f59e0b;"></i></p>
+            <p class="titles">Poems</p>
+            <p class="numbers">{{ poems_count|default:"4.2k" }} stories</p>
+        </div>
+        <div onclick="window.location.href='/books/?genre=Fantasy';" style="cursor: pointer;"
+            class="reveal-scale delay-400">
             <p class="icons"><i class="fa-solid fa-wand-magic-sparkles" style="color: #3b82f6;"></i></p>
             <p class="titles">Fantasy</p>
             <p class="numbers">{{ genre_counts.Fantasy|default:"12.8k" }} stories</p>
         </div>
-        <div onclick="window.location.href='/books/?genre=Romance';" style="cursor: pointer;">
+        <div onclick="window.location.href='/books/?genre=Romance';" style="cursor: pointer;"
+            class="reveal-scale delay-500">
             <p class="icons"><i class="fa-solid fa-heart" style="color: #ef4444;"></i></p>
             <p class="titles">Romance</p>
             <p class="numbers">{{ genre_counts.Romance|default:"9.7k" }} stories</p>
         </div>
-        <div onclick="window.location.href='/books/?genre=Adventure';" style="cursor: pointer;">
+        <div onclick="window.location.href='/books/?genre=Adventure';" style="cursor: pointer;"
+            class="reveal-scale delay-600">
             <p class="icons"><i class="fa-solid fa-compass" style="color: #10b981;"></i></p>
             <p class="titles">Adventure</p>
             <p class="numbers">{{ genre_counts.Adventure|default:"7.3k" }} stories</p>
@@ -65,14 +78,14 @@
     </div>
 </section>
 
-<section class="stories-box st">
+<section class="stories-box st reveal">
     <div class="head">
         <h1>Featured Books</h1>
         <a href="/books/">View All <i class="fa-solid fa-chevron-right"
                 style="font-size: 10px; margin-left: 5px;"></i></a>
     </div>
 
-    <div class="boxed book-list-view">
+    <div class="boxed book-list-view reveal delay-100">
         {% for book in handpicked_books %}
         <div class="premium-story-card" onclick="window.location.href='{% url 'view_book_public' book.id %}';">
             {% if book.cover_image %}
@@ -130,14 +143,47 @@
         {% endfor %}
     </div>
 </section>
-<section class="fourth">
+<section class="fourth reveal">
     <h1>Ready To Share Your Story with the World?</h1>
-    <p class="saying">Whether it's a ashort story, a full novel, or a screenplay,your words deserve to be heard. Start
+    <p class="saying reveal delay-100">Whether it's a ashort story, a full novel, or a screenplay,your words deserve to
+        be heard. Start
         writing today.</p>
-    <div class="comps"><a href="/write/new/">Create Your First Story</a>
+    <div class="comps reveal delay-200"><a href="/write/new/">Create Your First Story</a>
         <pre>free forever. No credit card required.</pre>
     </div>
 </section>
+
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        // --- Scroll Tracking ---
+        const progressBar = document.getElementById('progressBar');
+        const header = document.querySelector('.global-header');
+        const heroSection = document.querySelector('.first');
+
+        window.addEventListener('scroll', () => {
+            const windowHeight = document.documentElement.scrollHeight - document.documentElement.clientHeight;
+            const scrolled = (window.scrollY / windowHeight) * 100;
+
+            if (progressBar) {
+                progressBar.style.width = scrolled + '%';
+            }
+
+            // Navbar state
+            if (window.scrollY > 50) {
+                header.classList.add('scrolled');
+            } else {
+                header.classList.remove('scrolled');
+            }
+
+            // Subtle parallax for hero
+            if (heroSection) {
+                const speed = 0.3;
+                const offset = window.scrollY * speed;
+                heroSection.style.backgroundPositionY = `calc(50% + ${offset}px)`;
+            }
+        });
+    });
+</script>
 
 <style>
     /* Mobile-specific tweaks for index page headers */

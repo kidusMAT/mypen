@@ -5,15 +5,15 @@
 
 {% block content %}
 <main class="confessions-page">
-    <div class="confessions-header">
-        <div class="anonymous-badge">
+    <div class="confessions-header reveal">
+        <div class="anonymous-badge reveal-scale delay-100">
             <i class="fa-solid fa-eye-slash" style="color: #d89f5a;"></i> 100% Anonymous
         </div>
-        <h1>Confessions</h1>
-        <p>Unburden your soul. No names, no judgement — just raw honesty.</p>
+        <h1 class="reveal-scale delay-200">Confessions</h1>
+        <p class="reveal delay-300">Unburden your soul. No names, no judgement — just raw honesty.</p>
     </div>
 
-    <div class="confession-composer">
+    <div class="confession-composer reveal delay-400">
         <form id="confession-form" onsubmit="submitConfession(event)">
             {% csrf_token %}
             <textarea id="confession-input" name="content"
@@ -73,22 +73,27 @@
                 return response.json();
             })
             .then(data => {
-                if (!data.html || data.html.trim() === '') {
-                    hasMore = false;
-                    document.getElementById('no-more-msg').style.display = 'block';
-                } else {
-                    const feed = document.getElementById('confessions-feed');
-                    feed.insertAdjacentHTML('beforeend', data.html);
-                }
+            } else {
+                const feed = document.getElementById('confessions-feed');
+                const tempDiv = document.createElement('div');
+                tempDiv.innerHTML = data.html;
+
+                // Initialize animations for new items
+                window.initRevealAnimations(tempDiv);
+
+                while(tempDiv.firstChild) {
+            feed.appendChild(tempDiv.firstChild);
+        }
+    }
             })
-            .catch(error => {
-                hasMore = false;
-                document.getElementById('no-more-msg').style.display = 'block';
-            })
+            .catch (error => {
+        hasMore = false;
+        document.getElementById('no-more-msg').style.display = 'block';
+    })
             .finally(() => {
-                isLoading = false;
-                document.getElementById('loading-spinner').style.display = 'none';
-            });
+        isLoading = false;
+        document.getElementById('loading-spinner').style.display = 'none';
+    });
     }
 
     function updateCharCount(textarea) {
@@ -122,7 +127,13 @@
             .then(data => {
                 if (data.success && data.html) {
                     const feed = document.getElementById('confessions-feed');
-                    feed.insertAdjacentHTML('afterbegin', data.html);
+                    const tempDiv = document.createElement('div');
+                    tempDiv.innerHTML = data.html;
+
+                    // Initialize animations for the new confession
+                    window.initRevealAnimations(tempDiv);
+
+                    feed.insertBefore(tempDiv.firstChild, feed.firstChild);
                     input.value = '';
                     updateCharCount(input);
                     btn.classList.remove('active');

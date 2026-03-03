@@ -166,7 +166,10 @@ AUTHENTICATION_BACKENDS = [
 SOCIALACCOUNT_PROVIDERS = {
     'google': {
         'SCOPE': ['profile', 'email'],
-        'AUTH_PARAMS': {'access_type': 'online'},
+        'AUTH_PARAMS': {
+            'access_type': 'online',
+            'prompt': 'select_account',
+        },
         'APPS': [
             {
                 'client_id': os.getenv('GOOGLE_CLIENT_ID', ''),
@@ -203,6 +206,7 @@ ACCOUNT_LOGIN_METHODS = {'username', 'email'}
 ACCOUNT_EMAIL_SUBJECT_PREFIX = "[Mypen] "
 ACCOUNT_LOGIN_ON_PASSWORD_RESET = True
 ACCOUNT_USERNAME_VALIDATORS = 'config.validators.custom_username_validators'
+SOCIALACCOUNT_LOGIN_ON_GET = True
 
 # Default primary key field type
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
