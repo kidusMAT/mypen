@@ -207,5 +207,10 @@ ACCOUNT_EMAIL_SUBJECT_PREFIX = "[Mypen] "
 ACCOUNT_LOGIN_ON_PASSWORD_RESET = True
 ACCOUNT_USERNAME_VALIDATORS = 'config.validators.custom_username_validators'
 
+# Social Account Configuration
+SOCIALACCOUNT_AUTO_SIGNUP = True
+SOCIALACCOUNT_LOGIN_ON_GET = True
+SOCIALACCOUNT_ADAPTER = 'newapp.adapters.MySocialAccountAdapter'
+
 # Default primary key field type
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
