@@ -73,28 +73,32 @@
                 return response.json();
             })
             .then(data => {
-            } else {
-                const feed = document.getElementById('confessions-feed');
-                const tempDiv = document.createElement('div');
-                tempDiv.innerHTML = data.html;
+                if (!data.html || data.html.trim() === '') {
+                    hasMore = false;
+                    document.getElementById('no-more-msg').style.display = 'block';
+                } else {
+                    const feed = document.getElementById('confessions-feed');
+                    const tempDiv = document.createElement('div');
+                    tempDiv.innerHTML = data.html;
 
-                // Initialize animations for new items
-                window.initRevealAnimations(tempDiv);
+                    // Initialize animations for new items
+                    window.initRevealAnimations(tempDiv);
 
-                while(tempDiv.firstChild) {
-            feed.appendChild(tempDiv.firstChild);
-        }
-    }
+                    while (tempDiv.firstChild) {
+                        feed.appendChild(tempDiv.firstChild);
+                    }
+                }
             })
-            .catch (error => {
-        hasMore = false;
-        document.getElementById('no-more-msg').style.display = 'block';
-    })
+            .catch(error => {
+                hasMore = false;
+                document.getElementById('no-more-msg').style.display = 'block';
+            })
             .finally(() => {
-        isLoading = false;
-        document.getElementById('loading-spinner').style.display = 'none';
-    });
+                isLoading = false;
+                document.getElementById('loading-spinner').style.display = 'none';
+            });
     }
+
 
     function updateCharCount(textarea) {
         document.getElementById('char-count').innerText = `${textarea.value.length}/500`;

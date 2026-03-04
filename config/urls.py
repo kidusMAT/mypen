@@ -16,7 +16,7 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path, include
-from newapp.views import index, scripts , books , poems, write, write_chapter , create_content, discover, dashboard, manage_book, add_chapter, save_chapter_ajax, add_chapter_ajax, update_book_metadata_ajax, view_book_public, delete_book, read_chapter, about, contact, privacy, terms, toggle_like_chapter, toggle_bookmark_book, toggle_like_book, writing_tips, contests, write_script, save_script_ajax, create_script_ajax, read_script, read_poem, coming_soon, write_poem, create_poem_ajax, save_poem_ajax, toggle_like_script, toggle_bookmark_script, toggle_like_poem, toggle_bookmark_poem, delete_book_ajax, submit_contest_entry, update_phone_number, reviews_page, movie_detail_page, ajax_add_movie, ajax_add_movie_comment, ajax_rate_movie, ajax_delete_movie_comment, book_review_detail_page, ajax_add_book_review, ajax_add_book_comment, ajax_rate_book_review, ajax_delete_book_comment, ajax_delete_profile_comment, profile_view, edit_profile, add_profile_comment, get_profile_comments_ajax, authors_list, confessions_page, get_confessions_ajax, add_confession_ajax, toggle_like_confession, add_confession_comment_ajax, ajax_delete_confession, ajax_delete_confession_comment, ajax_delete_movie, ajax_delete_book_review
+from newapp.views import index, scripts , books , poems, write, write_chapter , create_content, discover, dashboard, manage_book, add_chapter, save_chapter_ajax, add_chapter_ajax, update_book_metadata_ajax, view_book_public, delete_book, delete_script, delete_poem, read_chapter, about, contact, privacy, terms, toggle_like_chapter, toggle_bookmark_book, toggle_like_book, writing_tips, contests, write_script, save_script_ajax, create_script_ajax, read_script, read_poem, coming_soon, write_poem, create_poem_ajax, save_poem_ajax, toggle_like_script, toggle_bookmark_script, toggle_like_poem, toggle_bookmark_poem, delete_book_ajax, submit_contest_entry, update_phone_number, reviews_page, movie_detail_page, ajax_add_movie, ajax_add_movie_comment, ajax_rate_movie, ajax_delete_movie_comment, book_review_detail_page, ajax_add_book_review, ajax_add_book_comment, ajax_rate_book_review, ajax_delete_book_comment, ajax_delete_profile_comment, profile_view, edit_profile, add_profile_comment, get_profile_comments_ajax, authors_list, confessions_page, get_confessions_ajax, add_confession_ajax, toggle_like_confession, add_confession_comment_ajax, ajax_delete_confession, ajax_delete_confession_comment, ajax_delete_movie, ajax_delete_book_review
 
 
 urlpatterns = [
@@ -63,7 +63,9 @@ urlpatterns = [
     path('ajax/toggle-bookmark-script/<int:script_id>/', toggle_bookmark_script, name='toggle_bookmark_script'),
     path('ajax/toggle-like-poem/<int:poem_id>/', toggle_like_poem, name='toggle_like_poem'),
     path('ajax/toggle-bookmark-poem/<int:poem_id>/', toggle_bookmark_poem, name='toggle_bookmark_poem'),
-    path('ajax/delete-book/<int:book_id>/', delete_book_ajax, name='delete_book_ajax'),
+    path('ajax/delete-book/<int:book_id>/', delete_book_ajax, name='delete_book_ajax'), # This is likely redundant but kept for safety
+    path('ajax/delete-script/<int:script_id>/', delete_script, name='delete_script'),
+    path('ajax/delete-poem/<int:poem_id>/', delete_poem, name='delete_poem'),
     path('ajax/submit-contest-entry/', submit_contest_entry, name='submit_contest_entry'),
     path('ajax/update-phone-number/', update_phone_number, name='update_phone_number'),
     

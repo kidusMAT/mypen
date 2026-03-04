@@ -544,6 +544,42 @@ def delete_book(request, book_id):
             'message': str(e)
         }, status=400)
 
+@login_required
+@require_POST
+def delete_script(request, script_id):
+    """Delete a script (AJAX endpoint)"""
+    try:
+        script = get_object_or_404(Script, id=script_id, author=request.user)
+        script_title = script.title
+        script.delete()
+        return JsonResponse({
+            'status': 'success',
+            'message': f'"{script_title}" has been deleted successfully.'
+        })
+    except Exception as e:
+        return JsonResponse({
+            'status': 'error',
+            'message': str(e)
+        }, status=400)
+
+@login_required
+@require_POST
+def delete_poem(request, poem_id):
+    """Delete a poem (AJAX endpoint)"""
+    try:
+        poem = get_object_or_404(Poem, id=poem_id, author=request.user)
+        poem_title = poem.title
+        poem.delete()
+        return JsonResponse({
+            'status': 'success',
+            'message': f'"{poem_title}" has been deleted successfully.'
+        })
+    except Exception as e:
+        return JsonResponse({
+            'status': 'error',
+            'message': str(e)
+        }, status=400)
+
 def read_chapter(request, chapter_id):
     """Public chapter reading view"""
     chapter = get_object_or_404(Chapter, id=chapter_id)

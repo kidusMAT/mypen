@@ -44,6 +44,7 @@
         position: fixed;
         top: 0;
         width: 100%;
+        box-sizing: border-box;
         z-index: 1000;
         justify-content: space-between;
     }
@@ -152,14 +153,16 @@
         box-shadow: 0 10px 50px rgba(0, 0, 0, 0.04);
         border: 1px solid rgba(0, 0, 0, 0.03);
         border-radius: 4px;
-        padding: 80px 100px;
+        padding: 60px 80px;
+        /* Reduced from 80px 100px */
         position: relative;
         font-family: 'Playfair Display', serif;
     }
 
     .poem-header-area {
         text-align: center;
-        margin-bottom: 60px;
+        margin-bottom: 40px;
+        /* Reduced from 60px */
     }
 
     .poem-badge {
@@ -170,13 +173,16 @@
         color: var(--poem-gold);
         font-weight: 700;
         text-transform: uppercase;
-        font-size: 12px;
+        font-size: 11px;
+        /* Reduced from 12px */
         letter-spacing: 2px;
-        margin-bottom: 20px;
+        margin-bottom: 15px;
+        /* Reduced from 20px */
     }
 
     .poem-display-title {
-        font-size: 64px;
+        font-size: 48px;
+        /* Reduced from 64px */
         font-weight: 800;
         margin: 0 0 10px 0;
         color: var(--text-main);
@@ -185,7 +191,8 @@
     }
 
     .poem-display-subtitle {
-        font-size: 26px;
+        font-size: 22px;
+        /* Reduced from 26px */
         font-style: italic;
         color: var(--text-muted);
         margin: 0 0 10px 0;
@@ -217,8 +224,10 @@
 
     .poem-sub-name {
         font-weight: 700;
-        font-size: 32px;
-        margin: 2.5em 0 1.2em 0 !important;
+        font-size: 26px;
+        /* Reduced from 32px */
+        margin: 2em 0 1em 0 !important;
+        /* Slightly reduced margins */
         text-transform: uppercase;
         letter-spacing: 2px;
         color: var(--text-main);
@@ -234,6 +243,48 @@
 
         .poem-display-title {
             font-size: 38px;
+        }
+    }
+
+    @media (max-width: 600px) {
+        .reader-nav {
+            padding: 0 12px;
+        }
+
+        .nav-left {
+            gap: 12px;
+            max-width: 40%;
+        }
+
+        .nav-info {
+            overflow: hidden;
+            white-space: nowrap;
+        }
+
+        .nav-title,
+        .nav-author {
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .nav-right {
+            gap: 8px;
+        }
+
+        .tool-group {
+            gap: 8px;
+            margin-right: 10px;
+            padding-right: 10px;
+        }
+
+        .tool-btn {
+            padding: 6px;
+            font-size: 16px;
+        }
+
+        .zoom-value {
+            min-width: 20px;
+            font-size: 13px;
         }
     }
 </style>
