@@ -152,6 +152,8 @@ CLOUDINARY_URL = os.getenv('CLOUDINARY_URL')
 if CLOUDINARY_URL:
     DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
     MEDIA_URL = '/media/'
+    # On Vercel, the only writable directory is /tmp
+    MEDIA_ROOT = '/tmp/media' if os.getenv('VERCEL') else os.path.join(BASE_DIR, 'media')
 else:
     # Local development fallback
     MEDIA_URL = '/media/'
