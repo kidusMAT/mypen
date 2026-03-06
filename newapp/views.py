@@ -527,7 +527,7 @@ def view_book_public(request, book_id):
     
     context = {
         'book': book,
-        'chapters': published_chapters,
+        'chapters': chapters,
         'total_likes': book.likes.count(),
         'total_bookmarks': book.bookmarks.count(),
     }
