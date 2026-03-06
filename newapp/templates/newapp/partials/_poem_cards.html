@@ -3,6 +3,8 @@
     {% if poem.cover_image %}
     <div class="card-header-vibrant"
         style="background-image: url('{{ poem.cover_image.url }}'); background-size: cover; background-position: center;">
+        <img src="{{ poem.cover_image.url }}" style="display:none"
+            onerror="var p=this.parentElement; p.style.backgroundImage='none'; p.classList.add('bg-grad-8'); p.innerHTML='<div class=\'card-icon-overlay\'><i class=\'fa-solid fa-feather-pointed\'></i></div>';">
     </div>
     {% else %}
     <div

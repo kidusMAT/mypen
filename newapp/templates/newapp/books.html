@@ -110,7 +110,8 @@
             <div class="newitem" onclick="window.location.href='{% url 'view_book_public' book.id %}';">
                 <div class="newimg">
                     {% if book.cover_image %}
-                    <img src="{{ book.cover_image.url }}" alt="{{ book.title }}">
+                    <img src="{{ book.cover_image.url }}" alt="{{ book.title }}"
+                        onerror="this.style.display='none'; this.parentElement.innerHTML='<div class=\'placeholder-cover\'><i class=\'fa-solid fa-book\'></i></div>';">
                     {% else %}
                     <div class="placeholder-cover">
                         <i class="fa-solid fa-book"></i>

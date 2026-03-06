@@ -62,7 +62,10 @@
 </style>
 <main class="book-profile-page">
     {% if book.cover_image %}
-    <div class="profile-hero-bg" style="background-image: url('{{ book.cover_image.url }}');"></div>
+    <div class="profile-hero-bg" style="background-image: url('{{ book.cover_image.url }}');">
+        <img src="{{ book.cover_image.url }}" style="display:none"
+            onerror="this.parentElement.style.backgroundImage='linear-gradient(135deg, #1e3a8a, #1d4ed8)';">
+    </div>
     {% endif %}
 
     <section class="profile-hero-section">
@@ -71,7 +74,8 @@
                 <div class="profile-header-main">
                     {% if book.cover_image %}
                     <div class="profile-cover-wrapper">
-                        <img src="{{ book.cover_image.url }}" alt="{{ book.title }}" class="main-cover">
+                        <img src="{{ book.cover_image.url }}" alt="{{ book.title }}" class="main-cover"
+                            onerror="this.src='/static/images/default_cover.jpg';">
                         <div class="cover-shadow"></div>
                     </div>
                     {% endif %}
