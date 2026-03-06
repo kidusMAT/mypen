@@ -144,7 +144,11 @@ STATIC_ROOT = BASE_DIR / 'staticfiles'
 STATICFILES_DIRS = [
     os.path.join(BASE_DIR, 'static'),
 ]
-STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+STORAGES = {
+    "staticfiles": {
+        "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage",
+    },
+}
 
 
 # Media files — Cloudinary in production, local in development
@@ -152,7 +156,9 @@ CLOUDINARY_URL = os.getenv('CLOUDINARY_URL')
 if CLOUDINARY_URL:
     import cloudinary
     cloudinary.config(cloudinary_url=CLOUDINARY_URL)
-    DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
+    STORAGES["default"] = {
+        "BACKEND": "cloudinary_storage.storage.MediaCloudinaryStorage",
+    }
     MEDIA_URL = '/media/'
     # On Vercel, the only writable directory is /tmp
     MEDIA_ROOT = '/tmp/media' if os.getenv('VERCEL') else os.path.join(BASE_DIR, 'media')
