@@ -52,7 +52,7 @@ class Book(models.Model):
     description = models.TextField(blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     handpicked = models.BooleanField(default=False)
-    cover_image = models.ImageField(upload_to='images/', blank=True, null=True)
+    cover_image = models.ImageField(upload_to='book_covers/', null=True, blank=True)
     genre = models.CharField(max_length=100, blank=True)
     status = models.CharField(max_length=10, choices=STATUS_CHOICES, default='DRAFT')
     views = models.PositiveIntegerField(default=0)
