@@ -7,7 +7,8 @@
 <main class="dashboard-page">
     <section class="dashboard-header">
         <div class="dashboard-container">
-            <h1>Welcome back, <a href="{% url 'profile_view' user.username %}" class="dashboard-profile-link">{{ user.username }}</a></h1>
+            <h1>Welcome back, <a href="{% url 'profile_view' user.username %}" class="dashboard-profile-link">{{
+                    user.username }}</a></h1>
             <p class="subtitle">Manage your stories and track your writing progress.</p>
         </div>
     </section>
@@ -56,11 +57,12 @@
                             onerror="this.src='/static/images/default_cover.jpg'; this.style.opacity='0.5';">
                         {% else %}
                         <label class="image-placeholder upload-trigger" for="upload-book-{{ book.id }}"
-                            title="Click to upload cover">
+                            title="Click to upload cover" onclick="event.stopPropagation();">
                             <i class="fa-solid fa-image"></i>
                             <span class="upload-hint">Upload Cover</span>
                         </label>
                         <input type="file" id="upload-book-{{ book.id }}" style="display: none;" accept="image/*"
+                            onclick="event.stopPropagation();"
                             onchange="handleQuickUpload(this, 'book', {{ book.id }})">
                         {% endif %}
                     </div>
@@ -119,7 +121,7 @@
             <div class="stories-list">
                 {% for script in user_scripts %}
                 <div class="dashboard-story-card" id="script-card-{{ script.id }}" style="cursor: pointer;"
-                    onclick="window.location.href='{% url 'write_script' script.id %}';">
+                    data-url="{% url 'write_script' script.id %}">
                     <div class="story-image">
                         {% if script.cover_image %}
                         <img src="{{ script.cover_image.url }}" alt="{{ script.title }}"
@@ -132,6 +134,7 @@
                             <span class="upload-hint">Upload Cover</span>
                         </label>
                         <input type="file" id="upload-script-{{ script.id }}" style="display: none;" accept="image/*"
+                            onclick="event.stopPropagation();"
                             onchange="handleQuickUpload(this, 'script', {{ script.id }})">
                         {% endif %}
                     </div>
@@ -180,7 +183,7 @@
             <div class="stories-list">
                 {% for poem in user_poems %}
                 <div class="dashboard-story-card" id="poem-card-{{ poem.id }}" style="cursor: pointer;"
-                    onclick="window.location.href='{% url 'write_poem' poem.id %}';">
+                    data-url="{% url 'write_poem' poem.id %}">
                     <div class="story-image">
                         {% if poem.cover_image %}
                         <img src="{{ poem.cover_image.url }}" alt="{{ poem.title }}" id="poem-cover-{{ poem.id }}"
@@ -192,6 +195,7 @@
                             <span class="upload-hint">Upload Cover</span>
                         </label>
                         <input type="file" id="upload-poem-{{ poem.id }}" style="display: none;" accept="image/*"
+                            onclick="event.stopPropagation();"
                             onchange="handleQuickUpload(this, 'poem', {{ poem.id }})">
                         {% endif %}
                     </div>
@@ -286,6 +290,21 @@
                     if (window.showToast) showToast('An error occurred during upload', 'error');
                 });
         }
+
+        // Safe card redirects
+        document.addEventListener('DOMContentLoaded', () => {
+            document.querySelectorAll('.dashboard-story-card').forEach(card => {
+                card.addEventListener('click', (e) => {
+                    // Don't redirect if clicking an interactive element
+                    if (e.target.closest('a, button, label, input')) {
+                        return;
+                    }
+
+                    const url = card.getAttribute('data-url');
+                    if (url) window.location.href = url;
+                });
+            });
+        });
     </script>
 
     <style>
