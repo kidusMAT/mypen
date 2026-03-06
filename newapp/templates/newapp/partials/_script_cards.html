@@ -31,7 +31,7 @@
             <span>{{ script.page_count|default:0 }} pages</span>
 
             <div class="card-metrics-row" style="margin-left: auto; display: flex; gap: 15px;">
-                <span class="metric" onclick="toggleScriptLike(event, {{ script.id }})" style="cursor: pointer;">
+                <span class="metric" onclick="toggleScriptLike(event, '{{ script.id }}')" style="cursor: pointer;">
                     {% if user in script.likes.all %}
                     <i class="fa-solid fa-heart" style="color: #ef4444;"></i>
                     {% else %}
@@ -39,7 +39,7 @@
                     {% endif %}
                     <span>{{ script.total_likes|default:0 }}</span>
                 </span>
-                <span class="metric" onclick="toggleScriptBookmark(event, {{ script.id }})" style="cursor: pointer;">
+                <span class="metric" onclick="toggleScriptBookmark(event, '{{ script.id }}')" style="cursor: pointer;">
                     {% if user in script.bookmarks.all %}
                     <i class="fa-solid fa-bookmark" style="color: #D48C11;"></i>
                     {% else %}

@@ -301,12 +301,16 @@ def save_chapter_ajax(request, chapter_id):
             chapter.content = content
         if title is not None:
             chapter.title = title
-        chapter.status = status
-        
+
+        # Only change status if explicitly publishing, OR if the chapter is still a draft.
+        # Never downgrade a PUBLISHED chapter back to DRAFT on a plain save.
         if status == 'PUBLISHED':
+            chapter.status = 'PUBLISHED'
             chapter.book.status = 'PUBLISHED'
             chapter.book.save()
-            
+        elif chapter.status != 'PUBLISHED':
+            chapter.status = status
+        
         chapter.save()
         return JsonResponse({'status': 'success', 'message': 'Chapter saved'})
     except Exception as e:
@@ -511,8 +515,11 @@ def view_book_public(request, book_id):
     """Public view of a book showing all published chapters"""
     book = get_object_or_404(Book, id=book_id)
     
-    # Get only published chapters
-    published_chapters = book.chapters.filter(status='PUBLISHED').order_by('order')
+    # Get chapters: Author sees all (Draft + Published), others see only Published
+    if request.user == book.author:
+        chapters = book.chapters.all().order_by('order')
+    else:
+        chapters = book.chapters.filter(status='PUBLISHED').order_by('order')
     
     # Increment views count
     book.views += 1
@@ -1416,3 +1423,27 @@ def ajax_delete_book_review(request, review_id):
         return JsonResponse({'success': False, 'message': 'Permission denied.'}, status=403)
     review.delete()
     return JsonResponse({'success': True})
+
+@login_required
+@require_POST
+def ajax_upload_cover(request, item_type, item_id):
+    from .models import Book, Script, Poem
+    cover_image = request.FILES.get('cover_image')
+    if not cover_image:
+        return JsonResponse({'success': False, 'message': 'No image provided'})
+
+    try:
+        if item_type == 'book':
+            item = get_object_or_404(Book, id=item_id, author=request.user)
+        elif item_type == 'script':
+            item = get_object_or_404(Script, id=item_id, author=request.user)
+        elif item_type == 'poem':
+            item = get_object_or_404(Poem, id=item_id, author=request.user)
+        else:
+            return JsonResponse({'success': False, 'message': 'Invalid item type'})
+
+        item.cover_image = cover_image
+        item.save()
+        return JsonResponse({'success': True, 'url': item.cover_image.url})
+    except Exception as e:
+        return JsonResponse({'success': False, 'message': str(e)})

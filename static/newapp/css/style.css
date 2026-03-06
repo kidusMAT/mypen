@@ -2036,7 +2036,7 @@ footer .lower p {
 }
 
 .writeing-section {
-    padding: 32px 45px;
+    padding: 32px 0;
     min-height: 100vh;
     background-color: #fbf9f6de;
     display: flex;
@@ -2108,12 +2108,12 @@ footer .lower p {
 
 .writeing-section .formcont {
     width: 100%;
-    max-width: 900px;
-    margin: 10px 0;
+    max-width: 800px;
+    margin: 10px auto;
     display: flex;
     flex-direction: column;
     align-items: center;
-    padding: 0 60px;
+    padding: 0 20px;
     /* Added padding to push content right and add breathing room */
 }
 
@@ -2217,7 +2217,7 @@ footer .lower p {
     outline: none;
     font-family: inherit;
     font-size: 20px;
-    line-height: 1.5;
+    line-height: 1.6;
     word-wrap: break-word;
     cursor: text;
 }
@@ -3328,7 +3328,7 @@ footer .lower p {
 
 .chapter-body-text {
     font-size: 20px;
-    line-height: 1.85;
+    line-height: 1.6;
     color: #302419;
     overflow-wrap: break-word;
     word-break: break-word;
@@ -3336,7 +3336,7 @@ footer .lower p {
 
 .chapter-body-text p,
 .chapter-body-text div {
-    margin-bottom: 32px;
+    margin-bottom: 24px;
 }
 
 /* Drop Cap Styling */
@@ -3901,6 +3901,8 @@ footer .lower p {
     justify-content: center;
     overflow: hidden;
     background-color: #f8fafc;
+    background-size: cover;
+    background-position: center;
     /* Fallback background */
 }
 
@@ -5029,8 +5031,8 @@ body.poem-mode .formcont {
     min-height: 400px;
     border: none;
     font-family: 'Playfair Display', 'Noto Serif Ethiopic', Georgia, serif;
-    font-size: 18px;
-    line-height: 1.6;
+    font-size: 22px;
+    line-height: 1.8;
     color: #4a3c31;
     text-align: left;
 }
@@ -5046,9 +5048,9 @@ body.poem-mode .formcont {
 /* Regular lines - single spaced */
 .poem-editor div,
 .poem-editor p {
-    margin: 0;
+    margin:-bottom: 0px;
     padding: 0;
-    line-height: 1.5;
+    line-height: 1.8;
 }
 
 /* Empty lines between stanzas - double spaced */
@@ -5938,3 +5940,61 @@ body.poem-mode .formcont {
         gap: 20px;
     }
 }
+/* Script Card Styles */
+.horizontal-script-card {
+    display: flex;
+    background: #fff;
+    border-radius: 16px;
+    overflow: hidden;
+    border: 1px solid rgba(0, 0, 0, 0.04);
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.3s ease;
+    cursor: pointer;
+    min-height: 220px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.03);
+}
+
+.card-visual {
+    flex: 0 0 160px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    font-size: 40px;
+    position: relative;
+    background-size: cover;
+    background-position: center;
+}
+
+.card-details {
+    flex: 1;
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+    background: #fafafa;
+}
+
+
+/* Story Editor Specifics */
+.Story .editor-content p,
+.Story .editor-content div {
+    margin-bottom: 24px; /* Aligned with .chapter-body-text */
+}
+
+/* Script Editor Specifics */
+.Script .editor-content {
+    font-family: 'Courier New', Courier, monospace; /* Fallback since font import (2) skipped */
+    font-size: 16px;
+    line-height: 1.2;
+    color: #000;
+}
+
+.Script .editor-content div,
+.Script .editor-content p {
+    margin-bottom: 0.8em;
+}
+
+
+
+
+@media (min-width: 768px) { .writeing-section .formcont { padding: 0 40px; } }
+

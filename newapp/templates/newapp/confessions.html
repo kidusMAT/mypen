@@ -125,7 +125,10 @@
         fetch('/ajax/confessions/add/', {
             method: 'POST',
             body: formData,
-            headers: { 'X-Requested-With': 'XMLHttpRequest' }
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+            }
         })
             .then(response => response.json())
             .then(data => {
@@ -134,14 +137,32 @@
                     const tempDiv = document.createElement('div');
                     tempDiv.innerHTML = data.html;
 
-                    // Initialize animations for the new confession
-                    window.initRevealAnimations(tempDiv);
+                    // The partial return might have multiple nodes (like whitespace)
+                    // Use firstElementChild to get the actual article/card
+                    const newConfession = tempDiv.firstElementChild;
 
-                    feed.insertBefore(tempDiv.firstChild, feed.firstChild);
-                    input.value = '';
-                    updateCharCount(input);
-                    btn.classList.remove('active');
+                    if (newConfession) {
+                        // Initialize animations for the new confession
+                        if (window.initRevealAnimations) {
+                            window.initRevealAnimations(tempDiv);
+                        }
+
+                        feed.prepend(newConfession);
+                        input.value = '';
+                        updateCharCount(input);
+                        btn.classList.remove('active');
+
+                        if (window.showToast) {
+                            showToast("Confession added anonymously", "success");
+                        }
+                    }
+                } else {
+                    if (window.showToast) showToast("Failed to add confession", "error");
                 }
+            })
+            .catch(err => {
+                console.error("Error adding confession:", err);
+                if (window.showToast) showToast("An error occurred", "error");
             })
             .finally(() => {
                 btn.innerHTML = '<i class="fa-regular fa-paper-plane"></i> Confess';
@@ -163,21 +184,25 @@
                 const btn = document.getElementById(`like-btn-${id}`);
                 const icon = btn.querySelector('i');
 
-                countSpan.innerText = data.count;
-                if (data.liked) {
-                    btn.classList.add('liked');
-                    icon.classList.remove('fa-regular');
-                    icon.classList.add('fa-solid');
-                } else {
-                    btn.classList.remove('liked');
-                    icon.classList.remove('fa-solid');
-                    icon.classList.add('fa-regular');
+                if (countSpan) countSpan.innerText = data.count;
+                if (btn && icon) {
+                    if (data.liked) {
+                        btn.classList.add('liked');
+                        icon.classList.remove('fa-regular');
+                        icon.classList.add('fa-solid');
+                    } else {
+                        btn.classList.remove('liked');
+                        icon.classList.remove('fa-solid');
+                        icon.classList.add('fa-regular');
+                    }
                 }
-            });
+            })
+            .catch(err => console.error("Error toggling like:", err));
     }
 
     function toggleConfessionComments(id) {
         const section = document.getElementById(`comments-section-${id}`);
+        if (!section) return;
         if (section.style.display === 'none') {
             section.style.display = 'block';
         } else {
@@ -190,8 +215,10 @@
         const form = e.target;
         const formData = new FormData(form);
         const submitBtn = form.querySelector('.submit-comment-btn');
-        submitBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>';
-        submitBtn.disabled = true;
+        if (submitBtn) {
+            submitBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>';
+            submitBtn.disabled = true;
+        }
 
         fetch(`/ajax/confessions/${id}/comment/`, {
             method: 'POST',
@@ -202,14 +229,29 @@
             .then(data => {
                 if (data.success && data.html) {
                     const card = document.getElementById(`confession-${id}`);
-                    // Replace the entire card HTML with the updated partial containing the new comment
-                    card.outerHTML = data.html;
-                    // Ensure the newly rendered card has its comments section open
-                    document.getElementById(`comments-section-${id}`).style.display = 'block';
+                    if (card) {
+                        // Replace the entire card HTML with the updated partial
+                        const tempDiv = document.createElement('div');
+                        tempDiv.innerHTML = data.html;
+                        const newCard = tempDiv.firstElementChild;
+
+                        if (newCard) {
+                            card.replaceWith(newCard);
+                            // Keep comments section open
+                            const newSection = document.getElementById(`comments-section-${id}`);
+                            if (newSection) newSection.style.display = 'block';
+
+                            if (window.showToast) showToast("Comment added", "info");
+                        }
+                    }
                 }
             })
+            .catch(err => {
+                console.error("Error adding comment:", err);
+                if (window.showToast) showToast("Failed to add comment", "error");
+            })
             .finally(() => {
-                if (form) {
+                if (submitBtn) {
                     submitBtn.innerHTML = '<i class="fa-regular fa-paper-plane"></i>';
                     submitBtn.disabled = false;
                 }

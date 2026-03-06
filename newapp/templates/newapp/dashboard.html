@@ -52,9 +52,15 @@
                 <div class="dashboard-story-card" id="book-card-{{ book.id }}">
                     <div class="story-image">
                         {% if book.cover_image %}
-                        <img src="{{ book.cover_image.url }}" alt="{{ book.title }}">
+                        <img src="{{ book.cover_image.url }}" alt="{{ book.title }}" id="book-cover-{{ book.id }}">
                         {% else %}
-                        <div class="image-placeholder"><i class="fa-solid fa-image"></i></div>
+                        <label class="image-placeholder upload-trigger" for="upload-book-{{ book.id }}"
+                            title="Click to upload cover">
+                            <i class="fa-solid fa-image"></i>
+                            <span class="upload-hint">Upload Cover</span>
+                        </label>
+                        <input type="file" id="upload-book-{{ book.id }}" style="display: none;" accept="image/*"
+                            onchange="handleQuickUpload(this, 'book', {{ book.id }})">
                         {% endif %}
                     </div>
                     <div class="story-details">
@@ -115,9 +121,16 @@
                     onclick="window.location.href='{% url 'write_script' script.id %}';">
                     <div class="story-image">
                         {% if script.cover_image %}
-                        <img src="{{ script.cover_image.url }}" alt="{{ script.title }}">
+                        <img src="{{ script.cover_image.url }}" alt="{{ script.title }}"
+                            id="script-cover-{{ script.id }}">
                         {% else %}
-                        <div class="image-placeholder"><i class="fa-solid fa-scroll"></i></div>
+                        <label class="image-placeholder upload-trigger" for="upload-script-{{ script.id }}"
+                            title="Click to upload cover" onclick="event.stopPropagation();">
+                            <i class="fa-solid fa-scroll"></i>
+                            <span class="upload-hint">Upload Cover</span>
+                        </label>
+                        <input type="file" id="upload-script-{{ script.id }}" style="display: none;" accept="image/*"
+                            onchange="handleQuickUpload(this, 'script', {{ script.id }})">
                         {% endif %}
                     </div>
                     <div class="story-details">
@@ -168,9 +181,15 @@
                     onclick="window.location.href='{% url 'write_poem' poem.id %}';">
                     <div class="story-image">
                         {% if poem.cover_image %}
-                        <img src="{{ poem.cover_image.url }}" alt="{{ poem.title }}">
+                        <img src="{{ poem.cover_image.url }}" alt="{{ poem.title }}" id="poem-cover-{{ poem.id }}">
                         {% else %}
-                        <div class="image-placeholder"><i class="fa-solid fa-feather-pointed"></i></div>
+                        <label class="image-placeholder upload-trigger" for="upload-poem-{{ poem.id }}"
+                            title="Click to upload cover" onclick="event.stopPropagation();">
+                            <i class="fa-solid fa-feather-pointed"></i>
+                            <span class="upload-hint">Upload Cover</span>
+                        </label>
+                        <input type="file" id="upload-poem-{{ poem.id }}" style="display: none;" accept="image/*"
+                            onchange="handleQuickUpload(this, 'poem', {{ poem.id }})">
                         {% endif %}
                     </div>
                     <div class="story-details">
@@ -222,5 +241,80 @@
 
     <!-- Toast Notification Container -->
     <div id="toast-container"></div>
+<script>
+function handleQuickUpload(input, type, id) {
+    if (!input.files || !input.files[0]) return;
+    
+    const file = input.files[0];
+    const formData = new FormData();
+    formData.append('cover_image', file);
+    
+    const label = document.querySelector(`label[for="upload-${type}-${id}"]`);
+    if (!label) return;
+    
+    const originalContent = label.innerHTML;
+    label.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i><span class="upload-hint">Uploading...</span>';
+    label.style.pointerEvents = 'none';
+
+    fetch(`/ajax/upload-cover/${type}/${id}/`, {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': '{{ csrf_token }}',
+            'X-Requested-With': 'XMLHttpRequest'
+        },
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            const container = label.parentElement;
+            container.innerHTML = `<img src="${data.url}" alt="Cover" id="${type}-cover-${id}">`;
+            if (window.showToast) showToast('Cover uploaded successfully!', 'success');
+        } else {
+            label.innerHTML = originalContent;
+            label.style.pointerEvents = 'auto';
+            if (window.showToast) showToast(data.message || 'Upload failed', 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Error uploading cover:', error);
+        label.innerHTML = originalContent;
+        label.style.pointerEvents = 'auto';
+        if (window.showToast) showToast('An error occurred during upload', 'error');
+    });
+}
+</script>
+
+<style>
+.upload-trigger {
+    cursor: pointer;
+    position: relative;
+    transition: all 0.3s ease;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    background: #f8f9fa !important;
+    border: 2px dashed #dee2e6 !important;
+    justify-content: center;
+    align-items: center;
+}
+
+.upload-trigger:hover {
+    background: #e9ecef !important;
+    border-color: #D48C11 !important;
+    color: #D48C11 !important;
+}
+
+.upload-hint {
+    font-size: 12px;
+    font-weight: 600;
+    opacity: 0.7;
+}
+
+.upload-trigger i {
+    font-size: 24px;
+}
+</style>
+
 </main>
 {% endblock %}
