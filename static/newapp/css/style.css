@@ -37,7 +37,16 @@ body {
     line-height: 1.5;
 }
 
+html.no-scroll,
+body.no-scroll {
+    overflow: hidden !important;
+    height: 100vh !important;
+    touch-action: none !important;
+}
+
+
 /* Premium Reveal Animations */
+
 .reveal {
     opacity: 0;
     transform: translateY(30px);
@@ -5048,7 +5057,7 @@ body.poem-mode .formcont {
 /* Regular lines - single spaced */
 .poem-editor div,
 .poem-editor p {
-    margin:-bottom: 0px;
+    margin: -bottom: 0px;
     padding: 0;
     line-height: 1.8;
 }
@@ -5940,6 +5949,7 @@ body.poem-mode .formcont {
         gap: 20px;
     }
 }
+
 /* Script Card Styles */
 .horizontal-script-card {
     display: flex;
@@ -5977,12 +5987,14 @@ body.poem-mode .formcont {
 /* Story Editor Specifics */
 .Story .editor-content p,
 .Story .editor-content div {
-    margin-bottom: 24px; /* Aligned with .chapter-body-text */
+    margin-bottom: 24px;
+    /* Aligned with .chapter-body-text */
 }
 
 /* Script Editor Specifics */
 .Script .editor-content {
-    font-family: 'Courier New', Courier, monospace; /* Fallback since font import (2) skipped */
+    font-family: 'Courier New', Courier, monospace;
+    /* Fallback since font import (2) skipped */
     font-size: 16px;
     line-height: 1.2;
     color: #000;
@@ -5996,5 +6008,8 @@ body.poem-mode .formcont {
 
 
 
-@media (min-width: 768px) { .writeing-section .formcont { padding: 0 40px; } }
-
+@media (min-width: 768px) {
+    .writeing-section .formcont {
+        padding: 0 40px;
+    }
+}

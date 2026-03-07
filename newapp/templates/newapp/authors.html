@@ -138,6 +138,8 @@
 
         overlay.classList.add('active');
         drawer.classList.add('active');
+        document.body.classList.add('no-scroll');
+        document.documentElement.classList.add('no-scroll');
         content.innerHTML = '<div style="padding: 20px; text-align: center;"><i class="fa-solid fa-spinner fa-spin"></i> Loading...</div>';
 
         fetch(`/ajax/profile/${username}/comments/`, {
@@ -152,6 +154,8 @@
     function closeCommentDrawer() {
         document.getElementById('comment-drawer-overlay').classList.remove('active');
         document.getElementById('comment-drawer').classList.remove('active');
+        document.body.classList.remove('no-scroll');
+        document.documentElement.classList.remove('no-scroll');
     }
 
     function submitCommentAjax(e, username) {

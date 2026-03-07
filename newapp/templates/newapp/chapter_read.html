@@ -20,10 +20,12 @@
                 <div class="utility-icons">
                     <button id="toc-toggle" title="Table of Contents"><i class="fa-solid fa-list-ul"></i></button>
                     <button id="bookmark-btn" title="Bookmark" onclick="toggleBookBookmark(null, {{ book.id }})">
-                        <i class="{% if bookmarked %}fa-solid{% else %}fa-regular{% endif %} fa-bookmark" {% if bookmarked %}style="color: #D48C11;" {% endif %}></i>
+                        <i class="{% if bookmarked %}fa-solid{% else %}fa-regular{% endif %} fa-bookmark" {% if
+                            bookmarked %}style="color: #D48C11;" {% endif %}></i>
                     </button>
                     <button id="like-btn" title="Like" onclick="toggleLike(null, 'chapter', {{ chapter.id }})">
-                        <i class="{% if liked %}fa-solid{% else %}fa-regular{% endif %} fa-heart" {% if liked %}style="color: #ef4444;" {% endif %}></i>
+                        <i class="{% if liked %}fa-solid{% else %}fa-regular{% endif %} fa-heart" {% if liked
+                            %}style="color: #ef4444;" {% endif %}></i>
                     </button>
                     <button id="share-btn" title="Share"><i class="fa-solid fa-share-nodes"></i></button>
                     <button id="settings-toggle" title="Reading Settings"><i class="fa-solid fa-gear"></i></button>
@@ -141,9 +143,28 @@
             const btn = document.getElementById(btnId);
             const sidebar = document.getElementById(sidebarId);
             const close = document.getElementById(closeId);
-            if (btn && sidebar) btn.onclick = () => sidebar.classList.add('active');
-            if (close && sidebar) close.onclick = () => sidebar.classList.remove('active');
+            if (btn && sidebar) {
+                btn.onclick = (e) => {
+                    e.stopPropagation();
+                    sidebar.classList.add('active');
+                    document.body.classList.add('no-scroll');
+                    document.documentElement.classList.add('no-scroll');
+                }
+            }
+            if (close && sidebar) {
+                close.onclick = (e) => {
+                    e.stopPropagation();
+                    sidebar.classList.remove('active');
+                    document.body.classList.remove('no-scroll');
+                    document.documentElement.classList.remove('no-scroll');
+                }
+            }
+            // Prevent scroll from closing sidebar if clicking inside
+            if (sidebar) {
+                sidebar.onclick = (e) => e.stopPropagation();
+            }
         };
+
 
         setupToggle('toc-toggle', 'toc-sidebar', 'toc-close');
         setupToggle('settings-toggle', 'settings-menu', 'settings-close');

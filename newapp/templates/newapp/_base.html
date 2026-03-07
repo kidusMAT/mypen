@@ -350,18 +350,23 @@
         const mobileOverlay = document.getElementById('mobile-nav-overlay');
 
         if (mobileToggle && mobileOverlay) {
-            mobileToggle.addEventListener('click', () => {
+            mobileToggle.addEventListener('click', (e) => {
+                e.stopPropagation();
                 mobileOverlay.classList.add('active');
-                document.body.style.overflow = 'hidden';
+                document.body.classList.add('no-scroll');
+                document.documentElement.classList.add('no-scroll');
             });
         }
 
         if (closeMobile && mobileOverlay) {
-            closeMobile.addEventListener('click', () => {
+            closeMobile.addEventListener('click', (e) => {
+                e.stopPropagation();
                 mobileOverlay.classList.remove('active');
-                document.body.style.overflow = '';
+                document.body.classList.remove('no-scroll');
+                document.documentElement.classList.remove('no-scroll');
             });
         }
+
     </script>
 </body>
 
