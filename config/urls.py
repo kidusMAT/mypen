@@ -16,7 +16,7 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path, include
-from newapp.views import index, scripts , books , poems, write, write_chapter , create_content, discover, dashboard, manage_book, add_chapter, save_chapter_ajax, add_chapter_ajax, update_book_metadata_ajax, view_book_public, delete_book, delete_script, delete_poem, read_chapter, about, contact, privacy, terms, toggle_like_chapter, toggle_bookmark_book, toggle_like_book, writing_tips, contests, write_script, save_script_ajax, create_script_ajax, read_script, read_poem, coming_soon, write_poem, create_poem_ajax, save_poem_ajax, toggle_like_script, toggle_bookmark_script, toggle_like_poem, toggle_bookmark_poem, delete_book_ajax, submit_contest_entry, update_phone_number, reviews_page, movie_detail_page, ajax_add_movie, ajax_add_movie_comment, ajax_rate_movie, ajax_delete_movie_comment, book_review_detail_page, ajax_add_book_review, ajax_add_book_comment, ajax_rate_book_review, ajax_delete_book_comment, ajax_delete_profile_comment, profile_view, edit_profile, add_profile_comment, get_profile_comments_ajax, authors_list, confessions_page, get_confessions_ajax, add_confession_ajax, toggle_like_confession, add_confession_comment_ajax, ajax_delete_confession, ajax_delete_confession_comment, ajax_delete_movie, ajax_delete_book_review, ajax_upload_cover
+from newapp.views import index, scripts , books , poems, write, write_chapter , create_content, discover, dashboard, manage_book, add_chapter, save_chapter_ajax, add_chapter_ajax, update_book_metadata_ajax, view_book_public, delete_book, delete_script, delete_poem, read_chapter, about, contact, privacy, terms, toggle_like_chapter, toggle_bookmark_book, toggle_like_book, writing_tips, contests, write_script, save_script_ajax, create_script_ajax, read_script, read_poem, coming_soon, write_poem, create_poem_ajax, save_poem_ajax, toggle_like_script, toggle_bookmark_script, toggle_like_poem, toggle_bookmark_poem, delete_book_ajax, submit_contest_entry, update_phone_number, reviews_page, movie_detail_page, ajax_add_movie, ajax_add_movie_comment, ajax_rate_movie, ajax_delete_movie_comment, book_review_detail_page, ajax_add_book_review, ajax_add_book_comment, ajax_rate_book_review, ajax_delete_book_comment, ajax_delete_profile_comment, profile_view, edit_profile, add_profile_comment, get_profile_comments_ajax, authors_list, confessions_page, get_confessions_ajax, add_confession_ajax, toggle_like_confession, add_confession_comment_ajax, ajax_delete_confession, ajax_delete_confession_comment, ajax_delete_movie, ajax_delete_book_review, ajax_upload_cover, ajax_remove_cover, ajax_update_status, write_episode, read_episode, save_episode_ajax, add_episode_ajax, manage_script
 
 
 urlpatterns = [
@@ -26,6 +26,7 @@ urlpatterns = [
     path('discover/', discover, name='discover'),
     path('dashboard/', dashboard, name='dashboard'),
     path('book/<int:book_id>/manage/', manage_book, name='manage_book'),
+    path('script/<int:script_id>/manage/', manage_script, name='manage_script'),
     path('book/<int:book_id>/add-chapter/', add_chapter, name='add_chapter'),
     path('ajax/save-chapter/<int:chapter_id>/', save_chapter_ajax, name='save_chapter_ajax'),
     path('ajax/add-chapter/<int:book_id>/', add_chapter_ajax, name='add_chapter_ajax'),
@@ -46,6 +47,10 @@ urlpatterns = [
     path('poem/read/<int:poem_id>/', read_poem, name='read_poem'),
     path('ajax/create-script/', create_script_ajax, name='create_script_ajax'),
     path('ajax/save-script/<int:script_id>/', save_script_ajax, name='save_script_ajax'),
+    path('episode/write/<int:episode_id>/', write_episode, name='write_episode'),
+    path('episode/read/<int:episode_id>/', read_episode, name='read_episode'),
+    path('ajax/add-episode/<int:script_id>/', add_episode_ajax, name='add_episode_ajax'),
+    path('ajax/save-episode/<int:episode_id>/', save_episode_ajax, name='save_episode_ajax'),
     path('poem/write/<int:poem_id>/', write_poem, name='write_poem'),
     path('ajax/create-poem/', create_poem_ajax, name='create_poem_ajax'),
     path('ajax/save-poem/<int:poem_id>/', save_poem_ajax, name='save_poem_ajax'),
@@ -101,6 +106,8 @@ urlpatterns = [
     path('ajax/book-review/<int:review_id>/delete/', ajax_delete_book_review, name='ajax_delete_book_review'),
     path('ajax/profile/comment/<int:comment_id>/delete/', ajax_delete_profile_comment, name='ajax_delete_profile_comment'),
     path('ajax/upload-cover/<str:item_type>/<int:item_id>/', ajax_upload_cover, name='ajax_upload_cover'),
+    path('ajax/remove-cover/<str:item_type>/<int:item_id>/', ajax_remove_cover, name='ajax_remove_cover'),
+    path('ajax/update-status/<str:item_type>/<int:item_id>/', ajax_update_status, name='ajax_update_status'),
 ]
 
 

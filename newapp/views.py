@@ -6,7 +6,7 @@ from django.views.decorators.http import require_POST
 import json
 from django.core.paginator import Paginator
 from django.db.models import Count, Q, F
-from .models import Book, Chapter, Contest, Script, Poem, ContactMessage
+from .models import Book, Chapter, Contest, Script, ScriptEpisode, Poem, ContactMessage
 from .forms import ContactForm
 from django.contrib import messages
 from django.core.mail import send_mail
@@ -35,13 +35,24 @@ def create_content(request):
                 title = 'Untitled Script'
                 
             genre = request.POST.get('genre', '')
+            script_format = request.POST.get('script_format', 'FEATURE_FILM')
+
             script = Script.objects.create(
                 title=title, 
                 author=request.user, 
                 status='PUBLISHED' if script_file else 'DRAFT',
                 script_file=script_file,
-                genre=genre
+                genre=genre,
+                script_format=script_format
             )
+
+            if script_format == 'EPISODIC' and not script_file:
+                ScriptEpisode.objects.create(
+                    script=script,
+                    title="Episode 1",
+                    content="",
+                    status='DRAFT'
+                )
             
             if contest_id:
                 try:
@@ -266,6 +277,12 @@ def manage_book(request, book_id):
     book = get_object_or_404(Book, id=book_id, author=request.user)
     chapters = book.chapters.all().order_by('order')
     return render(request, 'newapp/manage_chapters.html', {'book': book, 'chapters': chapters})
+
+@login_required
+def manage_script(request, script_id):
+    script = get_object_or_404(Script, id=script_id, author=request.user)
+    episodes = script.episodes.all().order_by('order')
+    return render(request, 'newapp/manage_episodes.html', {'script': script, 'episodes': episodes})
 
 @login_required
 def add_chapter(request, book_id):
@@ -825,13 +842,23 @@ def create_script_ajax(request):
             title = data.get('title', 'Untitled Script')
             status = data.get('status', 'DRAFT')
             contest_id = data.get('contest_id')
+            script_format = data.get('script_format', 'FEATURE_FILM')
             
             script = Script.objects.create(
                 author=request.user,
                 title=title,
-                content=content,
-                status=status
+                content=content if script_format == 'FEATURE_FILM' else '',
+                status=status,
+                script_format=script_format
             )
+
+            if script_format == 'EPISODIC':
+                ScriptEpisode.objects.create(
+                    script=script,
+                    title="Episode 1",
+                    content=content,
+                    status=status
+                )
             
             if contest_id:
                 try:
@@ -908,6 +935,76 @@ def save_script_ajax(request, script_id):
 
     except Exception as e:
         return JsonResponse({'status': 'error', 'message': str(e)}, status=400)
+@login_required
+def write_episode(request, episode_id):
+    episode = get_object_or_404(ScriptEpisode, id=episode_id, script__author=request.user)
+    return render(request, 'newapp/write.html', {'episode': episode, 'script': episode.script})
+
+def read_episode(request, episode_id):
+    episode = get_object_or_404(ScriptEpisode, id=episode_id)
+    if episode.status == 'PUBLISHED':
+        episode.views += 1
+        episode.save()
+        
+    next_episode = ScriptEpisode.objects.filter(script=episode.script, order__gt=episode.order, status='PUBLISHED').order_by('order').first()
+    
+    return render(request, 'newapp/read_script.html', {
+        'episode': episode, 
+        'script': episode.script,
+        'next_episode': next_episode
+    })
+
+@login_required
+@require_POST
+def save_episode_ajax(request, episode_id):
+    episode = get_object_or_404(ScriptEpisode, id=episode_id, script__author=request.user)
+    try:
+        data = json.loads(request.body)
+        content = data.get('content')
+        title = data.get('title')
+        status = data.get('status', 'DRAFT')
+        
+        if content is not None:
+            episode.content = content
+        if title is not None:
+            episode.title = title
+
+        if status == 'PUBLISHED':
+            episode.status = 'PUBLISHED'
+            episode.script.status = 'PUBLISHED'
+            episode.script.save()
+        elif episode.status != 'PUBLISHED':
+            episode.status = status
+            
+        episode.save()
+        return JsonResponse({'status': 'success', 'message': 'Episode saved'})
+    except Exception as e:
+        return JsonResponse({'status': 'error', 'message': str(e)}, status=400)
+
+@login_required
+@require_POST
+def add_episode_ajax(request, script_id):
+    script = get_object_or_404(Script, id=script_id, author=request.user)
+    try:
+        last_epi = script.episodes.all().order_by('-order').first()
+        next_order = (last_epi.order + 1) if last_epi else 1
+        
+        new_epi = ScriptEpisode.objects.create(
+            script=script,
+            title=f"Episode {next_order}",
+            content="",
+            order=next_order,
+            status='DRAFT'
+        )
+        return JsonResponse({
+            'status': 'success',
+            'episode_id': new_epi.id,
+            'title': new_epi.title,
+            'order': new_epi.order
+        })
+    except Exception as e:
+        return JsonResponse({'status': 'error', 'message': str(e)}, status=400)
+
 @login_required
 def write_poem(request, poem_id):
     poem = get_object_or_404(Poem, id=poem_id, author=request.user)
@@ -1445,5 +1542,61 @@ def ajax_upload_cover(request, item_type, item_id):
         item.cover_image = cover_image
         item.save()
         return JsonResponse({'success': True, 'url': item.cover_image.url})
+    except Exception as e:
+        return JsonResponse({'success': False, 'message': str(e)})
+
+@login_required
+@require_POST
+def ajax_remove_cover(request, item_type, item_id):
+    from .models import Book, Script, Poem
+    try:
+        if item_type == 'book':
+            item = get_object_or_404(Book, id=item_id, author=request.user)
+        elif item_type == 'script':
+            item = get_object_or_404(Script, id=item_id, author=request.user)
+        elif item_type == 'poem':
+            item = get_object_or_404(Poem, id=item_id, author=request.user)
+        else:
+            return JsonResponse({'success': False, 'message': 'Invalid item type'})
+
+        if item.cover_image:
+            item.cover_image.delete(save=False)
+            item.cover_image = None
+            item.save()
+
+        return JsonResponse({'success': True})
+    except Exception as e:
+        return JsonResponse({'success': False, 'message': str(e)})
+
+@login_required
+@require_POST
+def ajax_update_status(request, item_type, item_id):
+    from .models import Book, Script, Poem
+    import json
+    try:
+        data = json.loads(request.body)
+        status = data.get('status')
+        if not status:
+            return JsonResponse({'success': False, 'message': 'Status not provided'})
+
+        if item_type == 'book':
+            item = get_object_or_404(Book, id=item_id, author=request.user)
+            valid_statuses = dict(Book.STATUS_CHOICES).keys()
+        elif item_type == 'script':
+            item = get_object_or_404(Script, id=item_id, author=request.user)
+            valid_statuses = dict(Script.STATUS_CHOICES).keys()
+        elif item_type == 'poem':
+            item = get_object_or_404(Poem, id=item_id, author=request.user)
+            valid_statuses = dict(Poem.STATUS_CHOICES).keys()
+        else:
+            return JsonResponse({'success': False, 'message': 'Invalid item type'})
+
+        if status not in valid_statuses:
+            return JsonResponse({'success': False, 'message': 'Invalid status'})
+
+        item.status = status
+        item.save()
+        
+        return JsonResponse({'success': True})
     except Exception as e:
         return JsonResponse({'success': False, 'message': str(e)})

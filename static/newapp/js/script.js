@@ -37,14 +37,27 @@ function switchMode(type) {
     document.querySelectorAll('.btn-mode-' + type).forEach(btn => btn.classList.add('active'));
 
     // Toggle Chapter Controls & Separators (Story Only)
-    const chapterControls = document.querySelector('.chapterc');
+    const chapterControls = document.querySelectorAll('.chapterc');
+    const episodeControls = document.querySelectorAll('.episodec');
     const chapterSeparators = document.querySelectorAll('.chapter-separator');
 
     if (type === 'story') {
-        if (chapterControls) chapterControls.style.display = 'flex';
+        chapterControls.forEach(c => c.style.display = 'flex');
+        episodeControls.forEach(e => e.style.display = 'none');
         chapterSeparators.forEach(s => s.style.display = 'flex');
+    } else if (type === 'script') {
+        chapterControls.forEach(c => c.style.display = 'none');
+        chapterSeparators.forEach(s => s.style.display = 'none');
+
+        const isEpisodic = document.querySelector('input[name="episode_id"]')?.value;
+        if (isEpisodic) {
+            episodeControls.forEach(e => e.style.display = 'flex');
+        } else {
+            episodeControls.forEach(e => e.style.display = 'none');
+        }
     } else {
-        if (chapterControls) chapterControls.style.display = 'none';
+        chapterControls.forEach(c => c.style.display = 'none');
+        episodeControls.forEach(e => e.style.display = 'none');
         chapterSeparators.forEach(s => s.style.display = 'none');
     }
 
@@ -381,6 +394,49 @@ async function endChapter() {
     }
 }
 
+async function endEpisode() {
+    const episodeId = document.querySelector('input[name="episode_id"]')?.value;
+    const scriptId = document.querySelector('input[name="script_id"]')?.value;
+    if (!episodeId) return;
+
+    const success = await saveEpisodeAjax(episodeId, 'DRAFT');
+    if (success) {
+        showToast("Episode saved. Returning to series management...", "info");
+        setTimeout(() => {
+            window.location.href = `/script/${scriptId}/manage/`;
+        }, 1000);
+    }
+}
+
+async function nextEpisode() {
+    const episodeId = document.querySelector('input[name="episode_id"]')?.value;
+    const scriptId = document.querySelector('input[name="script_id"]')?.value;
+    if (!episodeId || !scriptId) return;
+
+    const saveSuccess = await saveEpisodeAjax(episodeId, 'DRAFT');
+    if (!saveSuccess) return;
+
+    try {
+        const csrfToken = getCookie('csrftoken');
+        const response = await fetch(`/ajax/add-episode/${scriptId}/`, {
+            method: 'POST',
+            headers: { 'X-CSRFToken': csrfToken }
+        });
+        const data = await response.json();
+        if (data.status === 'success') {
+            showToast("New episode created!", "success");
+            setTimeout(() => {
+                window.location.href = `/episode/write/${data.episode_id}/`;
+            }, 500);
+        } else {
+            showToast(`Could not create next episode: ${data.message}`, "error");
+        }
+    } catch (error) {
+        console.error('Failed to add episode:', error);
+        showToast("Request to add episode failed.", "error");
+    }
+}
+
 async function nextChapter(bookId) {
     if (!activeChapterId) {
         console.error("No activeChapterId found for nextChapter");
@@ -458,6 +514,14 @@ function submitActiveForm(actionName) {
     console.log("DEBUG: submitActiveForm called. Mode:", currentMode, "Action:", actionName);
 
     if (currentMode === 'script') {
+        if (actionName === 'end_episode') {
+            endEpisode();
+            return;
+        } else if (actionName === 'next_episode') {
+            nextEpisode();
+            return;
+        }
+
         const title = document.querySelector('form.Script input[name="title"]')?.value;
         if (!title || title === 'Untitled Script') {
             openNameModal(actionName);
@@ -852,6 +916,38 @@ function calculatePageCount() {
     return Math.max(1, Math.ceil(totalLines / 55)); // standard screenplay is ~55 lines/page
 }
 
+async function saveEpisodeAjax(episodeId, status) {
+    const editor = document.getElementById('editor-script');
+    const content = editor ? editor.innerHTML : "";
+
+    const form = document.getElementById('Form-script');
+    const title = form?.querySelector('input[name="title"]')?.value || "Untitled Episode";
+
+    const csrfToken = getCookie('csrftoken');
+
+    try {
+        const response = await fetch(`/ajax/save-episode/${episodeId}/`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': csrfToken,
+            },
+            body: JSON.stringify({ content, title, status })
+        });
+        const data = await response.json();
+        if (data.status === 'success') {
+            if (status === 'DRAFT') showToast("Episode saved successfully", "success");
+            return true;
+        } else {
+            showToast(`Save failed: ${data.message}`, "error");
+            return false;
+        }
+    } catch (error) {
+        console.error(error);
+        return false;
+    }
+}
+
 async function saveScriptAjax(scriptId, status) {
     const editor = document.getElementById('editor-script');
     const content = editor ? editor.innerHTML : "";
@@ -889,7 +985,17 @@ async function saveScriptAjax(scriptId, status) {
 async function saveScript(actionName) {
     console.log("DEBUG: saveScript called with action:", actionName);
     let scriptId = document.querySelector('input[name="script_id"]')?.value;
-    console.log("DEBUG: Found scriptId:", scriptId);
+    let episodeId = document.querySelector('input[name="episode_id"]')?.value;
+    console.log("DEBUG: Found scriptId:", scriptId, "episodeId:", episodeId);
+
+    if (episodeId) {
+        if (actionName === 'save_draft') {
+            await saveEpisodeAjax(episodeId, 'DRAFT');
+        } else if (actionName === 'publish') {
+            await saveEpisodeAjax(episodeId, 'PUBLISHED');
+        }
+        return;
+    }
 
     // 1. Auto-create if missing
     if (!scriptId) {
@@ -901,6 +1007,7 @@ async function saveScript(actionName) {
             // Scope title search to Form-script
             const form = document.getElementById('Form-script');
             const title = form?.querySelector('input[name="title"]')?.value || "Untitled Script";
+            const script_format = form?.querySelector('select[name="script_format"]')?.value || "FEATURE_FILM";
 
             const csrfToken = getCookie('csrftoken');
 
@@ -912,7 +1019,7 @@ async function saveScript(actionName) {
                     'Content-Type': 'application/json',
                     'X-CSRFToken': csrfToken
                 },
-                body: JSON.stringify({ content, title, status: 'DRAFT', contest_id: contestId })
+                body: JSON.stringify({ content, title, status: 'DRAFT', contest_id: contestId, script_format })
             });
             const data = await response.json();
 

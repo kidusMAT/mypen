@@ -52,9 +52,16 @@
                 <div class="dashboard-story-card" id="book-card-{{ book.id }}">
                     <div class="story-image">
                         {% if book.cover_image %}
-                        <img src="{{ book.cover_image.url }}" alt="{{ book.title }}" id="book-cover-{{ book.id }}"
-                            onerror="this.src='/static/images/default_cover.jpg'; this.style.opacity='0.5';">
+                        <div class="cover-container" style="position:relative; height:100%;">
+                            <img src="{{ book.cover_image.url }}" alt="{{ book.title }}" id="book-cover-{{ book.id }}"
+                                onerror="this.src='/static/images/default_cover.jpg'; this.style.opacity='0.5';">
+                            <button class="btn-remove-cover" onclick="removeCover(event, 'book', {{ book.id }})"
+                                title="Remove Cover">
+                                <i class="fa-solid fa-times"></i>
+                            </button>
+                        </div>
                         {% else %}
+
                         <label class="image-placeholder upload-trigger" for="upload-book-{{ book.id }}"
                             title="Click to upload cover">
                             <i class="fa-solid fa-image"></i>
@@ -66,17 +73,29 @@
                     </div>
                     <div class="story-details">
                         <div class="badges" style="margin-bottom: 5px;">
-                            {% if book.status == 'FINISHED' %}
-                            <span class="status-badge finished"
-                                style="background: #28a745; color: white; padding: 2px 8px; border-radius: 12px; font-size: 11px; font-weight: 600;">Finished</span>
-                            {% elif book.status == 'PUBLISHED' %}
-                            <span class="status-badge published"
-                                style="background: #007bff; color: white; padding: 2px 8px; border-radius: 12px; font-size: 11px; font-weight: 600;">Published</span>
-                            {% else %}
-                            <span class="status-badge draft"
-                                style="background: #6c757d; color: white; padding: 2px 8px; border-radius: 12px; font-size: 11px; font-weight: 600;">Draft</span>
-                            {% endif %}
+                            <select
+                                class="status-select {% if book.status == 'PUBLISHED' %}published{% elif book.status == 'FINISHED' %}finished{% else %}draft{% endif %}"
+                                onchange="updateStatus(event, 'book', {{ book.id }}, this.value)"
+                                onclick="event.stopPropagation();">
+                                {% if book.status == 'DRAFT' %}
+                                <option value="DRAFT" selected>Draft</option>
+                                {% else %}
+                                <option value="DRAFT">Draft</option>
+                                {% endif %}
+                                {% if book.status == 'PUBLISHED' %}
+                                <option value="PUBLISHED" selected>Published</option>
+                                {% else %}
+                                <option value="PUBLISHED">Published</option>
+                                {% endif %}
+                                {% if book.status == 'FINISHED' %}
+                                <option value="FINISHED" selected>Finished</option>
+                                {% else %}
+                                <option value="FINISHED">Finished</option>
+                                {% endif %}
+                            </select>
+
                         </div>
+
                         <h3>{{ book.title }}</h3>
                         <p class="story-meta">
                             <span><i class="fa-solid fa-layer-group"></i> {{ book.total_chapters }} Chapters</span>
@@ -119,13 +138,22 @@
             <div class="stories-list">
                 {% for script in user_scripts %}
                 <div class="dashboard-story-card" id="script-card-{{ script.id }}" style="cursor: pointer;"
-                    onclick="window.location.href='{% url 'write_script' script.id %}';">
+                 {% if script.script_format == 'EPISODIC' %}
+                    onclick="window.location.href='{% url 'manage_script' script.id %}';" {% else %}
+                    onclick="window.location.href='{% url 'write_script' script.id %}';" {% endif %}>
                     <div class="story-image">
                         {% if script.cover_image %}
-                        <img src="{{ script.cover_image.url }}" alt="{{ script.title }}"
-                            id="script-cover-{{ script.id }}"
-                            onerror="this.src='/static/images/default_cover.jpg'; this.style.opacity='0.5';">
+                        <div class="cover-container" style="position:relative; height:100%;">
+                            <img src="{{ script.cover_image.url }}" alt="{{ script.title }}"
+                                id="script-cover-{{ script.id }}"
+                                onerror="this.src='/static/images/default_cover.jpg'; this.style.opacity='0.5';">
+                            <button class="btn-remove-cover" onclick="removeCover(event, 'script', {{ script.id }})"
+                                title="Remove Cover">
+                                <i class="fa-solid fa-times"></i>
+                            </button>
+                        </div>
                         {% else %}
+
                         <label class="image-placeholder upload-trigger" for="upload-script-{{ script.id }}"
                             title="Click to upload cover" onclick="event.stopPropagation();">
                             <i class="fa-solid fa-scroll"></i>
@@ -136,10 +164,34 @@
                         {% endif %}
                     </div>
                     <div class="story-details">
+                        <div class="badges" style="margin-bottom: 5px;">
+                            <select
+                                class="status-select {% if script.status == 'PUBLISHED' %}published{% else %}draft{% endif %}"
+                                onchange="updateStatus(event, 'script', {{ script.id }}, this.value)"
+                                onclick="event.stopPropagation();">
+                                {% if script.status == 'DRAFT' %}
+                                <option value="DRAFT" selected>Draft</option>
+                                {% else %}
+                                <option value="DRAFT">Draft</option>
+                                {% endif %}
+                                {% if script.status == 'PUBLISHED' %}
+                                <option value="PUBLISHED" selected>Published</option>
+                                {% else %}
+                                <option value="PUBLISHED">Published</option>
+                                {% endif %}
+                            </select>
+
+                        </div>
+
                         <h3>{{ script.title }}</h3>
                         <p class="story-meta">
+
+                            {% if script.script_format == 'EPISODIC' %}
+                            <span><i class="fa-solid fa-list-ol"></i> {{ script.episode_count }} Episodes</span>
+                            {% else %}
                             <span><i class="fa-regular fa-file-lines"></i> {{ script.page_count|default:0 }}
                                 Pages</span>
+                            {% endif %}
                             <span><i class="fa-solid fa-calendar"></i> {{ script.created_at|date:"M d, Y" }}</span>
                         </p>
                         <div class="story-stats">
@@ -148,8 +200,9 @@
                         </div>
                     </div>
                     <div class="story-actions">
-                        <a href="{% url 'write_script' script.id %}" class="btn-icon" title="Edit Script"
-                            onclick="event.stopPropagation();"><i class="fa-solid fa-pen-to-square"></i></a>
+                        <a href="{% if script.script_format == 'EPISODIC' %}{% url 'manage_script' script.id %}{% else %}{% url 'write_script' script.id %}{% endif %}"
+                            class="btn-icon" title="Edit Script" onclick="event.stopPropagation();"><i
+                                class="fa-solid fa-pen-to-square"></i></a>
                         <a href="/script/read/{{ script.id }}/" class="btn-icon" title="Read Script"
                             onclick="event.stopPropagation();"><i class="fa-solid fa-eye"></i></a>
                         <button
@@ -183,9 +236,16 @@
                     onclick="window.location.href='{% url 'write_poem' poem.id %}';">
                     <div class="story-image">
                         {% if poem.cover_image %}
-                        <img src="{{ poem.cover_image.url }}" alt="{{ poem.title }}" id="poem-cover-{{ poem.id }}"
-                            onerror="this.src='/static/images/default_cover.jpg'; this.style.opacity='0.5';">
+                        <div class="cover-container" style="position:relative; height:100%;">
+                            <img src="{{ poem.cover_image.url }}" alt="{{ poem.title }}" id="poem-cover-{{ poem.id }}"
+                                onerror="this.src='/static/images/default_cover.jpg'; this.style.opacity='0.5';">
+                            <button class="btn-remove-cover" onclick="removeCover(event, 'poem', {{ poem.id }})"
+                                title="Remove Cover">
+                                <i class="fa-solid fa-times"></i>
+                            </button>
+                        </div>
                         {% else %}
+
                         <label class="image-placeholder upload-trigger" for="upload-poem-{{ poem.id }}"
                             title="Click to upload cover" onclick="event.stopPropagation();">
                             <i class="fa-solid fa-feather-pointed"></i>
@@ -196,10 +256,34 @@
                         {% endif %}
                     </div>
                     <div class="story-details">
+                        <div class="badges" style="margin-bottom: 5px;">
+                            <select
+                                class="status-select {% if poem.status == 'PUBLISHED' %}published{% elif poem.status == 'FINISHED' %}finished{% else %}draft{% endif %}"
+                                onchange="updateStatus(event, 'poem', {{ poem.id }}, this.value)"
+                                onclick="event.stopPropagation();">
+                                {% if poem.status == 'DRAFT' %}
+                                <option value="DRAFT" selected>Draft</option>
+                                {% else %}
+                                <option value="DRAFT">Draft</option>
+                                {% endif %}
+                                {% if poem.status == 'PUBLISHED' %}
+                                <option value="PUBLISHED" selected>Published</option>
+                                {% else %}
+                                <option value="PUBLISHED">Published</option>
+                                {% endif %}
+                                {% if poem.status == 'FINISHED' %}
+                                <option value="FINISHED" selected>Finished</option>
+                                {% else %}
+                                <option value="FINISHED">Finished</option>
+                                {% endif %}
+                            </select>
+
+                        </div>
                         <h3>{{ poem.title }}</h3>
                         <p class="story-meta">
                             <span><i class="fa-solid fa-calendar"></i> {{ poem.created_at|date:"M d, Y" }}</span>
                         </p>
+
                         <div class="story-stats">
                             <span><i class="fa-solid fa-eye"></i> {{ poem.views }} Views</span>
                             <span><i class="fa-solid fa-heart"></i> {{ poem.total_likes }} Likes</span>
@@ -317,7 +401,240 @@
         .upload-trigger i {
             font-size: 24px;
         }
+
+        .btn-remove-cover {
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            background: rgba(0, 0, 0, 0.6);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 12px;
+            transition: all 0.2s;
+            opacity: 0;
+        }
+
+        .cover-container:hover .btn-remove-cover {
+            opacity: 1;
+        }
+
+        .btn-remove-cover:hover {
+            background: #ef4444;
+        }
+
+        .status-select {
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 600;
+            border: none;
+            cursor: pointer;
+            text-transform: uppercase;
+            appearance: none;
+            -webkit-appearance: none;
+            outline: none;
+            text-align: center;
+            text-align-last: center;
+        }
+
+        .status-select.draft {
+            background: #6c757d;
+            color: white;
+        }
+
+        .status-select.published {
+            background: #007bff;
+            color: white;
+        }
+
+        .status-select.finished {
+            background: #28a745;
+            color: white;
+        }
+
+        /* Custom Delete Modal */
+        .custom-modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(4px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+            opacity: 0;
+            pointer-events: none;
+            transition: all 0.3s ease;
+        }
+
+        .custom-modal-overlay.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .custom-modal-content {
+            background: white;
+            padding: 2rem;
+            border-radius: 16px;
+            width: 90%;
+            max-width: 400px;
+            text-align: center;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+            transform: translateY(20px) scale(0.95);
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        .custom-modal-overlay.active .custom-modal-content {
+            transform: translateY(0) scale(1);
+        }
+
+        .modal-icon {
+            font-size: 3rem;
+            color: #ef4444;
+            margin-bottom: 1rem;
+        }
+
+        .custom-modal-content h3 {
+            margin: 0 0 10px 0;
+            font-size: 1.25rem;
+            color: #1f2937;
+        }
+
+        .custom-modal-content p {
+            color: #4b5563;
+            font-size: 0.95rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .modal-actions {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+        }
+
+        .modal-btn {
+            padding: 0.5rem 1.5rem;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            border: none;
+            font-size: 0.95rem;
+            transition: all 0.2s;
+        }
+
+        .cancel-btn {
+            background: #e5e7eb;
+            color: #374151;
+        }
+
+        .cancel-btn:hover {
+            background: #d1d5db;
+        }
+
+        .confirm-btn {
+            background: #ef4444;
+            color: white;
+        }
+
+        .confirm-btn:hover {
+            background: #dc2626;
+        }
     </style>
 
+    <script>
+        let coverToDelete = null;
+
+        function removeCover(e, type, id) {
+            if (e) e.stopPropagation();
+            coverToDelete = { type, id };
+            document.getElementById('coverDeleteModal').classList.add('active');
+        }
+
+        function closeCoverModal() {
+            coverToDelete = null;
+            document.getElementById('coverDeleteModal').classList.remove('active');
+        }
+
+        function executeRemoveCover() {
+            if (!coverToDelete) return;
+            const { type, id } = coverToDelete;
+
+            const btn = document.getElementById('confirmRemoveBtn');
+            const originalText = btn.innerHTML;
+            btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i>';
+            btn.disabled = true;
+
+            fetch(`/ajax/remove-cover/${type}/${id}/`, {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': '{{ csrf_token }}',
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success) {
+                        if (window.showToast) showToast('Cover removed successfully!', 'success');
+                        window.location.reload();
+                    } else {
+                        if (window.showToast) showToast(data.message || 'Error removing cover', 'error');
+                        closeCoverModal();
+                        btn.innerHTML = originalText;
+                        btn.disabled = false;
+                    }
+                });
+        }
+
+        function updateStatus(e, type, id, status) {
+            if (e) e.stopPropagation();
+            fetch(`/ajax/update-status/${type}/${id}/`, {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': '{{ csrf_token }}',
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ status: status })
+            })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success) {
+                        if (window.showToast) showToast('Status updated successfully!', 'success');
+                        const select = e.target;
+                        select.className = 'status-select ' + status.toLowerCase();
+                        // Optional update the options display here if needed
+                    } else {
+                        if (window.showToast) showToast(data.message || 'Error updating status', 'error');
+                    }
+                });
+        }
+    </script>
+
+
+    <!-- Custom Delete Confirmation Modal -->
+    <div id="coverDeleteModal" class="custom-modal-overlay" onclick="closeCoverModal()">
+        <div class="custom-modal-content" onclick="event.stopPropagation()">
+            <div class="modal-icon">
+                <i class="fa-solid fa-trash-can"></i>
+            </div>
+            <h3>Remove Cover Image?</h3>
+            <p>Are you sure you want to remove this cover? This action cannot be undone.</p>
+            <div class="modal-actions">
+                <button onclick="closeCoverModal()" class="modal-btn cancel-btn">Cancel</button>
+                <button id="confirmRemoveBtn" onclick="executeRemoveCover()"
+                    class="modal-btn confirm-btn">Remove</button>
+            </div>
+        </div>
+    </div>
 </main>
 {% endblock %}

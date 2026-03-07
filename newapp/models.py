@@ -159,6 +159,13 @@ class Script(models.Model):
     last_saved = models.DateTimeField(auto_now=True)
     handpicked = models.BooleanField(default=False)
     status = models.CharField(max_length=10, choices=STATUS_CHOICES, default='DRAFT')
+    
+    FORMAT_CHOICES = (
+        ('FEATURE_FILM', 'Feature Film'),
+        ('EPISODIC', 'Series (Episodic)'),
+    )
+    script_format = models.CharField(max_length=20, choices=FORMAT_CHOICES, default='FEATURE_FILM')
+    
     page_count = models.PositiveIntegerField(default=0)
     script_file = models.FileField(upload_to='scripts/', blank=True, null=True)
 
@@ -169,6 +176,39 @@ class Script(models.Model):
 
     def __str__(self):
         return self.title
+
+    @property
+    def episode_count(self):
+        return self.episodes.count()
+
+class ScriptEpisode(models.Model):
+    STATUS_CHOICES = (
+        ('DRAFT', 'Draft'),
+        ('PUBLISHED', 'Published'),
+    )
+
+    script = models.ForeignKey(Script, related_name='episodes', on_delete=models.CASCADE)
+    title = models.CharField(max_length=200)
+    content = models.TextField(blank=True)
+    order = models.PositiveIntegerField(default=1)
+    status = models.CharField(max_length=10, choices=STATUS_CHOICES, default='DRAFT')
+    
+    # Metrics
+    views = models.PositiveIntegerField(default=0)
+    likes = models.ManyToManyField(User, related_name='liked_episodes', blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    last_saved = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['order']
+
+    def __str__(self):
+        return f"{self.script.title} - {self.title}"
+
+    @property
+    def is_updated(self):
+        from datetime import timedelta
+        return self.last_saved > self.created_at + timedelta(minutes=2)
 
 class Poem(models.Model):
     STATUS_CHOICES = (

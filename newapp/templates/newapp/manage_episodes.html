@@ -1,0 +1,85 @@
+{% extends "newapp/_base.html" %}
+{% load static %}
+
+{% block title %} Manage {{ script.title }} - Mypen {% endblock %}
+
+{% block content %}
+<main class="manage-book-page">
+    <section class="dashboard-header">
+        <div class="dashboard-container">
+            <div class="header-with-back">
+                <a href="{% url 'dashboard' %}" class="btn-back"><i class="fa-solid fa-arrow-left"></i> Back to
+                    Dashboard</a>
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <h1>{{ script.title }}</h1>
+                    {% if script.status == 'PUBLISHED' %}
+                    <span class="status-badge published"
+                        style="background: #007bff; color: white; padding: 4px 10px; border-radius: 12px; font-size: 12px; font-weight: 600;">Published</span>
+                    {% else %}
+                    <span class="status-badge draft"
+                        style="background: #6c757d; color: white; padding: 4px 10px; border-radius: 12px; font-size: 12px; font-weight: 600;">Draft</span>
+                    {% endif %}
+                </div>
+            </div>
+            <p class="subtitle">Manage episodes and track progress for this series.</p>
+        </div>
+    </section>
+
+    <section class="chapters-section">
+        <div class="dashboard-container">
+            <div class="section-header">
+                <h2>Episodes</h2>
+                <a href="#" class="btn-primary" onclick="addEpisode({{ script.id }})"><i class="fa-solid fa-plus"></i>
+                    Add New
+                    Episode</a>
+            </div>
+
+            <div class="stories-list">
+                {% for episode in episodes %}
+                <div class="dashboard-story-card" id="episode-card-{{ episode.id }}">
+                    <div class="chapter-order">{{ forloop.counter }}</div>
+                    <div class="story-details">
+                        <h3>{{ episode.title }}</h3>
+                        <p class="story-meta">
+                            <span><i class="fa-solid fa-clock"></i> Last saved {{ episode.last_saved|timesince }}
+                                ago</span>
+                            <span class="status-badge {{ episode.status|lower }}">{{ episode.status }}</span>
+                        </p>
+                    </div>
+                    <div class="story-actions">
+                        <a href="{% url 'write_episode' episode.id %}" class="btn-icon" title="Edit Episode"><i
+                                class="fa-solid fa-pen-to-square"></i></a>
+                        <a href="{% url 'read_episode' episode.id %}" class="btn-icon" title="Preview"><i
+                                class="fa-solid fa-eye"></i></a>
+                    </div>
+                </div>
+                {% empty %}
+                <div class="empty-state">
+                    <i class="fa-solid fa-file-signature"></i>
+                    <p>This script has no episodes yet. Let's start writing!</p>
+                    <a href="#" onclick="addEpisode({{ script.id }})" class="btn-primary">Create Your First Episode</a>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </section>
+</main>
+
+<script>
+    function addEpisode(scriptId) {
+        fetch(`/ajax/add-episode/${scriptId}/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': '{{ csrf_token }}'
+            }
+        }).then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    window.location.reload();
+                } else {
+                    alert('Error creating episode: ' + data.message);
+                }
+            });
+    }
+</script>
+{% endblock %}

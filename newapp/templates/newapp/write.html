@@ -23,6 +23,10 @@
                 {% if chapter %}
                 <a href="{% url 'manage_book' chapter.book.id %}" class="back"><i class="fa-solid fa-arrow-left"></i>
                     Back</a>
+                {% elif episode %}
+                <a href="{% url 'manage_script' episode.script.id %}" class="back"><i
+                        class="fa-solid fa-arrow-left"></i>
+                    Back</a>
                 {% else %}
                 <a href="/" class="back"><i class="fa-solid fa-arrow-left"></i> Back</a>
                 {% endif %}
@@ -105,6 +109,12 @@
                     <button type="button" onclick="submitActiveForm('end_chapter')"><i class="fa-solid fa-flag"></i> End
                         Ch.</button>
                 </div>
+                <div class="chapterc episodec" style="display: none;">
+                    <button type="button" onclick="submitActiveForm('next_episode')"><i
+                            class="fa-solid fa-arrow-right"></i> Next Ep.</button>
+                    <button type="button" onclick="submitActiveForm('end_episode')"><i class="fa-solid fa-flag"></i> End
+                        Ep.</button>
+                </div>
             </div>
         </div>
 
@@ -140,6 +150,12 @@
                 <button type="button" onclick="submitActiveForm('end_chapter')"><i class="fa-solid fa-flag"></i> End
                     Ch.</button>
             </div>
+            <div class="chapterc episodec" style="display: none;">
+                <button type="button" onclick="submitActiveForm('next_episode')"><i class="fa-solid fa-arrow-right"></i>
+                    Next Ep.</button>
+                <button type="button" onclick="submitActiveForm('end_episode')"><i class="fa-solid fa-flag"></i> End
+                    Ep.</button>
+            </div>
         </div>
         <div class="formcont">
             <form method="post" class="Story active" id="Form-story">
@@ -157,8 +173,8 @@
                 <input type="hidden" name="thestory" id="hidden-story-{{ chapter.id|default:'new' }}"
                     value="{{ chapter.content|default:'' }}">
                 <div contenteditable="true" class="editor-content" id="editor-story-{{ chapter.id|default:'new' }}"
-                    oninput="syncEditor('editor-story-{{ chapter.id|default:'new' }}', 'hidden-story-{{ chapter.id|default:'new' }}')"
-                    placeholder=" Tell your story ..."> {{ chapter.content|default:''|safe }}</div>
+                    oninput="syncEditor(this.id, 'hidden-story-{{ chapter.id|default:'new' }}')"
+                    placeholder="Tell your story...">{{ chapter.content|default:''|safe }}</div>
             </form>
             <form method="post" class="Poem" id="Form-poem">
                 {% csrf_token %}
@@ -180,16 +196,28 @@
             <form method="post" class="Script" id="Form-script">
                 {% csrf_token %}
                 <input type="hidden" name="script_id" value="{{ script.id|default:'' }}">
+                <input type="hidden" name="episode_id" value="{{ episode.id|default:'' }}">
                 <input type="hidden" name="type" value="script">
                 <input type="hidden" id="script-has-metadata"
                     value="{% if script and script.description %}true{% else %}false{% endif %}">
 
-                <input type="text" class="titlee" name="title" placeholder="Script Title"
-                    value="{{ script.title|default:'' }}">
-                <input type="hidden" name="content" id="hidden-script" value="{{ script.content|default:'' }}">
+                <input type="text" class="titlee" name="title"
+                    placeholder="{% if episode %}Episode Title{% else %}Script Title{% endif %}"
+                    value="{% if episode %}{{ episode.title|default:'' }}{% else %}{{ script.title|default:'' }}{% endif %}">
+
+                <select name="script_format" class="cn"
+                    style="margin-bottom: 10px; padding: 10px; width: 100%; border: 1px solid #ddd; border-radius: 5px; font-family: inherit; font-size: 16px;"
+                    {% if script.id %}disabled{% endif %}>
+                    <option value="FEATURE_FILM" {% if script.script_format == 'FEATURE_FILM' %}selected{% endif %}>
+                        Feature Film (Single Page)</option>
+                    <option value="EPISODIC" {% if script.script_format == 'EPISODIC' %}selected{% endif %}>Series
+                        (Episodic)</option>
+                </select>
+                <input type="hidden" name="content" id="hidden-script"
+                    value="{% if episode %}{{ episode.content|default:'' }}{% else %}{{ script.content|default:'' }}{% endif %}">
                 <div contenteditable="true" class="editor-content" id="editor-script"
                     oninput="syncEditor('editor-script', 'hidden-script')" placeholder="Start your script here...">
-                    {{ script.content|default:''|safe }}</div>
+                    {% if episode %}{{ episode.content|default:''|safe }}{% else %}{{ script.content|default:''|safe }}{% endif %}</div>
             </form>
         </div>
 
