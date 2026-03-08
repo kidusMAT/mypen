@@ -475,8 +475,7 @@
                 style="margin-left: 15px; padding: 5px; border-radius: 5px; background: #f0f0f0; border: 1px solid #ccc;">
                 {% for epi in script.episodes.all %}
                 {% if epi.status == 'PUBLISHED' or request.user == script.author %}
-                <option value="{% url 'read_episode' epi.id %}" {% if episode and epi.id==episode.id %}selected{% endif
-                    %}>{{ epi.title }}</option>
+                <option value="{% url 'read_episode' epi.id %}" {% if episode and epi.id == episode.id %}selected{% endif %}>{{ epi.title }}</option>
                 {% endif %}
                 {% endfor %}
             </select>

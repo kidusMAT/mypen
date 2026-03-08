@@ -29,19 +29,43 @@
     /* Fix the root cause: wide stats row pushing container on mobile */
     @media (max-width: 768px) {
         .profile-stats-row {
-            gap: 15px !important;
-            /* Significantly reduced to keep items in one row */
-            width: 100%;
+            gap: 12px !important;
+            /* Reduced gap to help fit everything */
             justify-content: center;
-            flex-wrap: wrap;
+            flex-wrap: nowrap !important;
+            /* Force one line */
+            width: 100%;
+            overflow-x: auto;
+            /* Allow horizontal scroll if screen is extremely narrow */
+            padding-bottom: 5px;
+            scrollbar-width: none;
+            /* Hide scrollbar for cleaner look */
+        }
+
+        .profile-stats-row::-webkit-scrollbar {
+            display: none;
         }
 
         .stat-item {
             min-width: 0;
+            flex-shrink: 0;
+            /* Prevent items from shrinking too much */
         }
 
         .stat-num {
-            font-size: 20px !important;
+            font-size: 18px !important;
+            /* Smaller font for mobile */
+        }
+
+        .stat-lbl {
+            font-size: 10px !important;
+            /* Smaller labels */
+        }
+
+        .stat-sep {
+            height: 20px !important;
+            /* Shorter separators */
+            flex-shrink: 0;
         }
 
         /* Stack buttons vertically on mobile */
