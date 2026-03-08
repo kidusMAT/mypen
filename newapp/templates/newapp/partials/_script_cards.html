@@ -14,8 +14,9 @@
     {% endif %}
     <div class="card-details">
         <div class="details-top">
-            <span class="badge secondary">{% if script.script_format == 'EPISODIC' %}Series{% else %}Feature{% endif
-                %}</span>
+            <span class="badge secondary">
+                {% if script.script_format == 'EPISODIC' %}Series{% else %}Feature{% endif %}
+            </span>
             {% if script.genre %}
             <span class="badge outline">{{ script.genre }}</span>
             {% endif %}
