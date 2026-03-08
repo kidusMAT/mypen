@@ -21,7 +21,7 @@ from newapp.views import index, scripts , books , poems, write, write_chapter , 
 
 urlpatterns = [
     path('coming-soon/', coming_soon, name='coming_soon'),
-    path('admin/', admin.site.urls),
+    path('only_for_me/', admin.site.urls),
     path('', index, name='index'),
     path('discover/', discover, name='discover'),
     path('dashboard/', dashboard, name='dashboard'),

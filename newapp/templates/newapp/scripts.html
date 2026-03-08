@@ -130,8 +130,10 @@
         border: 1px solid rgba(0, 0, 0, 0.04);
         transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.3s ease;
         cursor: pointer;
-        height: 280px;
-        /* Uniform height for all cards */
+        min-height: 280px;
+        height: auto;
+        width: 100%;
+        /* Uniform minimum height for all cards, allows expansion */
         box-shadow: 0 4px 15px rgba(0, 0, 0, 0.03);
     }
 
