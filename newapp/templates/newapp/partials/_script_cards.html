@@ -14,7 +14,8 @@
     {% endif %}
     <div class="card-details">
         <div class="details-top">
-            <span class="badge secondary">Feature</span>
+            <span class="badge secondary">{% if script.script_format == 'EPISODIC' %}Series{% else %}Feature{% endif
+                %}</span>
             {% if script.genre %}
             <span class="badge outline">{{ script.genre }}</span>
             {% endif %}
@@ -30,7 +31,11 @@
         </p>
         <div class="details-footer">
             <i class="fa-regular fa-clock"></i>
+            {% if script.script_format == 'EPISODIC' %}
+            <span>{{ script.episode_count }} episodes</span>
+            {% else %}
             <span>{{ script.page_count|default:0 }} pages</span>
+            {% endif %}
 
             <div class="card-metrics-row" style="margin-left: auto; display: flex; gap: 15px;">
                 <span class="metric" onclick="toggleScriptLike(event, '{{ script.id }}')" style="cursor: pointer;">

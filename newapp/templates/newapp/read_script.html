@@ -511,8 +511,7 @@
         <div class="script-hero">
             <div class="script-type-badge">
                 <i class="fa-solid fa-clapperboard" style="font-size: 1.1em;"></i>
-                <span>{% if script.script_format == 'EPISODIC' %}SERIES • EPISODE{% else %}FEATURE • SCREENPLAY{% endif
-                    %}</span>
+                <span>{% if script.script_format == 'EPISODIC' %}SERIES • EPISODE{% else %}FEATURE • SCREENPLAY{% endif %}</span>
             </div>
             <h1 class="script-hero-title">{% if episode %}{{ episode.title }}{% else %}{{ script.title }}{% endif %}
             </h1>
@@ -530,8 +529,7 @@
         </div>
 
         <!-- Hidden source content -->
-        <div id="script-raw-content" style="display:none;">{% if episode %}{{ episode.content|safe }}{% else %}{{
-            script.content|safe }}{% endif %}</div>
+        <div id="script-raw-content" style="display:none;">{% if episode %}{{ episode.content|safe }}{% else %}{{ script.content|safe }}{% endif %}</div>
     </main>
 
     <footer class="reader-footer">

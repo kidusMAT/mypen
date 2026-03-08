@@ -103,7 +103,7 @@ if DATABASE_URL:
     }
     # Add robust options for Neon/Pooler connections on Windows
     DATABASES['default']['OPTIONS'] = {
-        'connect_timeout': 10,
+        'connect_timeout': 30,
         'keepalives': 1,
         'keepalives_idle': 30,
         'keepalives_interval': 10,
