@@ -31,6 +31,16 @@
                 </div>
 
                 <div class="form-group">
+                    <label>Username</label>
+                    {{ form.username }}
+                    {% if form.username.errors %}
+                    <small style="color:#e53e3e;">{{ form.username.errors|join:", " }}</small>
+                    {% else %}
+                    <small>This is your unique @handle used in URLs and mentions.</small>
+                    {% endif %}
+                </div>
+
+                <div class="form-group">
                     <label>Pen Name</label>
                     {{ form.pen_name }}
                     <small>This name will be displayed on your stories.</small>

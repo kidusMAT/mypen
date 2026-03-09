@@ -124,7 +124,7 @@
                     </div>
                     <div>
                         <p class="newtitle">{{ book.title }}</p>
-                        <p class="newauthor">{{ book.author.username }}</p>
+                        <p class="newauthor">{{ book.author.authorprofile.pen_name|default:book.author.username }}</p>
                     </div>
                 </div>
             </div>

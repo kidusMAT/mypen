@@ -22,7 +22,7 @@
             {% endif %}
         </div>
         <h3 class="script-title">{{ script.title }}</h3>
-        <p class="script-author">by {{ script.author.username }}</p>
+        <p class="script-author">by {{ script.author.authorprofile.pen_name|default:script.author.username }}</p>
         <p class="script-preview">
             {% if script.description %}
             {{ script.description|truncatewords:15 }}

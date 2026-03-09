@@ -1293,15 +1293,20 @@ def profile_view(request, username):
 def edit_profile(request):
     from .forms import AuthorProfileForm
     profile, _ = AuthorProfile.objects.get_or_create(user=request.user)
-    
+
     if request.method == 'POST':
-        form = AuthorProfileForm(request.POST, request.FILES, instance=profile)
+        form = AuthorProfileForm(request.POST, request.FILES, instance=profile, user=request.user)
         if form.is_valid():
             form.save()
+            # Update the username on the User model
+            new_username = form.cleaned_data['username']
+            if request.user.username != new_username:
+                request.user.username = new_username
+                request.user.save(update_fields=['username'])
             return redirect('profile_view', username=request.user.username)
     else:
-        form = AuthorProfileForm(instance=profile)
-        
+        form = AuthorProfileForm(instance=profile, user=request.user)
+
     return render(request, 'newapp/edit_profile.html', {
         'form': form,
         'profile': profile

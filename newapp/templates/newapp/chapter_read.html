@@ -20,10 +20,12 @@
                 <div class="utility-icons">
                     <button id="toc-toggle" title="Table of Contents"><i class="fa-solid fa-list-ul"></i></button>
                     <button id="bookmark-btn" title="Bookmark" onclick="toggleBookBookmark(null, {{ book.id }})">
-                        <i class="{% if bookmarked %}fa-solid{% else %}fa-regular{% endif %} fa-bookmark" {% if bookmarked %}style="color: #D48C11;" {% endif %}></i>
+                        <i class="{% if bookmarked %}fa-solid{% else %}fa-regular{% endif %} fa-bookmark" {% if
+                            bookmarked %}style="color: #D48C11;" {% endif %}></i>
                     </button>
                     <button id="like-btn" title="Like" onclick="toggleLike(null, 'chapter', {{ chapter.id }})">
-                        <i class="{% if liked %}fa-solid{% else %}fa-regular{% endif %} fa-heart" {% if liked %}style="color: #ef4444;" {% endif %}></i>
+                        <i class="{% if liked %}fa-solid{% else %}fa-regular{% endif %} fa-heart" {% if liked
+                            %}style="color: #ef4444;" {% endif %}></i>
                     </button>
                     <button id="share-btn" title="Share"><i class="fa-solid fa-share-nodes"></i></button>
                     <button id="settings-toggle" title="Reading Settings"><i class="fa-solid fa-gear"></i></button>
@@ -64,7 +66,8 @@
                 <div class="book-title-accent">
                     <i class="fa-solid fa-book-open"></i> {{ book.title }}
                 </div>
-                <div class="author-attribution">by {{ book.author.username }}</div>
+                <div class="author-attribution">by {{ book.author.authorprofile.pen_name|default:book.author.username }}
+                </div>
             </div>
 
             <h1 class="chapter-display-title">{{ chapter.title }}</h1>

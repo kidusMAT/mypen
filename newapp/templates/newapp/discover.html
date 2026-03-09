@@ -39,7 +39,7 @@
                     <div class="trending-rank">0{{ forloop.counter }}</div>
                     <div class="trending-info">
                         <h3>{{ book.title }}</h3>
-                        <p class="author">by {{ book.author.username }}</p>
+                        <p class="author">by {{ book.author.authorprofile.pen_name|default:book.author.username }}</p>
                         <div class="stats">
                             <span><i class="fa-solid fa-eye"></i> {{ book.views }}</span>
                             <span onclick="toggleBookLike(event, {{ book.id }})" style="cursor: pointer;">

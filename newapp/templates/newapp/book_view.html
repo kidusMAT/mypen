@@ -122,7 +122,8 @@
                         <div class="profile-author-row">
                             <div class="author-avatar-stub">{{ book.author.username|slice:":1"|upper }}</div>
                             <span class="author-label">Written by</span>
-                            <span class="author-value">{{ book.author.username }}</span>
+                            <span class="author-value">{{
+                                book.author.authorprofile.pen_name|default:book.author.username }}</span>
                         </div>
 
                         <div class="profile-stats-row">

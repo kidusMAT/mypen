@@ -99,15 +99,13 @@ if DATABASE_URL:
             default=DATABASE_URL,
             conn_max_age=0,
             ssl_require=True,
+            conn_health_checks=True,  # Auto-reconnect when Neon drops the connection
         )
     }
-    # Add robust options for Neon/Pooler connections on Windows
+    # Neon pooler connection options (keepalives omitted — not supported on Windows)
     DATABASES['default']['OPTIONS'] = {
-        'connect_timeout': 30,
-        'keepalives': 1,
-        'keepalives_idle': 30,
-        'keepalives_interval': 10,
-        'keepalives_count': 5,
+        'connect_timeout': 10,
+        'sslmode': 'require',
     }
 else:
     DATABASES = {

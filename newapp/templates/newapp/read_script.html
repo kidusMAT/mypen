@@ -133,6 +133,49 @@
         text-align: center;
     }
 
+    /* Episode Selector Styling */
+    .episode-picker {
+        position: relative;
+        display: flex;
+        align-items: center;
+        margin-left: 15px;
+    }
+
+    .episode-select {
+        appearance: none;
+        -webkit-appearance: none;
+        background-color: #f1f3f5;
+        border: 1px solid #e9ecef;
+        border-radius: 8px;
+        padding: 6px 32px 6px 12px;
+        font-family: inherit;
+        font-size: 13px;
+        font-weight: 600;
+        color: var(--text-main);
+        cursor: pointer;
+        transition: all 0.2s ease;
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='%23666' viewBox='0 0 16 16'%3E%3Cpath d='M7.247 11.14 2.451 5.658C2.185 5.355 2.401 5 2.737 5h9.526c.336 0 .552.355.286.658L7.753 11.14a.611.611 0 0 1-.506.002z'/%3E%3C/svg%3E");
+        background-repeat: no-repeat;
+        background-position: right 10px center;
+        min-width: 120px;
+        max-width: 180px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        height: 36px;
+    }
+
+    .episode-select:hover {
+        background-color: #e9ecef;
+        border-color: var(--script-gold);
+    }
+
+    .episode-select:focus {
+        outline: none;
+        border-color: var(--script-gold);
+        box-shadow: 0 0 0 3px rgba(212, 160, 23, 0.1);
+    }
+
     /* Main Reader Content */
     .reader-main {
         margin-top: 64px;
@@ -406,8 +449,35 @@
         }
 
         .nav-right {
-            gap: 6px;
+            gap: 4px;
             flex-shrink: 0;
+        }
+
+        .episode-picker {
+            margin-left: 2px;
+        }
+
+        .episode-select {
+            min-width: 0;
+            max-width: 90px;
+            width: 90px;
+            padding: 3px 20px 3px 7px;
+            font-size: 10px;
+            background-position: right 5px center;
+            background-size: 12px;
+            height: 28px;
+            border-radius: 6px;
+        }
+
+        .nav-right {
+            gap: 2px;
+        }
+
+        .tool-group {
+            border-right: none;
+            padding-right: 0;
+            margin-right: 0;
+            gap: 4px;
         }
 
         .tool-btn {
@@ -468,17 +538,22 @@
             <a href="/scripts/" class="back-btn"><i class="fa-solid fa-arrow-left"></i></a>
             <div class="nav-info">
                 <h4 class="nav-title">{% if episode %}{{ episode.title }}{% else %}{{ script.title }}{% endif %}</h4>
-                <p class="nav-author">by {{ script.author.username }}</p>
+                <p class="nav-author">by {{ script.author.authorprofile.pen_name|default:script.author.username }}</p>
             </div>
-            {% if episode or script.script_format == 'EPISODIC' %}
-            <select onchange="window.location.href=this.value"
-                style="margin-left: 15px; padding: 5px; border-radius: 5px; background: #f0f0f0; border: 1px solid #ccc;">
-                {% for epi in script.episodes.all %}
-                {% if epi.status == 'PUBLISHED' or request.user == script.author %}
-                <option value="{% url 'read_episode' epi.id %}" {% if episode and epi.id == episode.id %}selected{% endif %}>{{ epi.title }}</option>
-                {% endif %}
-                {% endfor %}
-            </select>
+            {% if script.script_format == 'EPISODIC' %}
+            <div class="episode-picker">
+                <select class="episode-select" onchange="window.location.href=this.value">
+                    <option value="" disabled {% if not episode %}selected{% endif %}>Episodes...</option>
+                    {% for epi in script.episodes.all %}
+                    {% if epi.status == 'PUBLISHED' or request.user.id == script.author.id %}
+                    <option value="{% url 'read_episode' epi.id %}" {% if episode and epi.id==episode.id %}selected{%
+                        endif %}>
+                        {{ epi.title }}
+                    </option>
+                    {% endif %}
+                    {% endfor %}
+                </select>
+            </div>
             {% endif %}
         </div>
 
@@ -511,11 +586,13 @@
         <div class="script-hero">
             <div class="script-type-badge">
                 <i class="fa-solid fa-clapperboard" style="font-size: 1.1em;"></i>
-                <span>{% if script.script_format == 'EPISODIC' %}SERIES • EPISODE{% else %}FEATURE • SCREENPLAY{% endif %}</span>
+                <span>{% if script.script_format == 'EPISODIC' %}SERIES • EPISODE{% else %}FEATURE • SCREENPLAY{% endif
+                    %}</span>
             </div>
             <h1 class="script-hero-title">{% if episode %}{{ episode.title }}{% else %}{{ script.title }}{% endif %}
             </h1>
-            <p class="script-hero-author">by {{ script.author.username }}</p>
+            <p class="script-hero-author">by {{ script.author.authorprofile.pen_name|default:script.author.username }}
+            </p>
         </div>
 
         <div id="pages-container" class="pages-container">
@@ -529,7 +606,8 @@
         </div>
 
         <!-- Hidden source content -->
-        <div id="script-raw-content" style="display:none;">{% if episode %}{{ episode.content|safe }}{% else %}{{ script.content|safe }}{% endif %}</div>
+        <div id="script-raw-content" style="display:none;">{% if episode %}{{ episode.content|safe }}{% else %}{{
+            script.content|safe }}{% endif %}</div>
     </main>
 
     <footer class="reader-footer">

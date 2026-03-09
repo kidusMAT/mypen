@@ -20,7 +20,7 @@
         <div class="card-badge-pill" style="background: #28a745; color: white; margin-left: 5px;">Finished</div>
         {% endif %}
         <h3 class="card-story-title">{{ poem.title }}</h3>
-        <p class="card-author-line">by {{ poem.author.username }}</p>
+        <p class="card-author-line">by {{ poem.author.authorprofile.pen_name|default:poem.author.username }}</p>
         <p class="card-preview-text">
             {% if poem.description %}
             {{ poem.description|truncatewords:18 }}

@@ -103,7 +103,7 @@
             <div class="card-body-content">
                 <div class="card-badge-pill">{{ book.genre|default:"Featured" }}</div>
                 <h3 class="card-story-title">{{ book.title }}</h3>
-                <p class="card-author-line">by {{ book.author.username }}</p>
+                <p class="card-author-line">by {{ book.author.authorprofile.pen_name|default:book.author.username }}</p>
                 <p class="card-preview-text">
                     {% if book.description %}
                     {{ book.description|truncatewords:15 }}
