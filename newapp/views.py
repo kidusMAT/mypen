@@ -194,8 +194,8 @@ from django.db.models import Sum
 
 def index(request):
     handpicked_books = Book.objects.filter(handpicked=True, status__in=['PUBLISHED', 'FINISHED']).annotate(
-        total_likes=Count('likes'),
-        total_chapters=Count('chapters')
+        total_likes=Count('likes', distinct=True),
+        total_chapters=Count('chapters', filter=Q(chapters__status='PUBLISHED'), distinct=True)
     ).prefetch_related('likes', 'bookmarks').order_by('-created_at', '-id')[:8]
     
     # Calculate statistics
@@ -239,11 +239,12 @@ from django.db.models import Sum
 @login_required
 def dashboard(request):
     user_books = Book.objects.filter(author=request.user).annotate(
-        total_likes=Count('likes'),
-        total_chapters=Count('chapters')
+        total_likes=Count('likes', distinct=True),
+        total_chapters=Count('chapters', filter=Q(chapters__status='PUBLISHED'), distinct=True)
     )
     user_scripts = Script.objects.filter(author=request.user).annotate(
-        total_likes=Count('likes')
+        total_likes=Count('likes', distinct=True),
+        episode_count_attr=Count('episodes', filter=Q(episodes__status='PUBLISHED'), distinct=True)
     )
     user_poems = Poem.objects.filter(author=request.user).annotate(
         total_likes=Count('likes')
@@ -444,7 +445,8 @@ def scripts(request):
     
     # Show ALL published scripts, prioritizing Handpicked.
     scripts_list = Script.objects.filter(status='PUBLISHED').annotate(
-        total_likes=Count('likes')
+        total_likes=Count('likes', distinct=True),
+        episode_count_attr=Count('episodes', filter=Q(episodes__status='PUBLISHED'), distinct=True)
     ).order_by('-handpicked', '-created_at')
         
     paginator = Paginator(scripts_list, 6)
@@ -472,13 +474,13 @@ def books(request):
 
     if active_genre:
         books_list = base_query.filter(genre__iexact=active_genre).annotate(
-            total_likes=Count('likes'),
-            total_chapters=Count('chapters')
+            total_likes=Count('likes', distinct=True),
+            total_chapters=Count('chapters', filter=Q(chapters__status='PUBLISHED'), distinct=True)
         ).prefetch_related('likes', 'bookmarks').order_by('-created_at', '-id')
     else:
         books_list = base_query.annotate(
-            total_likes=Count('likes'),
-            total_chapters=Count('chapters')
+            total_likes=Count('likes', distinct=True),
+            total_chapters=Count('chapters', filter=Q(chapters__status='PUBLISHED'), distinct=True)
         ).prefetch_related('likes', 'bookmarks').order_by('-created_at', '-id')
         
     paginator = Paginator(books_list, 6)
@@ -492,8 +494,8 @@ def books(request):
         return response
 
     new_releases = Book.objects.filter(status__in=['PUBLISHED', 'FINISHED']).distinct().annotate(
-        total_likes=Count('likes'),
-        total_chapters=Count('chapters')
+        total_likes=Count('likes', distinct=True),
+        total_chapters=Count('chapters', filter=Q(chapters__status='PUBLISHED'), distinct=True)
     ).prefetch_related('likes', 'bookmarks').order_by('-created_at')[:4]
     
     return render(request, 'newapp/books.html', {
@@ -515,11 +517,11 @@ def discover(request):
                 Q(author__username__icontains=query) |
                 Q(genre__icontains=query)
             )
-        ).annotate(total_likes=Count('likes')).order_by('-views', '-total_likes', '-id')
+        ).annotate(total_likes=Count('likes', distinct=True)).order_by('-views', '-total_likes', '-id')
     else:
         # Get top 4 trending books
         trending_books = Book.objects.filter(status__in=['PUBLISHED', 'FINISHED']).annotate(
-            total_likes=Count('likes')
+            total_likes=Count('likes', distinct=True)
         ).order_by('-views', '-total_likes', '-id')[:4]
     
     context = {
@@ -874,8 +876,27 @@ def create_script_ajax(request):
         return JsonResponse({'status': 'error', 'message': str(e)}, status=400)
 
 def read_script(request, script_id):
+    from django.shortcuts import redirect as django_redirect
     script = get_object_or_404(Script, id=script_id)
-    # Increment views
+
+    # For EPISODIC scripts, redirect to the first published episode
+    if script.script_format == 'EPISODIC':
+        is_author = request.user.is_authenticated and script.author == request.user
+        if is_author:
+            # Authors see the first episode (published or draft)
+            first_episode = script.episodes.all().order_by('order').first()
+        else:
+            # Regular visitors only see the first published episode
+            first_episode = script.episodes.filter(status='PUBLISHED').order_by('order').first()
+        
+        if first_episode:
+            from django.urls import reverse
+            return django_redirect(reverse('read_episode', args=[first_episode.id]))
+        else:
+            # No episodes available - show a placeholder page rather than raw script
+            return HttpResponse("No published episodes yet.", status=404)
+
+    # Increment views (for non-episodic scripts only)
     Script.objects.filter(id=script_id).update(views=F('views') + 1)
     script.refresh_from_db()
     
@@ -942,16 +963,26 @@ def write_episode(request, episode_id):
 
 def read_episode(request, episode_id):
     episode = get_object_or_404(ScriptEpisode, id=episode_id)
+    
+    # Security check: Only author can view drafts
+    if episode.status != 'PUBLISHED':
+        if not request.user.is_authenticated or episode.script.author != request.user:
+            return HttpResponse("This episode is not published yet.", status=403)
+            
     if episode.status == 'PUBLISHED':
         episode.views += 1
         episode.save()
         
     next_episode = ScriptEpisode.objects.filter(script=episode.script, order__gt=episode.order, status='PUBLISHED').order_by('order').first()
+    prev_episode = ScriptEpisode.objects.filter(script=episode.script, order__lt=episode.order, status='PUBLISHED').order_by('-order').first()
+    published_episodes = ScriptEpisode.objects.filter(script=episode.script, status='PUBLISHED').order_by('order')
     
     return render(request, 'newapp/read_script.html', {
         'episode': episode, 
         'script': episode.script,
-        'next_episode': next_episode
+        'next_episode': next_episode,
+        'prev_episode': prev_episode,
+        'published_episodes': published_episodes
     })
 
 @login_required
@@ -1279,8 +1310,8 @@ def profile_view(request, username):
     poems = list(user_prof.poem_set.filter(status='PUBLISHED'))
     works = sorted(books + scripts + poems, key=lambda x: x.created_at, reverse=True)
     
-    # Get profile comments
-    comments = profile.comments.all().order_by('-created_at')
+    # Get profile comments (only top-level threads for the initial load)
+    comments = profile.comments.filter(parent=None).all()
     
     return render(request, 'newapp/profile.html', {
         'profile': profile,
@@ -1323,7 +1354,14 @@ def add_profile_comment(request, username):
     if content:
         parent = None
         if parent_id:
-            parent = ProfileComment.objects.get(id=parent_id)
+            try:
+                parent = ProfileComment.objects.get(id=parent_id)
+            except ProfileComment.DoesNotExist:
+                pass
+        
+        # Enforce: Only profile owner can start a new thread. Visitors MUST reply.
+        if not parent and request.user != profile.user:
+            return JsonResponse({'success': False, 'message': 'Visitors can only reply to existing comments.'}, status=403)
             
         ProfileComment.objects.create(
             profile=profile, 
@@ -1335,7 +1373,7 @@ def add_profile_comment(request, username):
     if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
         comments = profile.comments.filter(parent=None).all()
         html = render_to_string('newapp/partials/_profile_comments.html', {'comments': comments, 'profile': profile}, request=request)
-        return JsonResponse({'success': True, 'html': html})
+        return JsonResponse({'success': True, 'html': html, 'comment_count': profile.comments.count()})
         
     return redirect('profile_view', username=username)
 
@@ -1480,12 +1518,13 @@ def ajax_delete_profile_comment(request, comment_id):
     if comment.author != request.user and not request.user.is_staff:
         return JsonResponse({'success': False, 'message': 'Permission denied.'}, status=403)
     profile = comment.profile
+    username = profile.user.username
     comment.delete()
     
     # We need to re-fetch comments to render partial correctly
-    comments = profile.received_comments.all().order_by('-created_at')
+    comments = profile.comments.filter(parent=None).all()
     html = render_to_string('newapp/partials/_profile_comments.html', {'comments': comments, 'profile': profile}, request=request)
-    return JsonResponse({'success': True, 'html': html})
+    return JsonResponse({'success': True, 'html': html, 'comment_count': profile.comments.count(), 'username': username})
 
 @login_required
 @require_POST
@@ -1601,6 +1640,13 @@ def ajax_update_status(request, item_type, item_id):
 
         item.status = status
         item.save()
+
+        # When an EPISODIC series is published, also publish the first episode
+        if item_type == 'script' and status == 'PUBLISHED' and item.script_format == 'EPISODIC':
+            first_episode = item.episodes.order_by('order').first()
+            if first_episode and first_episode.status != 'PUBLISHED':
+                first_episode.status = 'PUBLISHED'
+                first_episode.save()
         
         return JsonResponse({'success': True})
     except Exception as e:

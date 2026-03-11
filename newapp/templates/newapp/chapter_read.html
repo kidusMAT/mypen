@@ -5,6 +5,95 @@
 
 {% block header %}{% endblock %}
 {% block footer %}{% endblock %}
+{% block extra_head %}
+<style>
+    .reading-end-nav {
+        margin-top: 80px;
+        padding: 40px 0 60px;
+        border-top: 1px solid rgba(0, 0, 0, 0.08);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 24px;
+        flex-wrap: wrap;
+    }
+
+    .end-message {
+        margin: 0;
+        color: #7a736d;
+        font-style: italic;
+    }
+
+    .btn-nav-premium {
+        display: inline-flex;
+        align-items: center;
+        gap: 12px;
+        padding: 14px 32px;
+        border-radius: 12px;
+        font-family: system-ui, -apple-system, sans-serif;
+        font-size: 15px;
+        font-weight: 600;
+        text-decoration: none;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    }
+
+    .btn-prev-chapter {
+        background: #f8fafc;
+        color: #475569;
+        border: 1px solid #e2e8f0;
+    }
+
+    .btn-next-chapter {
+        background: #D48C11;
+        color: #ffffff;
+        border: 1px solid #bf7e0f;
+    }
+
+    .btn-prev-chapter:hover {
+        background: #f1f5f9;
+        color: #1e293b;
+        transform: translateY(-2px);
+        box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+    }
+
+    .btn-next-chapter:hover {
+        background: #bf7e0f;
+        transform: translateY(-2px);
+        box-shadow: 0 10px 15px -3px rgba(212, 140, 17, 0.3);
+    }
+
+    .btn-nav-premium i {
+        font-size: 14px;
+        transition: transform 0.2s ease;
+    }
+
+    .btn-prev-chapter:hover i {
+        transform: translateX(-4px);
+    }
+
+    .btn-next-chapter:hover i {
+        transform: translateX(4px);
+    }
+
+    @media (max-width: 640px) {
+        .reading-end-nav {
+            flex-direction: column;
+            align-items: stretch;
+            padding: 40px 20px;
+        }
+
+        .btn-nav-premium {
+            justify-content: center;
+        }
+
+        .btn-next-chapter {
+            order: -1;
+            /* Next chapter usually more important */
+        }
+    }
+</style>
+{% endblock %}
 
 {% block content %}
 <div class="reading-interface">
@@ -20,12 +109,10 @@
                 <div class="utility-icons">
                     <button id="toc-toggle" title="Table of Contents"><i class="fa-solid fa-list-ul"></i></button>
                     <button id="bookmark-btn" title="Bookmark" onclick="toggleBookBookmark(null, {{ book.id }})">
-                        <i class="{% if bookmarked %}fa-solid{% else %}fa-regular{% endif %} fa-bookmark" {% if
-                            bookmarked %}style="color: #D48C11;" {% endif %}></i>
+                        <i class="{% if bookmarked %}fa-solid{% else %}fa-regular{% endif %} fa-bookmark" {% if bookmarked %}style="color: #D48C11;" {% endif %}></i>
                     </button>
                     <button id="like-btn" title="Like" onclick="toggleLike(null, 'chapter', {{ chapter.id }})">
-                        <i class="{% if liked %}fa-solid{% else %}fa-regular{% endif %} fa-heart" {% if liked
-                            %}style="color: #ef4444;" {% endif %}></i>
+                        <i class="{% if liked %}fa-solid{% else %}fa-regular{% endif %} fa-heart" {% if liked %}style="color: #ef4444;" {% endif %}></i>
                     </button>
                     <button id="share-btn" title="Share"><i class="fa-solid fa-share-nodes"></i></button>
                     <button id="settings-toggle" title="Reading Settings"><i class="fa-solid fa-gear"></i></button>
@@ -78,9 +165,16 @@
             </article>
 
             <div class="reading-end-nav">
+                {% if prev_chapter %}
+                <a href="{% url 'read_chapter' prev_chapter.id %}" class="btn-nav-premium btn-prev-chapter">
+                    <i class="fa-solid fa-arrow-left"></i> Previous Chapter
+                </a>
+                {% endif %}
+
                 {% if next_chapter %}
-                <a href="{% url 'read_chapter' next_chapter.id %}" class="btn-next-chapter">Next Chapter <i
-                        class="fa-solid fa-arrow-right"></i></a>
+                <a href="{% url 'read_chapter' next_chapter.id %}" class="btn-nav-premium btn-next-chapter">
+                    Next Chapter <i class="fa-solid fa-arrow-right"></i>
+                </a>
                 {% else %}
                 <p class="end-message">You've reached the end of the current published chapters.</p>
                 {% endif %}

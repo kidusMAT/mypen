@@ -33,7 +33,7 @@
         <div class="details-footer">
             <i class="fa-regular fa-clock"></i>
             {% if script.script_format == 'EPISODIC' %}
-            <span>{{ script.episode_count }} episode{{ script.episode_count|pluralize }}</span>
+            <span>{{ script.episode_count_attr }} episode{{ script.episode_count_attr|pluralize }}</span>
             {% else %}
             <span>{{ script.page_count|default:0 }} page{{ script.page_count|default:0|pluralize }}</span>
             {% endif %}

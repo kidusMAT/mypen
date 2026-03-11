@@ -68,6 +68,14 @@
             flex-shrink: 0;
         }
 
+        .hide-mobile {
+            display: none !important;
+        }
+
+        .show-mobile {
+            display: inline !important;
+        }
+
         /* Stack buttons vertically on mobile */
         .profile-cta-row {
             flex-direction: column !important;
@@ -81,6 +89,12 @@
             width: 100% !important;
             justify-content: center;
             margin: 0 !important;
+        }
+    }
+
+    @media (min-width: 769px) {
+        .show-mobile {
+            display: none !important;
         }
     }
 </style>
@@ -122,14 +136,16 @@
                         <div class="profile-author-row">
                             <div class="author-avatar-stub">{{ book.author.username|slice:":1"|upper }}</div>
                             <span class="author-label">Written by</span>
-                            <span class="author-value">{{
-                                book.author.authorprofile.pen_name|default:book.author.username }}</span>
+                            <span class="author-value">{{ book.author.authorprofile.pen_name|default:book.author.username }}</span>
                         </div>
 
                         <div class="profile-stats-row">
                             <div class="stat-item">
                                 <span class="stat-num">{{ book.views }}</span>
-                                <span class="stat-lbl">Views</span>
+                                <span class="stat-lbl">
+                                    <span class="hide-mobile">Views</span>
+                                    <span class="show-mobile">Reads</span>
+                                </span>
                             </div>
                             <div class="stat-sep"></div>
                             <div class="stat-item">
@@ -139,12 +155,18 @@
                             <div class="stat-sep"></div>
                             <div class="stat-item">
                                 <span class="stat-num" id="bookmark-count-display">{{ total_bookmarks }}</span>
-                                <span class="stat-lbl">Bookmarks</span>
+                                <span class="stat-lbl">
+                                    <span class="hide-mobile">Bookmarks</span>
+                                    <span class="show-mobile">Saves</span>
+                                </span>
                             </div>
                             <div class="stat-sep"></div>
                             <div class="stat-item">
                                 <span class="stat-num">{{ chapters.count|default:0 }}</span>
-                                <span class="stat-lbl">Chapters</span>
+                                <span class="stat-lbl">
+                                    <span class="hide-mobile">Chapters</span>
+                                    <span class="show-mobile">Chps</span>
+                                </span>
                             </div>
                         </div>
 

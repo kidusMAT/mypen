@@ -69,7 +69,7 @@ class Book(models.Model):
         return self.views
     @property
     def chapter_count(self):
-        return self.chapters.count()
+        return self.chapters.filter(status='PUBLISHED').count()
 
     def __str__(self):
         return self.title
@@ -179,7 +179,7 @@ class Script(models.Model):
 
     @property
     def episode_count(self):
-        return self.episodes.count()
+        return self.episodes.filter(status='PUBLISHED').count()
 
 class ScriptEpisode(models.Model):
     STATUS_CHOICES = (

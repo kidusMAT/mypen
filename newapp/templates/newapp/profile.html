@@ -55,12 +55,32 @@
                 <h2 class="section-title">Little Comments</h2>
                 <div class="comments-container">
                     {% for comment in comments %}
-                    <div class="mini-comment">
+                    <div class="mini-comment" id="comment-{{ comment.id }}">
                         <div class="comment-header">
-                            <span class="comment-author">{{ comment.author.username }}</span>
+                            <span class="comment-author">{{ comment.author.authorprofile.pen_name|default:comment.author.username }}</span>
                             <span class="comment-date">{{ comment.created_at|date:"M d" }}</span>
                         </div>
                         <p class="comment-body">{{ comment.content }}</p>
+
+                        <!-- Mini Replies -->
+                        {% if comment.replies.all %}
+                        <button class="view-replies-btn" onclick="toggleReplies('{{ comment.id }}')">
+                            <i class="fa-solid fa-chevron-down"></i> View {{ comment.replies.count }} reply{{ comment.replies.count|pluralize }}
+                        </button>
+                        <div class="mini-replies" id="replies-{{ comment.id }}"
+                            style="display: none; margin-left: 20px; border-left: 2px solid #eee; padding-left: 10px; margin-top: 10px;">
+                            {% for reply in comment.replies.all %}
+                            <div class="mini-comment reply" id="comment-{{ reply.id }}"
+                                style="border-left: none; background: #f9f9f9; padding: 10px; border-radius: 8px; margin-bottom: 8px;">
+                                <div class="comment-header">
+                                    <span class="comment-author" style="font-size: 0.85rem;">{{ reply.author.authorprofile.pen_name|default:reply.author.username }}</span>
+                                    <span class="comment-date" style="font-size: 0.75rem;">{{ reply.created_at|date:"Y-m-d" }}</span>
+                                </div>
+                                <p class="comment-body" style="font-size: 0.85rem;">{{ reply.content }}</p>
+                            </div>
+                            {% endfor %}
+                        </div>
+                        {% endif %}
                     </div>
                     {% empty %}
                     <p class="empty-msg">No comments yet. Be the first to say hi!</p>
@@ -68,16 +88,46 @@
                 </div>
 
                 {% if user.is_authenticated %}
+                {% if user == profile_user %}
+                <div class="comment-instruction" style="font-size: 13px; color: #888; margin-bottom: 10px;">
+                    Start a new conversation thread below:
+                </div>
                 <form action="{% url 'add_profile_comment' profile_user.username %}" method="POST" class="comment-form">
                     {% csrf_token %}
-                    <textarea name="content" placeholder="Leave a nice comment..." required></textarea>
+                    <textarea name="content" placeholder="Post a message to your profile..." required></textarea>
                     <button type="submit">Post Comment</button>
                 </form>
+                {% else %}
+                <div class="comment-instruction"
+                    style="font-size: 13px; color: #888; background: #fff; padding: 15px; border-radius: 10px; border: 1px dashed #ddd; text-align: center;">
+                    To chat with {{ profile.pen_name|default:profile_user.username }}, click the <strong>"View
+                        Comments"</strong> button on their author card in the <a href="{% url 'authors_list' %}"
+                        style="color: #111; font-weight: 600;">Discover Authors</a> page to reply to their posts!
+                </div>
+                {% endif %}
                 {% endif %}
             </section>
         </div>
     </div>
 </main>
+
+<script>
+    function toggleReplies(commentId) {
+        const repliesDiv = document.getElementById(`replies-${commentId}`);
+        const btn = event.currentTarget;
+
+        if (repliesDiv.style.display === 'none') {
+            repliesDiv.style.display = 'block';
+            btn.classList.add('active');
+            btn.innerHTML = `<i class="fa-solid fa-chevron-up"></i> Hide replies`;
+        } else {
+            repliesDiv.style.display = 'none';
+            btn.classList.remove('active');
+            const count = repliesDiv.querySelectorAll('.mini-comment').length;
+            btn.innerHTML = `<i class="fa-solid fa-chevron-down"></i> View ${count} reply${count !== 1 ? 's' : ''}`;
+        }
+    }
+</script>
 
 <style>
     .profile-page {
@@ -236,6 +286,35 @@
         border-radius: 10px;
         margin-bottom: 10px;
         border-left: 3px solid #111;
+        transition: all 0.3s ease;
+    }
+
+    .view-replies-btn {
+        background: none;
+        border: none;
+        color: #666;
+        font-size: 12px;
+        font-weight: 600;
+        cursor: pointer;
+        padding: 5px 0;
+        margin-left: 20px;
+        display: flex;
+        align-items: center;
+        gap: 5px;
+        transition: color 0.2s;
+    }
+
+    .view-replies-btn:hover {
+        color: #111;
+    }
+
+    .view-replies-btn i {
+        font-size: 10px;
+        transition: transform 0.3s ease;
+    }
+
+    .view-replies-btn.active i {
+        transform: rotate(180deg);
     }
 
     .comment-header {

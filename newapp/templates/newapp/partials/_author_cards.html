@@ -38,7 +38,8 @@
 
     <div class="author-card-footer">
         <button class="btn-view-comments" onclick="openCommentDrawer('{{ profile.user.username }}')">
-            <i class="fa-regular fa-comment"></i> <span class="badge">{{ profile.comments.count }}</span>
+            <i class="fa-regular fa-comment"></i> <span class="badge"
+                id="author-comment-count-{{ profile.user.username }}">{{ profile.comments.count }}</span>
         </button>
         <a href="{% url 'profile_view' profile.user.username %}" class="btn-profile-link">View Profile</a>
     </div>

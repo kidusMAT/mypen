@@ -1,6 +1,6 @@
 {% extends "newapp/_base.html" %}
 
-{% block title %}{{ script.title }} - Script Reader{% endblock %}
+{% block title %} {{ script.title }} Reader | Mypen {% endblock %}
 
 {% block extra_head %}
 <link
@@ -12,7 +12,166 @@
         --toolbar-bg: #ffffff;
         --page-bg: #f8f9fa;
         --text-main: #1a1a1a;
-        --text-muted: #666666;
+        --text-muted: #7a736d;
+    }
+
+    /* Minimalist Navigation Footer */
+    .reader-footer {
+        height: 60px !important;
+        background: #ffffff !important;
+        border-top: 1px solid #f1f5f9;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0 40px;
+    }
+
+    .btn-nav-premium {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 6px 0;
+        font-family: system-ui, -apple-system, sans-serif;
+        font-size: 14px;
+        font-weight: 500;
+        text-decoration: none;
+        transition: color 0.2s;
+        cursor: pointer;
+        user-select: none;
+        background: transparent !important;
+        border: none !important;
+        box-shadow: none !important;
+    }
+
+    .footer-btn-premium {
+        color: #1a1a1a;
+    }
+
+    .footer-btn-premium:hover:not(.disabled) {
+        color: #000000;
+    }
+
+    /* Disabled State - plain light gray text */
+    .btn-nav-premium.disabled {
+        color: #cbd5e1 !important;
+        cursor: not-allowed !important;
+    }
+
+    .epi-nav-btn {
+        color: #D48C11;
+        font-weight: 600;
+    }
+
+    .epi-nav-btn:hover {
+        color: #bf7e0f;
+    }
+
+    .page-indicator {
+        font-family: system-ui, sans-serif;
+        font-weight: 600;
+        color: #475569;
+        font-size: 14px;
+    }
+
+    @media (max-width: 768px) {
+        .reader-footer {
+            padding: 0 16px;
+        }
+
+        .btn-nav-premium {
+            font-size: 13px;
+        }
+
+        .btn-nav-premium span {
+            display: none;
+        }
+    }
+
+    /* TOC Sidebar / Episode Drawer */
+    .reading-sidebar {
+        position: fixed;
+        top: 0;
+        right: 0;
+        width: 320px;
+        height: 100%;
+        background: #ffffff;
+        box-shadow: -10px 0 30px rgba(0, 0, 0, 0.05);
+        z-index: 2000;
+        transform: translateX(100%);
+        transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        display: flex;
+        flex-direction: column;
+        border-left: 1px solid rgba(0, 0, 0, 0.05);
+    }
+
+    .reading-sidebar.active {
+        transform: translateX(0);
+    }
+
+    .sidebar-header {
+        padding: 24px;
+        border-bottom: 1px solid #f1f5f9;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        background: #fff;
+        position: sticky;
+        top: 0;
+        z-index: 10;
+    }
+
+    .sidebar-header h3 {
+        margin: 0;
+        font-family: 'Playfair Display', serif;
+        font-size: 20px;
+        color: var(--text-main);
+    }
+
+    .sidebar-content {
+        flex: 1;
+        overflow-y: auto;
+        padding: 12px 0;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .toc-item {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        padding: 14px 24px;
+        text-decoration: none;
+        color: var(--text-muted);
+        transition: background 0.2s, color 0.2s;
+        border-left: 3px solid transparent;
+    }
+
+    .toc-item:hover {
+        background: #f8fafc;
+        color: var(--text-main);
+    }
+
+    .toc-item.active {
+        background: #fefce8;
+        color: var(--script-gold);
+        border-left-color: var(--script-gold);
+        font-weight: 600;
+    }
+
+    .toc-order {
+        font-family: 'Courier Prime', monospace;
+        font-size: 13px;
+        opacity: 0.6;
+        min-width: 20px;
+    }
+
+    .toc-title {
+        font-size: 15px;
+    }
+
+    @media (max-width: 480px) {
+        .reading-sidebar {
+            width: 100%;
+        }
     }
 
     body {
@@ -24,6 +183,63 @@
 
     * {
         box-sizing: border-box;
+    }
+
+    /* End-of-Episode CTA */
+    .end-of-episode-cta {
+        display: none;
+        justify-content: center;
+        align-items: center;
+        padding: 80px 20px 120px;
+    }
+
+    .eoe-inner {
+        text-align: center;
+        max-width: 480px;
+    }
+
+    .eoe-label {
+        font-size: 12px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 2px;
+        color: var(--script-gold);
+        margin-bottom: 12px;
+    }
+
+    .eoe-title {
+        font-family: 'Playfair Display', serif;
+        font-size: 40px;
+        font-weight: 700;
+        color: var(--text-main);
+        margin: 0 0 8px;
+    }
+
+    .eoe-next-title {
+        font-family: 'Playfair Display', serif;
+        font-size: 20px;
+        color: var(--text-muted);
+        margin: 0 0 32px;
+    }
+
+    .eoe-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        background: var(--script-gold);
+        color: #ffffff;
+        font-weight: 700;
+        font-size: 15px;
+        padding: 14px 32px;
+        border-radius: 12px;
+        text-decoration: none;
+        transition: background 0.2s, transform 0.2s;
+    }
+
+    .eoe-btn:hover {
+        background: #bf7e0f;
+        transform: translateY(-2px);
+        color: #ffffff;
     }
 
     /* Override base header for the reader experience */
@@ -133,48 +349,7 @@
         text-align: center;
     }
 
-    /* Episode Selector Styling */
-    .episode-picker {
-        position: relative;
-        display: flex;
-        align-items: center;
-        margin-left: 15px;
-    }
 
-    .episode-select {
-        appearance: none;
-        -webkit-appearance: none;
-        background-color: #f1f3f5;
-        border: 1px solid #e9ecef;
-        border-radius: 8px;
-        padding: 6px 32px 6px 12px;
-        font-family: inherit;
-        font-size: 13px;
-        font-weight: 600;
-        color: var(--text-main);
-        cursor: pointer;
-        transition: all 0.2s ease;
-        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='%23666' viewBox='0 0 16 16'%3E%3Cpath d='M7.247 11.14 2.451 5.658C2.185 5.355 2.401 5 2.737 5h9.526c.336 0 .552.355.286.658L7.753 11.14a.611.611 0 0 1-.506.002z'/%3E%3C/svg%3E");
-        background-repeat: no-repeat;
-        background-position: right 10px center;
-        min-width: 120px;
-        max-width: 180px;
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        height: 36px;
-    }
-
-    .episode-select:hover {
-        background-color: #e9ecef;
-        border-color: var(--script-gold);
-    }
-
-    .episode-select:focus {
-        outline: none;
-        border-color: var(--script-gold);
-        box-shadow: 0 0 0 3px rgba(212, 160, 23, 0.1);
-    }
 
     /* Main Reader Content */
     .reader-main {
@@ -453,21 +628,7 @@
             flex-shrink: 0;
         }
 
-        .episode-picker {
-            margin-left: 2px;
-        }
 
-        .episode-select {
-            min-width: 0;
-            max-width: 90px;
-            width: 90px;
-            padding: 3px 20px 3px 7px;
-            font-size: 10px;
-            background-position: right 5px center;
-            background-size: 12px;
-            height: 28px;
-            border-radius: 6px;
-        }
 
         .nav-right {
             gap: 2px;
@@ -540,21 +701,6 @@
                 <h4 class="nav-title">{% if episode %}{{ episode.title }}{% else %}{{ script.title }}{% endif %}</h4>
                 <p class="nav-author">by {{ script.author.authorprofile.pen_name|default:script.author.username }}</p>
             </div>
-            {% if script.script_format == 'EPISODIC' %}
-            <div class="episode-picker">
-                <select class="episode-select" onchange="window.location.href=this.value">
-                    <option value="" disabled {% if not episode %}selected{% endif %}>Episodes...</option>
-                    {% for epi in script.episodes.all %}
-                    {% if epi.status == 'PUBLISHED' or request.user.id == script.author.id %}
-                    <option value="{% url 'read_episode' epi.id %}" {% if episode and epi.id==episode.id %}selected{%
-                        endif %}>
-                        {{ epi.title }}
-                    </option>
-                    {% endif %}
-                    {% endfor %}
-                </select>
-            </div>
-            {% endif %}
         </div>
 
         <div class="nav-right">
@@ -565,6 +711,12 @@
                 <button class="tool-btn" onclick="adjustZoom(1)"><i
                         class="fa-solid fa-magnifying-glass-plus"></i></button>
             </div>
+            
+            {% if script.script_format == 'EPISODIC' %}
+            <button id="toc-toggle" class="tool-btn" title="Episodes">
+                <i class="fa-solid fa-list-ul"></i>
+            </button>
+            {% endif %}
 
             <button id="bookmark-btn" class="tool-btn {% if bookmarked %}active{% endif %}" title="Save Bookmark"
                 onclick="toggleScriptBookmark(null, '{{ script.id }}')">
@@ -586,8 +738,7 @@
         <div class="script-hero">
             <div class="script-type-badge">
                 <i class="fa-solid fa-clapperboard" style="font-size: 1.1em;"></i>
-                <span>{% if script.script_format == 'EPISODIC' %}SERIES • EPISODE{% else %}FEATURE • SCREENPLAY{% endif
-                    %}</span>
+                <span>{% if script.script_format == 'EPISODIC' %}SERIES • EPISODE{% else %}FEATURE • SCREENPLAY{% endif %}</span>
             </div>
             <h1 class="script-hero-title">{% if episode %}{{ episode.title }}{% else %}{{ script.title }}{% endif %}
             </h1>
@@ -605,33 +756,60 @@
             </div>
         </div>
 
+
+
         <!-- Hidden source content -->
-        <div id="script-raw-content" style="display:none;">{% if episode %}{{ episode.content|safe }}{% else %}{{
-            script.content|safe }}{% endif %}</div>
+        <div id="script-raw-content" style="display:none;">{% if episode %}{{ episode.content|safe }}{% else %}{{ script.content|safe }}{% endif %}</div>
     </main>
+    
+    <!-- TOC Sidebar -->
+    {% if script.script_format == 'EPISODIC' %}
+    <div id="toc-sidebar" class="reading-sidebar">
+        <div class="sidebar-header">
+            <h3>Episodes</h3>
+            <button id="toc-close" style="background: none; border: none; font-size: 20px; cursor: pointer; color: #7a736d;"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <div class="sidebar-content">
+            {% for epi in published_episodes %}
+            <a href="{% url 'read_episode' epi.id %}" class="toc-item {% if episode and epi.id == episode.id %}active{% endif %}">
+                <span class="toc-order">{{ forloop.counter }}</span>
+                <span class="toc-title">{{ epi.title }}</span>
+            </a>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
 
     <footer class="reader-footer">
-        <div class="footer-btn" id="prev-btn" onclick="changePage(-1)">
-            <i class="fa-solid fa-chevron-left"></i> Previous Page
+        <div style="flex: 1; display: flex; justify-content: flex-start;">
+            {% if prev_episode %}
+            <div class="btn-nav-premium epi-nav-btn prev-episode-btn" style="display: none;" id="prev-episode-btn">
+                <i class="fa-solid fa-angles-left"></i> Previous Episode
+            </div>
+            {% endif %}
+
+            <div class="btn-nav-premium footer-btn-premium" id="prev-btn">
+                <i class="fa-solid fa-chevron-left"></i> <span>Previous Page</span>
+            </div>
         </div>
 
-        <div class="page-indicator" id="page-indicator-text">
+        <div class="page-indicator" id="page-indicator-text" style="flex: 1; text-align: center;">
             Page 1 of 1
         </div>
 
-        <div class="footer-btn" id="next-btn" onclick="changePage(1)">
-            Next Page <i class="fa-solid fa-chevron-right"></i>
-        </div>
-        {% if next_episode %}
-        <div class="footer-btn next-episode-btn" style="display: none;"
-            onclick="window.location.href='{% url 'read_episode' next_episode.id %}'">
-            Next Episode <i class="fa-solid fa-angles-right"></i>
-        </div>
-        {% endif %}
-    </footer>
-</div>
+        <div style="flex: 1; display: flex; justify-content: flex-end;">
+            <div class="btn-nav-premium footer-btn-premium" id="next-btn">
+                <span>Next Page</span> <i class="fa-solid fa-chevron-right"></i>
+            </div>
 
-<script>
+            {% if next_episode %}
+            <div class="btn-nav-premium epi-nav-btn next-episode-btn" style="display: none;" id="next-episode-btn">
+                Next Episode <i class="fa-solid fa-angles-right"></i>
+            </div>
+            {% endif %}
+        </div>
+    </footer>
+</div><script>
     let currentZoom = 16;
     let currentPage = 1;
     let totalPages = 1;
@@ -646,43 +824,37 @@
         measurer.style.visibility = 'hidden';
         measurer.style.position = 'absolute';
         measurer.style.left = '-9999px';
-        measurer.style.display = 'block'; // Ensure it's active for measuring
+        measurer.style.display = 'block';
 
         const isMobile = window.innerWidth <= 800;
         let h, p;
         if (isMobile) {
             measurer.style.width = '95vw';
             measurer.style.height = '135vw';
-            measurer.style.padding = '9vw 11vw 9vw 15vw';
             h = window.innerWidth * 1.35;
-            p = window.innerWidth * 0.18; // 9vw + 9vw
+            p = window.innerWidth * 0.18;
         } else {
             measurer.style.width = '210mm';
             measurer.style.height = '297mm';
-            measurer.style.padding = '20mm 25mm 20mm 35mm';
-            h = 297 * 3.78; // 297mm to px
-            p = 40 * 3.78; // 20mm + 20mm to px
+            h = 297 * 3.78;
+            p = 40 * 3.78;
         }
-        document.body.appendChild(measurer);
+        container.appendChild(measurer);
 
         const contentDiv = document.createElement('div');
         contentDiv.className = 'script-content';
         contentDiv.style.fontSize = currentZoom + 'px';
-        // Enforce measurement rules for accurate offsetHeight
         contentDiv.style.height = 'auto';
-        contentDiv.style.minHeight = '0';
-        contentDiv.style.overflow = 'visible';
         measurer.appendChild(contentDiv);
 
         const temp = document.createElement('div');
         temp.innerHTML = rawContent;
         const nodes = Array.from(temp.childNodes);
-
-        // Balanced buffer (10px) for Amharic descenders and layout stability
         const maxHeight = h - p - 10;
 
         let pIndex = 1;
         let currentPageNodes = [];
+        const remainingNodes = nodes.map(n => n.cloneNode(true));
 
         function createPage(nodesForPage, pageNum) {
             const pageDiv = document.createElement('div');
@@ -692,7 +864,6 @@
             const cont = document.createElement('div');
             cont.className = 'script-content';
             cont.style.fontSize = currentZoom + 'px';
-
             nodesForPage.forEach(n => cont.appendChild(n));
 
             const num = document.createElement('div');
@@ -704,48 +875,35 @@
             container.appendChild(pageDiv);
         }
 
-        contentDiv.innerHTML = '';
-        const remainingNodes = nodes.map(n => n.cloneNode(true));
-
         while (remainingNodes.length > 0) {
             const node = remainingNodes.shift();
             contentDiv.appendChild(node);
 
-            // Use offsetHeight with enforced auto height for true precision
             if (contentDiv.offsetHeight > maxHeight) {
-                if (currentPageNodes.length > 0) {
-                    contentDiv.removeChild(node);
-                    // Always try to fill the remaining space, no matter how small
-                    splitAndProcess(node);
-                } else {
-                    // Node is alone and still too big - must split it
-                    splitAndProcess(node);
-                }
+                contentDiv.removeChild(node);
+                splitAndProcess(node);
             } else {
                 currentPageNodes.push(node);
             }
         }
 
         function splitAndProcess(node) {
-            // Only split text-based nodes
-            if (node.nodeType === 1 && (node.innerText || "").trim().length > 3) {
-                const words = node.innerHTML.split(' ');
-                let low = 0;
-                let high = words.length - 1;
-                let fitIdx = 0;
-
-                // CUMULATIVE MEASUREMENT: Reset content height for precision
+            const isElement = node.nodeType === 1;
+            const isText = node.nodeType === 3;
+            const textValue = isElement ? node.innerText : node.textContent;
+            
+            if (textValue && textValue.trim().length > 3) {
+                const words = (isElement ? node.innerHTML : node.textContent).split(' ');
+                let low = 0, high = words.length - 1, fitIdx = 0;
+                
                 contentDiv.style.height = 'auto';
-                contentDiv.style.minHeight = '0';
-                contentDiv.style.overflow = 'visible';
-                if (contentDiv.contains(node)) contentDiv.removeChild(node);
-
-                const partialNode = node.cloneNode(false);
-                contentDiv.appendChild(partialNode);
+                const partial = isElement ? node.cloneNode(false) : document.createTextNode("");
+                contentDiv.appendChild(partial);
 
                 while (low <= high) {
                     let mid = Math.floor((low + high) / 2);
-                    partialNode.innerHTML = words.slice(0, mid + 1).join(' ');
+                    const slice = words.slice(0, mid + 1).join(' ');
+                    if (isElement) partial.innerHTML = slice; else partial.textContent = slice;
 
                     if (contentDiv.offsetHeight <= maxHeight) {
                         fitIdx = mid + 1;
@@ -756,56 +914,44 @@
                 }
 
                 if (fitIdx > 0) {
-                    const head = node.cloneNode(false);
-                    head.innerHTML = words.slice(0, fitIdx).join(' ');
-                    const tail = node.cloneNode(false);
-                    tail.innerHTML = words.slice(fitIdx).join(' ');
+                    const head = isElement ? node.cloneNode(false) : document.createTextNode("");
+                    const headSlice = words.slice(0, fitIdx).join(' ');
+                    if (isElement) head.innerHTML = headSlice; else head.textContent = headSlice;
+                    
+                    const tail = isElement ? node.cloneNode(false) : document.createTextNode("");
+                    const tailSlice = words.slice(fitIdx).join(' ');
+                    if (isElement) tail.innerHTML = tailSlice; else tail.textContent = tailSlice;
 
                     createPage(currentPageNodes.concat([head]), pIndex++);
-                    // Only unshift if there's actual content left in the tail
-                    if (tail.innerText.trim().length > 0 || tail.querySelector('img')) {
-                        remainingNodes.unshift(tail);
-                    }
+                    if (tailSlice.trim().length > 0) remainingNodes.unshift(tail);
                     currentPageNodes = [];
                 } else {
-                    // Fail-safe: If we are already alone on the page and STILL fit 0 words,
-                    // we MUST force at least one word to avoid an infinite loop.
-                    if (currentPageNodes.length === 0) {
-                        const head = node.cloneNode(false);
-                        head.innerHTML = words.slice(0, 1).join(' ');
-                        const tail = node.cloneNode(false);
-                        tail.innerHTML = words.slice(1).join(' ');
-
-                        createPage([head], pIndex++);
-                        if (words.length > 1) remainingNodes.unshift(tail);
-                    } else {
-                        // Not alone on page, move whole block to next page
+                    if (currentPageNodes.length > 0) {
                         createPage(currentPageNodes, pIndex++);
                         currentPageNodes = [];
                         remainingNodes.unshift(node);
+                    } else {
+                        createPage([node], pIndex++);
                     }
                 }
-                contentDiv.innerHTML = '';
             } else {
-                // Image or non-splittable content
                 if (currentPageNodes.length > 0) {
                     createPage(currentPageNodes, pIndex++);
                     currentPageNodes = [];
                     remainingNodes.unshift(node);
                 } else {
-                    // Force it even if alone on page
                     createPage([node], pIndex++);
                 }
-                contentDiv.innerHTML = '';
             }
+            contentDiv.innerHTML = '';
         }
 
         if (currentPageNodes.length > 0) {
             createPage(currentPageNodes, pIndex++);
         }
 
-        totalPages = pIndex - 1;
-        document.body.removeChild(measurer);
+        totalPages = Math.max(1, pIndex - 1);
+        container.removeChild(measurer);
         updateNavigation();
     }
 
@@ -817,25 +963,40 @@
             document.querySelector(`.page-${currentPage}`)?.classList.add('active');
             updateNavigation();
 
-            // Scroll to the top of the pages container instead of window top
             const container = document.getElementById('pages-container');
-            const headerHeight = 80; // nav(64) + some buffer
+            const headerHeight = 80;
             const scrollPos = container.getBoundingClientRect().top + window.pageYOffset - headerHeight;
-
-            window.scrollTo({
-                top: scrollPos,
-                behavior: 'smooth'
-            });
+            window.scrollTo({ top: scrollPos, behavior: 'smooth' });
         }
     }
 
     function updateNavigation() {
+        if (currentPage > totalPages) currentPage = totalPages;
+        if (currentPage < 1) currentPage = 1;
+        
         document.getElementById('page-indicator-text').innerText = `Page ${currentPage} of ${totalPages}`;
-        document.getElementById('prev-btn').classList.toggle('disabled', currentPage === 1);
 
+        const prevBtn = document.getElementById('prev-btn');
+        const prevEpiBtn = document.getElementById('prev-episode-btn');
         const nextBtn = document.getElementById('next-btn');
-        const nextEpiBtn = document.querySelector('.next-episode-btn');
+        const nextEpiBtn = document.getElementById('next-episode-btn');
 
+        // Prev logic
+        if (currentPage === 1) {
+            prevBtn.classList.add('disabled');
+            if (prevEpiBtn) {
+                prevBtn.style.display = 'none';
+                prevEpiBtn.style.display = 'flex';
+            }
+        } else {
+            prevBtn.classList.remove('disabled');
+            if (prevEpiBtn) {
+                prevBtn.style.display = 'flex';
+                prevEpiBtn.style.display = 'none';
+            }
+        }
+
+        // Next logic
         if (currentPage === totalPages) {
             nextBtn.classList.add('disabled');
             if (nextEpiBtn) {
@@ -852,43 +1013,95 @@
     }
 
     function adjustZoom(delta) {
-        currentZoom += delta;
-        if (currentZoom < 10) currentZoom = 10;
-        if (currentZoom > 36) currentZoom = 36;
+        currentZoom = Math.min(36, Math.max(10, currentZoom + delta));
         document.getElementById('zoom-level').innerText = currentZoom;
-        // Re-paginate when zoom changes because content height changes
-        const oldPage = currentPage;
         paginate();
-        // Try to stay on the same relative page if possible
-        if (currentPage > totalPages) currentPage = totalPages;
-        updateNavigation();
     }
 
-    // Initial pagination
-    window.addEventListener('load', paginate);
+    window.addEventListener('load', () => { setTimeout(paginate, 10); });
+    
+    document.addEventListener('DOMContentLoaded', function () {
+        // Dropdown/Drawer Toggles
+        const setupToggle = (btnId, sidebarId, closeId) => {
+            const btn = document.getElementById(btnId), sidebar = document.getElementById(sidebarId), close = document.getElementById(closeId);
+            if (btn && sidebar) btn.onclick = (e) => { e.stopPropagation(); sidebar.classList.add('active'); document.body.classList.add('no-scroll'); document.documentElement.classList.add('no-scroll'); };
+            if (close && sidebar) close.onclick = () => { sidebar.classList.remove('active'); document.body.classList.remove('no-scroll'); document.documentElement.classList.remove('no-scroll'); };
+        };
+        setupToggle('toc-toggle', 'toc-sidebar', 'toc-close');
+        
+        // Footer navigation
+        document.getElementById('prev-btn').onclick = () => changePage(-1);
+        document.getElementById('next-btn').onclick = () => changePage(1);
+        if (document.getElementById('prev-episode-btn')) {
+            document.getElementById('prev-episode-btn').onclick = () => { window.location.href = "{% if prev_episode %}{% url 'read_episode' prev_episode.id %}{% endif %}"; };
+        }
+        if (document.getElementById('next-episode-btn')) {
+            document.getElementById('next-episode-btn').onclick = () => { window.location.href = "{% if next_episode %}{% url 'read_episode' next_episode.id %}{% endif %}"; };
+        }
 
-    // Interaction Functions
+        // Close sidebars on outside click
+        document.addEventListener('click', (e) => {
+            const sidebars = document.querySelectorAll('.reading-sidebar');
+            sidebars.forEach(sidebar => {
+                if (sidebar.classList.contains('active') && !sidebar.contains(e.target)) {
+                    sidebar.classList.remove('active');
+                    document.body.classList.remove('no-scroll');
+                    document.documentElement.classList.remove('no-scroll');
+                }
+            });
+        });
+    });
+
     function shareScript() {
         const url = window.location.href;
         navigator.clipboard.writeText(url).then(() => {
-            showToast('Link copied to clipboard!', 'success');
-        }).catch(err => {
-            console.error('Could not copy text: ', err);
+            const btn = document.querySelector('[title="Share"]');
+            const originalIcon = btn.innerHTML;
+            btn.innerHTML = '<i class="fa-solid fa-check" style="color: #22c55e;"></i>';
+            setTimeout(() => { btn.innerHTML = originalIcon; }, 2000);
         });
+    }
+
+    function toggleScriptLike(btn, scriptId) {
+        fetch(`/toggle-like-script/${scriptId}/`, { method: 'POST', headers: { 'X-CSRFToken': '{{ csrf_token }}' } })
+            .then(res => res.json())
+            .then(data => {
+                const likeBtn = document.getElementById('like-btn');
+                const icon = likeBtn.querySelector('i');
+                if (data.liked) {
+                    likeBtn.classList.add('active');
+                    icon.className = 'fa-solid fa-heart';
+                    icon.style.color = '#ef4444';
+                } else {
+                    likeBtn.classList.remove('active');
+                    icon.className = 'fa-regular fa-heart';
+                    icon.style.color = '';
+                }
+            });
+    }
+
+    function toggleScriptBookmark(btn, scriptId) {
+        fetch(`/toggle-bookmark-script/${scriptId}/`, { method: 'POST', headers: { 'X-CSRFToken': '{{ csrf_token }}' } })
+            .then(res => res.json())
+            .then(data => {
+                const bBtn = document.getElementById('bookmark-btn');
+                const icon = bBtn.querySelector('i');
+                if (data.bookmarked) {
+                    bBtn.classList.add('active');
+                    icon.className = 'fa-solid fa-bookmark';
+                    icon.style.color = '#D48C11';
+                } else {
+                    bBtn.classList.remove('active');
+                    icon.className = 'fa-regular fa-bookmark';
+                    icon.style.color = '';
+                }
+            });
     }
 </script>
 
 <style>
-    @keyframes slideIn {
-        from {
-            transform: translateX(100%);
-            opacity: 0;
-        }
-
-        to {
-            transform: translateX(0);
-            opacity: 1;
-        }
+    .no-scroll {
+        overflow: hidden !important;
     }
 </style>
 {% endblock %}

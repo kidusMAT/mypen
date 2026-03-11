@@ -144,10 +144,33 @@ async function deleteProfileComment(commentId) {
         .then(res => res.json())
         .then(data => {
             if (data.success) {
-                // Profile comment deletion returns the updated HTML of the comment list
-                const container = document.getElementById('drawer-comments-list');
-                if (container) {
-                    container.innerHTML = data.html;
+                const commentEl = document.getElementById(`comment-${commentId}`);
+                if (commentEl) {
+                    commentEl.style.transition = 'all 0.4s ease';
+                    commentEl.style.opacity = '0';
+                    commentEl.style.maxHeight = '0';
+                    commentEl.style.paddingTop = '0';
+                    commentEl.style.paddingBottom = '0';
+                    commentEl.style.marginTop = '0';
+                    commentEl.style.marginBottom = '0';
+                    commentEl.style.overflow = 'hidden';
+
+                    setTimeout(() => {
+                        const drawerContainer = document.getElementById('comment-drawer-content');
+                        if (drawerContainer) {
+                            drawerContainer.innerHTML = data.html;
+                        } else {
+                            commentEl.remove();
+                        }
+                    }, 400);
+                } else {
+                    const container = document.getElementById('comment-drawer-content');
+                    if (container) container.innerHTML = data.html;
+                }
+
+                if (data.comment_count !== undefined && data.username !== undefined) {
+                    const badge = document.getElementById('author-comment-count-' + data.username);
+                    if (badge) badge.innerText = data.comment_count;
                 }
                 showToast("Comment deleted", "info");
             }

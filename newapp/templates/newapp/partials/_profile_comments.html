@@ -8,14 +8,17 @@
     <div class="comment-card" id="comment-{{ comment.id }}">
         <div class="comment-header" style="display: flex; justify-content: space-between; align-items: center;">
             <div>
-                <span class="comment-author">{{ comment.author.username }}</span>
+                <span class="comment-author">{{ comment.author.authorprofile.pen_name|default:comment.author.username }}</span>
                 <span class="comment-date">{{ comment.created_at|date:"Y-m-d" }}</span>
             </div>
             <div style="display: flex; gap: 8px;">
-                <button class="btn-reply-small" onclick="setReply('{{ comment.id }}', '{{ comment.author.username }}')"
+                {% if comment.author == profile.user %}
+                <button class="btn-reply-small"
+                    onclick="setReply('{{ comment.id }}', '{{ comment.author.authorprofile.pen_name|default:comment.author.username }}')"
                     title="Reply">
                     <i class="fa-solid fa-reply"></i>
                 </button>
+                {% endif %}
                 {% if user == comment.author %}
                 <button class="comment-delete-btn" onclick="deleteProfileComment({{ comment.id }})"
                     title="Delete comment">
@@ -30,13 +33,18 @@
 
         <!-- Replies -->
         {% if comment.replies.all %}
-        <div class="comment-replies" style="margin-top: 15px; padding-left: 20px; border-left: 2px solid #f1f5f9;">
+        <button class="view-replies-btn" onclick="toggleDrawerReplies('{{ comment.id }}')"
+            style="background: none; border: none; color: #64748b; font-size: 0.8rem; font-weight: 600; cursor: pointer; padding: 5px 0; margin-top: 5px; display: flex; align-items: center; gap: 5px;">
+            <i class="fa-solid fa-chevron-down"></i> View {{ comment.replies.count }} reply{{ comment.replies.count|pluralize }}
+        </button>
+        <div class="comment-replies" id="drawer-replies-{{ comment.id }}"
+            style="display: none; margin-top: 10px; padding-left: 20px; border-left: 2px solid #f1f5f9;">
             {% for reply in comment.replies.all %}
             <div class="comment-card reply-card" id="comment-{{ reply.id }}"
-                style="padding: 15px; margin-bottom: 10px; background: #fff;">
+                style="padding: 15px; margin-bottom: 10px; background: #fff; border: 1px solid #f1f5f9; border-radius: 10px;">
                 <div class="comment-header" style="display: flex; justify-content: space-between; align-items: center;">
                     <div>
-                        <span class="comment-author" style="font-size: 0.9rem;">{{ reply.author.username }}</span>
+                        <span class="comment-author" style="font-size: 0.9rem;">{{ reply.author.authorprofile.pen_name|default:reply.author.username }}</span>
                         <span class="comment-date" style="font-size: 0.8rem;">{{ reply.created_at|date:"Y-m-d" }}</span>
                     </div>
                     {% if user == reply.author %}
@@ -134,14 +142,33 @@
             style="position: absolute; right: 10px; top: 10px; background: none; border: none; cursor: pointer; color: #999;"><i
                 class="fa-solid fa-xmark"></i></button>
     </div>
+    {% if user == profile.user %}
     <form onsubmit="submitCommentAjax(event, '{{ profile.user.username }}')" class="drawer-comment-form"
         id="drawer-main-form">
         {% csrf_token %}
         <input type="hidden" name="parent_id" id="parent-id-input">
-        <textarea name="content" id="drawer-comment-textarea" placeholder="Add your comment..." required
+        <textarea name="content" id="drawer-comment-textarea" placeholder="Start a new comment thread..." required
             maxlength="500"></textarea>
         <button type="submit" class="btn-submit-comment">Post Comment</button>
     </form>
+    {% else %}
+    <!-- Visitors can only reply, so show the form only when replying -->
+    <div id="visitor-form-wrapper" style="display: none;">
+        <form onsubmit="submitCommentAjax(event, '{{ profile.user.username }}')" class="drawer-comment-form"
+            id="drawer-visitor-form">
+            {% csrf_token %}
+            <input type="hidden" name="parent_id" id="parent-id-input-visitor">
+            <textarea name="content" id="drawer-comment-textarea-visitor" placeholder="Add your reply..." required
+                maxlength="500"></textarea>
+            <button type="submit" class="btn-submit-comment">Post Reply</button>
+        </form>
+    </div>
+    <div id="visitor-instruction"
+        style="text-align: center; padding: 10px; border-top: 1px solid #eee; font-size: 13px; color: #888;">
+        Click the <i class="fa-solid fa-reply"></i> button on a comment from {{
+        profile.pen_name|default:profile.user.username }} to reply.
+    </div>
+    {% endif %}
 </div>
 {% else %}
 <div class="drawer-login-prompt">

@@ -137,8 +137,7 @@
 
             <div class="stories-list">
                 {% for script in user_scripts %}
-                <div class="dashboard-story-card" id="script-card-{{ script.id }}" style="cursor: pointer;"
-                 {% if script.script_format == 'EPISODIC' %}
+                <div class="dashboard-story-card" id="script-card-{{ script.id }}" style="cursor: pointer;" {% if script.script_format == 'EPISODIC' %}
                     onclick="window.location.href='{% url 'manage_script' script.id %}';" {% else %}
                     onclick="window.location.href='{% url 'write_script' script.id %}';" {% endif %}>
                     <div class="story-image">
@@ -187,7 +186,8 @@
                         <p class="story-meta">
 
                             {% if script.script_format == 'EPISODIC' %}
-                            <span><i class="fa-solid fa-list-ol"></i> {{ script.episode_count }} Episodes</span>
+                            <span><i class="fa-solid fa-clapperboard"></i> {{ script.episode_count_attr }}
+                                Episodes</span>
                             {% else %}
                             <span><i class="fa-regular fa-file-lines"></i> {{ script.page_count|default:0 }}
                                 Pages</span>
