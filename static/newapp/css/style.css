@@ -632,12 +632,60 @@ footer .upper div .saying {
 
 footer .upper div .socials {
     display: flex;
+    gap: 18px;
     margin: 20px 0;
-    width: 50%;
+    align-items: center;
 }
 
-footer .upper div .socials li {
-    flex: 1;
+.social-icon-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 48px;
+    height: 44px;
+    border-radius: 10px;
+    background: rgba(48, 36, 25, 0.06);
+    color: #7a736d;
+    font-size: 20px;
+    text-decoration: none;
+    transition: background 0.2s ease, color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+    border: 1px solid rgba(48, 36, 25, 0.08);
+}
+
+.social-icon-btn:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1);
+}
+
+.social-icon-btn:has(.fa-instagram):hover {
+    background: radial-gradient(circle at 30% 110%, #fdf497 0%, #fd5949 45%, #d6249f 60%, #285AEB 90%);
+    color: #fff;
+    border-color: transparent;
+}
+
+.social-icon-btn:has(.fa-tiktok):hover {
+    background: #000;
+    color: #fff;
+    border-color: transparent;
+}
+
+.social-icon-btn:has(.fa-telegram):hover {
+    background: #2AABEE;
+    color: #fff;
+    border-color: transparent;
+}
+
+@media (max-width: 768px) {
+    .social-icon-btn {
+        width: 44px;
+        height: 40px;
+        font-size: 18px;
+        border-radius: 8px;
+    }
+
+    footer .upper div .socials {
+        gap: 14px;
+    }
 }
 
 footer .upper div .logo-bm {
@@ -806,12 +854,16 @@ footer .lower p {
     font-weight: 600;
     color: #302419;
     margin: 20px 0;
+    text-align: center;
+    padding: 0 15px;
 }
 
 .second .sy {
     color: #7a736d;
     font-size: 18px;
     font-family: Georgia, serif;
+    text-align: center;
+    padding: 0 15px;
 }
 
 .second .listed {

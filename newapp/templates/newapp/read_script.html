@@ -646,12 +646,12 @@
             padding: 3px;
         }
 
+        /* A4 true ratio: 297/210 = 1.414, so 95vw * 1.414 ≈ 134.4vw */
         .script-page {
             width: 95vw;
-            height: 135vw;
-            /* Fixed height for consistent pagination */
-            /* Proportially adjusted from A4 margins */
-            padding: 9vw 11vw 9vw 15vw;
+            height: 134.4vw;
+            /* Same proportional padding as desktop (20mm on 210mm = ~9.5%) */
+            padding: 9vw 5vw 9vw 8vw;
         }
 
         .script-character,
@@ -672,19 +672,29 @@
         }
 
         .reader-footer {
-            padding: 0 16px;
+            padding: 0 12px;
+            height: 50px !important;
         }
 
         .footer-btn {
-            font-size: 12px;
+            font-size: 11px;
             gap: 4px;
-            padding: 8px 4px;
+            padding: 6px 2px;
+        }
+
+        .page-indicator {
+            font-size: 12px;
         }
 
         .page-number-hint {
-            bottom: 20px !important;
-            right: 20px !important;
-            font-size: 11px !important;
+            bottom: 12px !important;
+            right: 15px !important;
+            font-size: 10px !important;
+            opacity: 0.5;
+        }
+
+        .reader-main {
+            padding: 40px 10px;
         }
     }
 </style>
@@ -829,10 +839,15 @@
         const isMobile = window.innerWidth <= 800;
         let h, p;
         if (isMobile) {
-            measurer.style.width = '95vw';
-            measurer.style.height = '135vw';
-            h = window.innerWidth * 1.35;
+            // Use exact A4 proportions scaled to 95vw
+            // A4 = 210mm × 297mm; ratio = 297/210
+            const w = window.innerWidth * 0.95;
+            h = w * (297 / 210); // True A4 height at this width
+            // Matches CSS padding: 9vw top + 9vw bottom = 18vw total vertical padding
             p = window.innerWidth * 0.18;
+            measurer.style.width = '95vw';
+            measurer.style.height = h + 'px';
+            // Keep same zoom as desktop so page count matches
         } else {
             measurer.style.width = '210mm';
             measurer.style.height = '297mm';
@@ -850,7 +865,7 @@
         const temp = document.createElement('div');
         temp.innerHTML = rawContent;
         const nodes = Array.from(temp.childNodes);
-        const maxHeight = h - p - 10;
+        const maxHeight = h - p - 20; // safety margin
 
         let pIndex = 1;
         let currentPageNodes = [];
@@ -953,6 +968,16 @@
         totalPages = Math.max(1, pIndex - 1);
         container.removeChild(measurer);
         updateNavigation();
+
+        // Sync the real page count to the database (only on first paginate, not on zoom)
+        if (!window._pageCountSynced) {
+            window._pageCountSynced = true;
+            fetch(`/ajax/save-script/{{ script.id }}/`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'X-CSRFToken': '{{ csrf_token }}' },
+                body: JSON.stringify({ page_count: totalPages })
+            }).catch(() => {}); // Silent fail — not critical
+        }
     }
 
     function changePage(delta) {
