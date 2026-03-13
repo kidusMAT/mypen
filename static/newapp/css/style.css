@@ -4978,16 +4978,7 @@ html {
     text-transform: uppercase;
     margin: 15px 0 5px 0 !important;
     position: relative;
-}
-
-/* Automatic Scene Numbering using CSS Counters */
-.script-scene::after {
-    counter-increment: scene-counter;
-    content: counter(scene-counter);
-    position: absolute;
-    right: 0;
-    font-weight: normal;
-    color: #666;
+    padding-right: 30px; /* Leave space for JS-injected number */
 }
 
 .editor-content div,

@@ -75,15 +75,16 @@
 
     @media (max-width: 768px) {
         .reader-footer {
-            padding: 0 16px;
+            padding: 0 10px;
         }
 
         .btn-nav-premium {
-            font-size: 13px;
+            font-size: 14px;
+            gap: 5px;
         }
 
         .btn-nav-premium span {
-            display: none;
+            display: inline; /* Show the labels as requested */
         }
     }
 
@@ -402,21 +403,33 @@
         align-items: center;
         width: 100%;
         padding-bottom: 100px;
+        counter-reset: scene-counter; /* Ensures continuous scene numbering across all pages */
     }
 
     .script-page {
         background: #ffffff;
         width: 210mm;
-        height: 297mm;
+        height: auto;
+        min-height: 297mm;
         box-shadow: 0 5px 30px rgba(0, 0, 0, 0.05);
         position: relative;
-        padding: 20mm 10mm;
-        /* Professional screen margins: reduced for wider feel */
-        overflow: hidden;
+        padding: 60px 80px; /* Matches desktop writer padding */
         display: none;
-        /* Only show active page */
         border: 1px solid rgba(0, 0, 0, 0.03);
         border-radius: 6px;
+    }
+
+    @media (max-width: 800px) {
+        .pages-container {
+            padding-bottom: 120px; /* Ensure current page can scroll past footer */
+        }
+
+        .script-page {
+            width: 95vw;
+            height: auto !important; /* Force auto height to prevent clipping */
+            min-height: calc(95vw * 1.414); 
+            padding: 15px 10px 100px 10px; /* Added 100px bottom padding to keep text clear of footer */
+        }
     }
 
     /* Balanced Font Stack Strategy */
@@ -444,9 +457,8 @@
         line-height: 1.2;
         color: #000;
         white-space: pre-wrap;
-        height: 100%;
+        height: auto; /* Allow content to dictate page height */
         width: 100%;
-        overflow: hidden;
         font-weight: 300 !important;
         /* Thin for modern script look */
         -webkit-font-smoothing: antialiased;
@@ -646,13 +658,7 @@
             padding: 3px;
         }
 
-        /* A4 true ratio: 297/210 = 1.414, so 95vw * 1.414 ≈ 134.4vw */
-        .script-page {
-            width: 95vw;
-            height: 134.4vw;
-            /* Same proportional padding as desktop (20mm on 210mm = ~9.5%) */
-            padding: 9vw 5vw 9vw 8vw;
-        }
+        /* Removed redundant height-constrained script-page block */
 
         .script-character,
         .script-parenthetical {
@@ -829,47 +835,33 @@
         const container = document.getElementById('pages-container');
         container.innerHTML = '';
 
-        const measurer = document.createElement('div');
-        measurer.className = 'script-page';
-        measurer.style.visibility = 'hidden';
-        measurer.style.position = 'absolute';
-        measurer.style.left = '-9999px';
-        measurer.style.display = 'block';
-
-        const isMobile = window.innerWidth <= 800;
-        let h, p;
-        if (isMobile) {
-            // Use exact A4 proportions scaled to 95vw
-            // A4 = 210mm × 297mm; ratio = 297/210
-            const w = window.innerWidth * 0.95;
-            h = w * (297 / 210); // True A4 height at this width
-            // Matches CSS padding: 9vw top + 9vw bottom = 18vw total vertical padding
-            p = window.innerWidth * 0.18;
-            measurer.style.width = '95vw';
-            measurer.style.height = h + 'px';
-            // Keep same zoom as desktop so page count matches
-        } else {
-            measurer.style.width = '210mm';
-            measurer.style.height = '297mm';
-            h = 297 * 3.78;
-            p = 40 * 3.78;
-        }
-        container.appendChild(measurer);
-
-        const contentDiv = document.createElement('div');
-        contentDiv.className = 'script-content';
-        contentDiv.style.fontSize = currentZoom + 'px';
-        contentDiv.style.height = 'auto';
-        measurer.appendChild(contentDiv);
-
         const temp = document.createElement('div');
         temp.innerHTML = rawContent;
+        
+        // Remove saved "PAGE BREAK" dividers from the writer so they don't break reading flow
+        temp.querySelectorAll('.page-divider').forEach(d => d.remove());
+        
+        // --- FIX: Explicitly number scenes before pagination ---
+        // CSS counters break across disconnected DOM containers (pages).
+        // By baking the number into the HTML beforehand, it stays consistent.
+        let sceneCounter = 1;
+        temp.querySelectorAll('.script-scene').forEach(scene => {
+            // Check if there's already a generated number to avoid duplicates if re-paginating
+            if (!scene.querySelector('.generated-scene-number')) {
+                const numSpan = document.createElement('span');
+                numSpan.className = 'generated-scene-number';
+                numSpan.style.cssText = 'position: absolute; right: 0; font-weight: normal; color: #666;';
+                numSpan.innerText = sceneCounter++;
+                scene.style.position = 'relative'; // Ensure absolute positioning of span works
+                scene.appendChild(numSpan);
+            }
+        });
+
         const nodes = Array.from(temp.childNodes);
-        const maxHeight = h - p - 20; // safety margin
 
         let pIndex = 1;
         let currentPageNodes = [];
-        const remainingNodes = nodes.map(n => n.cloneNode(true));
+        let lineCount = 0;
 
         function createPage(nodesForPage, pageNum) {
             const pageDiv = document.createElement('div');
@@ -879,6 +871,7 @@
             const cont = document.createElement('div');
             cont.className = 'script-content';
             cont.style.fontSize = currentZoom + 'px';
+            cont.style.height = 'auto';
             nodesForPage.forEach(n => cont.appendChild(n));
 
             const num = document.createElement('div');
@@ -890,83 +883,28 @@
             container.appendChild(pageDiv);
         }
 
-        while (remainingNodes.length > 0) {
-            const node = remainingNodes.shift();
-            contentDiv.appendChild(node);
-
-            if (contentDiv.offsetHeight > maxHeight) {
-                contentDiv.removeChild(node);
-                splitAndProcess(node);
-            } else {
-                currentPageNodes.push(node);
-            }
-        }
-
-        function splitAndProcess(node) {
-            const isElement = node.nodeType === 1;
-            const isText = node.nodeType === 3;
-            const textValue = isElement ? node.innerText : node.textContent;
+        nodes.forEach(node => {
+            currentPageNodes.push(node);
             
-            if (textValue && textValue.trim().length > 3) {
-                const words = (isElement ? node.innerHTML : node.textContent).split(' ');
-                let low = 0, high = words.length - 1, fitIdx = 0;
+            // Replicate script writer's logical pagination:
+            // The writer's checkPageDividers uses 'editor.children', which only counts Element nodes.
+            // We must do the same to ensure page breaks align perfectly.
+            if (node.nodeType === 1) { 
+                lineCount++;
                 
-                contentDiv.style.height = 'auto';
-                const partial = isElement ? node.cloneNode(false) : document.createTextNode("");
-                contentDiv.appendChild(partial);
-
-                while (low <= high) {
-                    let mid = Math.floor((low + high) / 2);
-                    const slice = words.slice(0, mid + 1).join(' ');
-                    if (isElement) partial.innerHTML = slice; else partial.textContent = slice;
-
-                    if (contentDiv.offsetHeight <= maxHeight) {
-                        fitIdx = mid + 1;
-                        low = mid + 1;
-                    } else {
-                        high = mid - 1;
-                    }
-                }
-
-                if (fitIdx > 0) {
-                    const head = isElement ? node.cloneNode(false) : document.createTextNode("");
-                    const headSlice = words.slice(0, fitIdx).join(' ');
-                    if (isElement) head.innerHTML = headSlice; else head.textContent = headSlice;
-                    
-                    const tail = isElement ? node.cloneNode(false) : document.createTextNode("");
-                    const tailSlice = words.slice(fitIdx).join(' ');
-                    if (isElement) tail.innerHTML = tailSlice; else tail.textContent = tailSlice;
-
-                    createPage(currentPageNodes.concat([head]), pIndex++);
-                    if (tailSlice.trim().length > 0) remainingNodes.unshift(tail);
-                    currentPageNodes = [];
-                } else {
-                    if (currentPageNodes.length > 0) {
-                        createPage(currentPageNodes, pIndex++);
-                        currentPageNodes = [];
-                        remainingNodes.unshift(node);
-                    } else {
-                        createPage([node], pIndex++);
-                    }
-                }
-            } else {
-                if (currentPageNodes.length > 0) {
+                if (lineCount >= 55) {
                     createPage(currentPageNodes, pIndex++);
                     currentPageNodes = [];
-                    remainingNodes.unshift(node);
-                } else {
-                    createPage([node], pIndex++);
+                    lineCount = 0;
                 }
             }
-            contentDiv.innerHTML = '';
-        }
+        });
 
         if (currentPageNodes.length > 0) {
             createPage(currentPageNodes, pIndex++);
         }
 
         totalPages = Math.max(1, pIndex - 1);
-        container.removeChild(measurer);
         updateNavigation();
 
         // Sync the real page count to the database (only on first paginate, not on zoom)
