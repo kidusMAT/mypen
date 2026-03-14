@@ -1,0 +1,14 @@
+{% load account %}
+Hello{% if user_display %} {{ user_display }}{% endif %},
+
+Thank you for registering an account on Mypen! We're thrilled to have you join our community of writers and dreamers.
+
+Before you can start sharing your stories and connecting with others, we just need to verify your email address.
+
+Please go to the following link to confirm your email:
+{{ activate_url }}
+
+If you didn't create an account with Mypen, you can safely ignore this email.
+
+Thanks,
+The Mypen Team
