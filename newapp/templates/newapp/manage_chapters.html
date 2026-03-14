@@ -54,6 +54,43 @@
                     console.error('Error:', error);
                 });
         }
+
+        function toggleChapterStatus(chapterId, currentStatus) {
+            const newStatus = currentStatus === 'PUBLISHED' ? 'DRAFT' : 'PUBLISHED';
+            fetch(`/ajax/update-status/chapter/${chapterId}/`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': '{{ csrf_token }}'
+                },
+                body: JSON.stringify({ status: newStatus })
+            })
+            .then(r => r.json())
+            .then(data => {
+                if (data.success) {
+                    const btn = document.getElementById('publish-btn-' + chapterId);
+                    const icon = btn.querySelector('i');
+                    if (newStatus === 'PUBLISHED') {
+                        btn.style.color = '#28a745';
+                        btn.title = 'Unpublish';
+                        icon.className = 'fa-solid fa-eye';
+                        // Update the badge too
+                        const badge = btn.closest('.dashboard-story-card').querySelector('.status-badge');
+                        if (badge) { badge.textContent = 'PUBLISHED'; badge.className = 'status-badge published'; }
+                    } else {
+                        btn.style.color = '#6c757d';
+                        btn.title = 'Publish';
+                        icon.className = 'fa-solid fa-eye-slash';
+                        const badge = btn.closest('.dashboard-story-card').querySelector('.status-badge');
+                        if (badge) { badge.textContent = 'DRAFT'; badge.className = 'status-badge draft'; }
+                    }
+                    // Update the onclick to reflect new status
+                    btn.setAttribute('onclick', `toggleChapterStatus(${chapterId}, '${newStatus}')`);
+                } else {
+                    alert('Error: ' + (data.message || 'Could not update status'));
+                }
+            });
+        }
     </script>
 
     <section class="chapters-section">
@@ -77,6 +114,14 @@
                         </p>
                     </div>
                     <div class="story-actions">
+                        <button type="button"
+                            onclick="toggleChapterStatus({{ chapter.id }}, '{{ chapter.status }}')"
+                            class="btn-icon"
+                            title="{% if chapter.status == 'PUBLISHED' %}Unpublish{% else %}Publish{% endif %}"
+                            id="publish-btn-{{ chapter.id }}"
+                            style="color: {% if chapter.status == 'PUBLISHED' %}#28a745{% else %}#6c757d{% endif %};">
+                            <i class="fa-solid {% if chapter.status == 'PUBLISHED' %}fa-eye{% else %}fa-eye-slash{% endif %}"></i>
+                        </button>
                         <a href="{% url 'write_chapter' chapter.id %}" class="btn-icon" title="Edit Chapter"><i
                                 class="fa-solid fa-pen-to-square"></i></a>
                         <a href="{% url 'read_chapter' chapter.id %}" class="btn-icon" title="Preview"><i

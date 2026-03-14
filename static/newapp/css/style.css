@@ -5242,6 +5242,18 @@ body.poem-mode .formcont {
     margin-top: 24px;
     margin-bottom: 12px;
     width: 100%;
+    counter-increment: scene-counter;
+    padding-right: 2.5em;
+    position: relative;
+}
+
+.script-scene::after {
+    content: counter(scene-counter) ".";
+    position: absolute;
+    right: 0;
+    font-weight: bold;
+    opacity: 0.5;
+    font-size: 0.85em;
 }
 
 .script-left {

@@ -363,11 +363,14 @@ def add_chapter_ajax(request, book_id):
 def update_book_metadata_ajax(request, book_id):
     book = get_object_or_404(Book, id=book_id, author=request.user)
     try:
+        title = request.POST.get('title')
         genre = request.POST.get('genre')
         description = request.POST.get('description')
         cover_image = request.FILES.get('cover_image')
         status = request.POST.get('status')
         
+        if title:
+            book.title = title
         if genre:
             book.genre = genre
         if description:
@@ -630,6 +633,8 @@ def read_chapter(request, chapter_id):
         prev_chapter = chapter_list[current_index - 1] if current_index > 0 else None
         next_chapter = chapter_list[current_index + 1] if current_index < len(chapter_list) - 1 else None
     except ValueError:
+        # Chapter is not in published list (Author previewing a draft)
+        current_index = -1 
         prev_chapter = None
         next_chapter = None
     
@@ -639,9 +644,9 @@ def read_chapter(request, chapter_id):
         'prev_chapter': prev_chapter,
         'next_chapter': next_chapter,
         'all_chapters': all_chapters,
-        'current_sequence': current_index + 1,
+        'current_sequence': current_index + 1 if current_index != -1 else "?",
         'total_sequence': len(chapter_list),
-        'progress_percent': int(((current_index + 1) / len(chapter_list)) * 100) if len(chapter_list) > 0 else 0,
+        'progress_percent': int(((current_index + 1) / len(chapter_list)) * 100) if len(chapter_list) > 0 and current_index != -1 else 0,
         'liked': request.user.is_authenticated and request.user in chapter.likes.all(),
         'bookmarked': request.user.is_authenticated and request.user in chapter.book.bookmarks.all(),
     }
@@ -1632,6 +1637,10 @@ def ajax_update_status(request, item_type, item_id):
         elif item_type == 'poem':
             item = get_object_or_404(Poem, id=item_id, author=request.user)
             valid_statuses = dict(Poem.STATUS_CHOICES).keys()
+        elif item_type == 'chapter':
+            from .models import Chapter
+            item = get_object_or_404(Chapter, id=item_id, book__author=request.user)
+            valid_statuses = ['DRAFT', 'PUBLISHED']
         else:
             return JsonResponse({'success': False, 'message': 'Invalid item type'})
 
