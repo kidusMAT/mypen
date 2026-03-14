@@ -67,6 +67,8 @@
         {% if has_next %}
         <div style="display: flex; justify-content: center; margin-top: 60px;" id="load-more-container">
             <button class="btn-profile-link" id="load-more-btn" data-page="2"
+                data-paged-loader data-append-target=".authors-grid" data-page-param="page"
+                data-hide-selector="#load-more-container" data-loading-text="Loading..." data-done-text="See More Authors"
                 style="padding: 15px 40px; border-radius: 30px; border: none; font-size: 16px; cursor: pointer;">
                 See More Authors
             </button>
@@ -85,38 +87,6 @@
 </div>
 
 <script>
-    document.addEventListener('DOMContentLoaded', function () {
-        const loadMoreBtn = document.getElementById('load-more-btn');
-        const grid = document.querySelector('.authors-grid');
-
-        if (loadMoreBtn) {
-            loadMoreBtn.addEventListener('click', function () {
-                const page = this.getAttribute('data-page');
-                const url = `?page=${page}&ajax=1`;
-
-                this.innerText = 'Loading...';
-                this.disabled = true;
-
-                fetch(url)
-                    .then(res => {
-                        if (res.headers.get('X-Has-Next') === 'false') {
-                            document.getElementById('load-more-container').style.display = 'none';
-                        }
-                        return res.text();
-                    })
-                    .then(html => {
-                        if (html.trim()) {
-                            grid.insertAdjacentHTML('beforeend', html);
-                            this.setAttribute('data-page', parseInt(page) + 1);
-                        }
-                        this.innerText = 'See More Authors';
-                        this.disabled = false;
-                    })
-                    .catch(err => console.error(err));
-            });
-        }
-    });
-
     function openCommentDrawer(username) {
         const overlay = document.getElementById('comment-drawer-overlay');
         const drawer = document.getElementById('comment-drawer');

@@ -1,0 +1,91 @@
+{% load static %}
+
+{% for item in feed_items %}
+{% with kind=item.item_type obj=item.obj %}
+<article class="c-card feed-card" data-kind="{{ kind }}">
+    <a class="c-card-link"
+        href="{% if kind == 'book' %}{% url 'view_book_public' obj.id %}{% elif kind == 'script' %}{% url 'read_script' obj.id %}{% else %}{% url 'read_poem' obj.id %}{% endif %}">
+        <div class="c-media">
+            {% if obj.cover_image %}
+            <img class="c-media-img" src="{{ obj.cover_image.url }}" alt="{{ obj.title }}"
+                onerror="this.style.display='none'; this.parentElement.classList.add('no-img');">
+            {% endif %}
+
+            <div class="c-media-fallback">
+                <div class="c-media-icon">
+                    {% if kind == 'book' %}
+                    <i class="fa-solid fa-book"></i>
+                    {% elif kind == 'script' %}
+                    <i class="fa-solid fa-scroll"></i>
+                    {% else %}
+                    <i class="fa-solid fa-feather-pointed"></i>
+                    {% endif %}
+                </div>
+                <div class="c-media-grad {% if kind == 'book' %}grad-book{% elif kind == 'script' %}grad-script{% else %}grad-poem{% endif %}"></div>
+            </div>
+
+            <div class="c-badges">
+                <span class="c-pill c-pill-solid">{% if kind == 'book' %}Book{% elif kind == 'script' %}Script{% else %}Poem{% endif %}</span>
+                {% if kind != 'poem' and obj.genre %}
+                <span class="c-pill c-pill-ghost">{{ obj.genre }}</span>
+                {% endif %}
+                {% if obj.handpicked %}
+                <span class="c-pill c-pill-ghost"><i class="fa-solid fa-star"></i> Handpicked</span>
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="c-body">
+            <h3 class="c-title">{{ obj.title }}</h3>
+            <p class="c-meta">
+                by {{ obj.author.authorprofile.pen_name|default:obj.author.username }}
+                <span class="c-dot">•</span>
+                <span class="c-time">{{ obj.created_at|date:"M d, Y" }}</span>
+            </p>
+
+            <p class="c-snippet">
+                {% if obj.description %}
+                {{ obj.description|truncatewords:18 }}
+                {% elif kind == 'poem' and obj.content %}
+                {{ obj.content|truncatewords:18 }}
+                {% elif kind == 'script' and obj.content %}
+                {{ obj.content|truncatewords:18 }}
+                {% else %}
+                A new story is waiting here.
+                {% endif %}
+            </p>
+
+            <div class="c-stats">
+                {% if kind == 'book' %}
+                <span class="c-stat"><i class="fa-regular fa-file-lines"></i> {{ obj.total_chapters|default:0 }} chs</span>
+                {% elif kind == 'script' %}
+                <span class="c-stat"><i class="fa-regular fa-file-lines"></i> {{ obj.episode_count_attr|default:0 }} eps</span>
+                {% endif %}
+                <span class="c-stat"><i class="fa-regular fa-eye"></i> {{ obj.views|default:0 }}</span>
+            </div>
+        </div>
+    </a>
+
+    <div class="c-actions" role="group" aria-label="Actions">
+        <button class="c-action" type="button" data-action="like" data-type="{{ kind }}" data-id="{{ obj.id }}"
+            aria-pressed="{% if obj.is_liked %}true{% else %}false{% endif %}">
+            {% if obj.is_liked %}
+            <i class="fa-solid fa-heart" style="color: #ef4444;"></i>
+            {% else %}
+            <i class="fa-regular fa-heart"></i>
+            {% endif %}
+            <span>{{ obj.total_likes|default:0 }}</span>
+        </button>
+        <button class="c-action" type="button" data-action="bookmark" data-type="{{ kind }}" data-id="{{ obj.id }}"
+            aria-pressed="{% if obj.is_bookmarked %}true{% else %}false{% endif %}">
+            {% if obj.is_bookmarked %}
+            <i class="fa-solid fa-bookmark" style="color: #D48C11;"></i>
+            {% else %}
+            <i class="fa-regular fa-bookmark"></i>
+            {% endif %}
+        </button>
+    </div>
+</article>
+{% endwith %}
+{% endfor %}
+

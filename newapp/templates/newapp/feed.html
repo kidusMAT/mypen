@@ -1,0 +1,97 @@
+{% extends "newapp/_base.html" %}
+{% load static %}
+
+{% block title %}{% if user.is_authenticated %}For You{% else %}Trending{% endif %} - Mypen{% endblock %}
+
+{% block content %}
+<main class="feed-page">
+    <section class="feed-hero">
+        <div class="feed-hero-inner">
+            <div class="feed-hero-badge">
+                <i class="fa-solid fa-wand-magic-sparkles"></i>
+                {% if user.is_authenticated %}For You{% else %}Trending Now{% endif %}
+            </div>
+            <h1 class="feed-hero-title">{% if user.is_authenticated %}Your Next Great Read{% else %}Discover What's Hot{% endif %}</h1>
+            <p class="feed-hero-subtitle">
+                {% if user.is_authenticated %}
+                A mixed feed of books, scripts, and poems based on what you've liked and saved.
+                {% else %}
+                Sign in to unlock a personalized feed. For now, here are stories trending across Mypen.
+                {% endif %}
+            </p>
+
+            <form class="feed-filters" method="GET" action=".">
+                <div class="feed-filter-row">
+                    <label class="feed-filter">
+                        <span>Type</span>
+                        <select name="type">
+                            <option value="all" {% if type_filter == 'all' %}selected{% endif %}>All</option>
+                            <option value="book" {% if type_filter == 'book' %}selected{% endif %}>Books</option>
+                            <option value="script" {% if type_filter == 'script' %}selected{% endif %}>Scripts</option>
+                            <option value="poem" {% if type_filter == 'poem' %}selected{% endif %}>Poems</option>
+                        </select>
+                    </label>
+
+                    <label class="feed-filter">
+                        <span>Sort</span>
+                        <select name="sort">
+                            {% if user.is_authenticated %}
+                            <option value="for_you" {% if sort == 'for_you' %}selected{% endif %}>For You</option>
+                            {% endif %}
+                            <option value="trending" {% if sort == 'trending' %}selected{% endif %}>Trending</option>
+                            <option value="new" {% if sort == 'new' %}selected{% endif %}>New</option>
+                        </select>
+                    </label>
+
+                    <button class="feed-apply-btn" type="submit">
+                        <i class="fa-solid fa-filter"></i>
+                        Apply
+                    </button>
+                </div>
+            </form>
+        </div>
+    </section>
+
+    <section class="feed-section">
+        <div class="feed-container">
+            <div class="feed-grid" id="feed-container">
+                {% include "newapp/partials/_feed_items.html" %}
+            </div>
+
+            {% if has_next %}
+            <div class="feed-more-wrap" id="feed-load-more-wrap">
+                <button
+                    class="feed-more-btn"
+                    id="feed-load-more"
+                    type="button"
+                    data-paged-loader
+                    data-append-target="#feed-container"
+                    data-page="2"
+                    data-page-param="page"
+                    data-hide-selector="#feed-load-more-wrap"
+                    data-sentinel="#feed-sentinel"
+                    data-loading-text="Loading..."
+                    data-done-text="Load More"
+                >
+                    Load More
+                </button>
+            </div>
+            <div id="feed-sentinel" class="feed-sentinel" aria-hidden="true"></div>
+            {% else %}
+            {% if feed_items %}
+            <div class="feed-end">You're all caught up.</div>
+            {% endif %}
+            {% endif %}
+
+            {% if not feed_items %}
+            <div class="feed-empty">
+                <div class="feed-empty-icon"><i class="fa-regular fa-face-frown"></i></div>
+                <h2>Nothing to show yet</h2>
+                <p>Try switching filters, or check back after more writers publish.</p>
+                <a class="feed-empty-cta" href="/write/new/"><i class="fa-solid fa-pen-nib"></i> Start Writing</a>
+            </div>
+            {% endif %}
+        </div>
+    </section>
+</main>
+{% endblock %}

@@ -91,7 +91,7 @@ WSGI_APPLICATION = 'config.wsgi.application'
 
 
 # Database
-# Uses DATABASE_URL env var in production, falls back to local postgres for dev
+# Uses DATABASE_URL env var in production, falls back to SQLite for dev
 DATABASE_URL = os.getenv('DATABASE_URL')
 if DATABASE_URL:
     DATABASES = {
@@ -110,12 +110,8 @@ if DATABASE_URL:
 else:
     DATABASES = {
         'default': {
-            'ENGINE': 'django.db.backends.postgresql',
-            'NAME': 'postgres',
-            'USER': 'postgres',
-            'PASSWORD': 'admin',
-            'HOST': 'localhost',
-            'PORT': '5432',
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': BASE_DIR / 'db.sqlite3',
         }
     }
 

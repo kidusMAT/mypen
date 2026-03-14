@@ -237,6 +237,13 @@ async function deleteConfessionComment(commentId, confessionId) {
                     el.style.transition = '0.3s';
                     setTimeout(() => el.remove(), 300);
                 }
+
+                // Keep the comment count in sync if present on the page.
+                const countEl = document.getElementById(`comment-count-${confessionId}`);
+                if (countEl) {
+                    const n = parseInt(countEl.innerText || '0', 10);
+                    countEl.innerText = String(Math.max(0, isNaN(n) ? 0 : n - 1));
+                }
                 showToast("Comment deleted", "info");
             } else {
                 showToast(data.message || 'Error deleting comment', 'error');

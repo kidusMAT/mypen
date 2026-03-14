@@ -48,6 +48,8 @@
     {% if has_next %}
     <div class="below" id="load-more-container" style="display: flex; justify-content: center; margin: 40px 0;">
         <a href="javascript:void(0);" id="load-more-btn" data-page="2" data-genre="{{ active_genre|default:'' }}"
+            data-paged-loader data-append-target="#book-container" data-page-param="page"
+            data-hide-selector="#load-more-container" data-loading-text="Loading..." data-done-text="See More Books"
             style="text-decoration: none; color: #302419; font-size: 15px; font-weight: 600; padding: 10px 25px; border: 1px solid rgba(128, 128, 128, 0.237); border-radius: 5px; font-family: system-ui, sans-serif;">See
             More Books</a>
     </div>
@@ -59,44 +61,6 @@
         const wrapper = document.querySelector('.mobile-filter-wrapper');
         wrapper.classList.toggle('active');
     }
-    document.addEventListener('DOMContentLoaded', function () {
-        const loadMoreBtn = document.getElementById('load-more-btn');
-        const container = document.getElementById('book-container');
-
-        if (loadMoreBtn) {
-            loadMoreBtn.addEventListener('click', function () {
-                const page = this.getAttribute('data-page');
-                const genre = this.getAttribute('data-genre');
-                let url = `?page=${page}&ajax=1`;
-                if (genre) url += `&genre=${genre}`;
-
-                loadMoreBtn.innerText = 'Loading...';
-
-                fetch(url)
-                    .then(response => {
-                        const hasNext = response.headers.get('X-Has-Next');
-                        if (hasNext === 'false') {
-                            loadMoreBtn.parentElement.style.display = 'none';
-                        }
-                        return response.text();
-                    })
-                    .then(html => {
-                        if (html.trim() === '') {
-                            loadMoreBtn.parentElement.style.display = 'none';
-                            return;
-                        }
-
-                        container.insertAdjacentHTML('beforeend', html);
-                        this.setAttribute('data-page', parseInt(page) + 1);
-                        loadMoreBtn.innerText = 'See More Books';
-                    })
-                    .catch(err => {
-                        console.error('Error loading more books:', err);
-                        loadMoreBtn.innerText = 'See More Books';
-                    });
-            });
-        }
-    });
 </script>
 
 </section>

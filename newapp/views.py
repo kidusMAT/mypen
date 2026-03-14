@@ -3,9 +3,10 @@ from django.http import JsonResponse
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.views.decorators.http import require_POST
+from collections import Counter
 import json
 from django.core.paginator import Paginator
-from django.db.models import Count, Q, F
+from django.db.models import Count, Q, F, Value, Case, When, ExpressionWrapper, FloatField, CharField
 from .models import Book, Chapter, Contest, Script, ScriptEpisode, Poem, ContactMessage
 from .forms import ContactForm
 from django.contrib import messages
@@ -532,6 +533,238 @@ def discover(request):
         'search_query': query,
     }
     return render(request, 'newapp/discover.html', context)
+
+
+def feed(request):
+    user = request.user if request.user.is_authenticated else None
+
+    type_filter = (request.GET.get('type') or 'all').lower()
+    if type_filter not in {'all', 'book', 'script', 'poem'}:
+        type_filter = 'all'
+
+    sort = (request.GET.get('sort') or ('for_you' if user else 'trending')).lower()
+    if sort not in {'for_you', 'trending', 'new'}:
+        sort = 'for_you' if user else 'trending'
+
+    # Guests can't get a personalized feed. Treat as trending.
+    if sort == 'for_you' and not user:
+        sort = 'trending'
+
+    page_number = request.GET.get('page', 1)
+    is_ajax = bool(request.GET.get('ajax'))
+
+    per_page = 12
+
+    books_qs = Book.objects.filter(status__in=['PUBLISHED', 'FINISHED'])
+    scripts_qs = Script.objects.filter(status='PUBLISHED')
+    poems_qs = Poem.objects.filter(status__in=['PUBLISHED', 'FINISHED'])
+
+    preferred_genres = []
+    fav_author_ids = []
+    seen_book_ids = set()
+    seen_script_ids = set()
+    seen_poem_ids = set()
+
+    if user and sort == 'for_you':
+        # "Seen" = already liked/bookmarked; keep feed fresh by excluding these.
+        seen_book_ids = set(user.liked_books.values_list('id', flat=True)) | set(
+            user.bookmarked_books.values_list('id', flat=True)
+        )
+        seen_script_ids = set(user.liked_scripts.values_list('id', flat=True)) | set(
+            user.bookmarked_scripts.values_list('id', flat=True)
+        )
+        seen_poem_ids = set(user.liked_poems.values_list('id', flat=True)) | set(
+            user.bookmarked_poems.values_list('id', flat=True)
+        )
+
+        books_qs = books_qs.exclude(author=user).exclude(id__in=seen_book_ids)
+        scripts_qs = scripts_qs.exclude(author=user).exclude(id__in=seen_script_ids)
+        poems_qs = poems_qs.exclude(author=user).exclude(id__in=seen_poem_ids)
+
+        # Preferences derived on the fly from likes/bookmarks (no new tables).
+        genre_counts = Counter()
+        genre_counts.update(
+            g.strip()
+            for g in Book.objects.filter(id__in=seen_book_ids)
+            .exclude(genre__isnull=True)
+            .exclude(genre='')
+            .values_list('genre', flat=True)
+        )
+        genre_counts.update(
+            g.strip()
+            for g in Script.objects.filter(id__in=seen_script_ids)
+            .exclude(genre__isnull=True)
+            .exclude(genre='')
+            .values_list('genre', flat=True)
+        )
+        preferred_genres = [g for g, _ in genre_counts.most_common(3)]
+
+        author_counts = Counter()
+        author_counts.update(Book.objects.filter(id__in=seen_book_ids).values_list('author_id', flat=True))
+        author_counts.update(Script.objects.filter(id__in=seen_script_ids).values_list('author_id', flat=True))
+        author_counts.update(Poem.objects.filter(id__in=seen_poem_ids).values_list('author_id', flat=True))
+        fav_author_ids = [aid for aid, _ in author_counts.most_common(20)]
+
+    def with_feed_rows(qs, kind: str):
+        qs = qs.annotate(likes_count=Count('likes', distinct=True))
+
+        handpicked_bonus = Case(
+            When(handpicked=True, then=Value(10.0)),
+            default=Value(0.0),
+            output_field=FloatField(),
+        )
+
+        fav_author_bonus = (
+            Case(
+                When(author_id__in=fav_author_ids, then=Value(4.0)),
+                default=Value(0.0),
+                output_field=FloatField(),
+            )
+            if (user and sort == 'for_you' and fav_author_ids)
+            else Value(0.0, output_field=FloatField())
+        )
+
+        genre_bonus = Value(0.0, output_field=FloatField())
+        if user and sort == 'for_you' and preferred_genres and kind in {'book', 'script'}:
+            genre_q = Q()
+            for g in preferred_genres:
+                genre_q |= Q(genre__iexact=g)
+            genre_bonus = Case(
+                When(genre_q, then=Value(6.0)),
+                default=Value(0.0),
+                output_field=FloatField(),
+            )
+
+        score = ExpressionWrapper(
+            F('likes_count') * Value(4.0)
+            + F('views') * Value(0.2)
+            + handpicked_bonus
+            + fav_author_bonus
+            + genre_bonus,
+            output_field=FloatField(),
+        )
+
+        return (
+            qs.annotate(score=score)
+            .annotate(item_type=Value(kind, output_field=CharField()), object_id=F('id'))
+            .values('item_type', 'object_id', 'created_at', 'score')
+        )
+
+    feed_qs = None
+    feed_parts = []
+    if type_filter in {'all', 'book'}:
+        feed_parts.append(with_feed_rows(books_qs, 'book'))
+    if type_filter in {'all', 'script'}:
+        feed_parts.append(with_feed_rows(scripts_qs, 'script'))
+    if type_filter in {'all', 'poem'}:
+        feed_parts.append(with_feed_rows(poems_qs, 'poem'))
+
+    if not feed_parts:
+        feed_parts = [with_feed_rows(books_qs, 'book')]
+
+    feed_qs = feed_parts[0]
+    for part in feed_parts[1:]:
+        feed_qs = feed_qs.union(part, all=True)
+
+    if sort == 'new':
+        feed_qs = feed_qs.order_by('-created_at', '-object_id')
+    else:
+        feed_qs = feed_qs.order_by('-score', '-created_at', '-object_id')
+
+    paginator = Paginator(feed_qs, per_page)
+    page_obj = paginator.get_page(page_number)
+
+    rows = list(page_obj.object_list)
+    book_ids = [r['object_id'] for r in rows if r['item_type'] == 'book']
+    script_ids = [r['object_id'] for r in rows if r['item_type'] == 'script']
+    poem_ids = [r['object_id'] for r in rows if r['item_type'] == 'poem']
+
+    books = (
+        Book.objects.filter(id__in=book_ids)
+        .annotate(
+            total_likes=Count('likes', distinct=True),
+            total_chapters=Count('chapters', filter=Q(chapters__status='PUBLISHED'), distinct=True),
+        )
+        .select_related('author', 'author__authorprofile')
+        .prefetch_related('likes', 'bookmarks')
+    )
+    scripts = (
+        Script.objects.filter(id__in=script_ids)
+        .annotate(
+            total_likes=Count('likes', distinct=True),
+            episode_count_attr=Count('episodes', filter=Q(episodes__status='PUBLISHED'), distinct=True),
+        )
+        .select_related('author', 'author__authorprofile')
+        .prefetch_related('likes', 'bookmarks')
+    )
+    poems = (
+        Poem.objects.filter(id__in=poem_ids)
+        .annotate(total_likes=Count('likes', distinct=True))
+        .select_related('author', 'author__authorprofile')
+        .prefetch_related('likes', 'bookmarks')
+    )
+
+    book_map = {b.id: b for b in books}
+    script_map = {s.id: s for s in scripts}
+    poem_map = {p.id: p for p in poems}
+
+    liked_book_ids = set()
+    bookmarked_book_ids = set()
+    liked_script_ids = set()
+    bookmarked_script_ids = set()
+    liked_poem_ids = set()
+    bookmarked_poem_ids = set()
+    if user:
+        liked_book_ids = set(user.liked_books.values_list('id', flat=True))
+        bookmarked_book_ids = set(user.bookmarked_books.values_list('id', flat=True))
+        liked_script_ids = set(user.liked_scripts.values_list('id', flat=True))
+        bookmarked_script_ids = set(user.bookmarked_scripts.values_list('id', flat=True))
+        liked_poem_ids = set(user.liked_poems.values_list('id', flat=True))
+        bookmarked_poem_ids = set(user.bookmarked_poems.values_list('id', flat=True))
+
+    feed_items = []
+    for r in rows:
+        kind = r['item_type']
+        oid = r['object_id']
+        if kind == 'book':
+            obj = book_map.get(oid)
+            if not obj:
+                continue
+            obj.is_liked = oid in liked_book_ids
+            obj.is_bookmarked = oid in bookmarked_book_ids
+        elif kind == 'script':
+            obj = script_map.get(oid)
+            if not obj:
+                continue
+            obj.is_liked = oid in liked_script_ids
+            obj.is_bookmarked = oid in bookmarked_script_ids
+        else:
+            obj = poem_map.get(oid)
+            if not obj:
+                continue
+            obj.is_liked = oid in liked_poem_ids
+            obj.is_bookmarked = oid in bookmarked_poem_ids
+
+        feed_items.append({'item_type': kind, 'obj': obj})
+
+    context = {
+        'feed_items': feed_items,
+        'has_next': page_obj.has_next(),
+        'type_filter': type_filter,
+        'sort': sort,
+        'is_for_you': sort == 'for_you' and bool(user),
+    }
+
+    if is_ajax:
+        if not feed_items:
+            empty = HttpResponse("", status=200)
+            empty['X-Has-Next'] = 'false'
+            return empty
+        response = render(request, 'newapp/partials/_feed_items.html', context)
+        response['X-Has-Next'] = 'true' if page_obj.has_next() else 'false'
+        return response
+
+    return render(request, 'newapp/feed.html', context)
 
 def view_book_public(request, book_id):
     """Public view of a book showing all published chapters"""
@@ -1428,29 +1661,81 @@ def authors_list(request):
 # --- RECOVERED CONFESSION VIEWS ---
 
 def confessions_page(request):
-    return render(request, 'newapp/confessions.html')
+    sort = (request.GET.get('sort') or 'latest').lower()
+    if sort not in {'latest', 'top'}:
+        sort = 'latest'
+
+    page_number = request.GET.get('page', 1)
+
+    qs = Confession.objects.annotate(
+        like_count=Count('likes', distinct=True),
+        comment_count=Count('comments', distinct=True),
+    )
+    if sort == 'top':
+        qs = qs.order_by('-like_count', '-created_at')
+    else:
+        qs = qs.order_by('-created_at')
+
+    paginator = Paginator(qs, 10)
+    confessions = paginator.get_page(page_number)
+
+    if request.user.is_authenticated:
+        user_likes = set(request.user.liked_confessions.values_list('id', flat=True))
+        for conf in confessions:
+            conf.is_liked = conf.id in user_likes
+
+    return render(request, 'newapp/confessions.html', {
+        'confessions': confessions,
+        'has_next': confessions.has_next(),
+        'next_page': confessions.next_page_number() if confessions.has_next() else None,
+        'sort': sort,
+    })
 
 def get_confessions_ajax(request):
-    confessions_list = Confession.objects.all().order_by('-created_at')
+    sort = (request.GET.get('sort') or 'latest').lower()
+    if sort not in {'latest', 'top'}:
+        sort = 'latest'
+
+    confessions_list = Confession.objects.annotate(
+        like_count=Count('likes', distinct=True),
+        comment_count=Count('comments', distinct=True),
+    )
+    if sort == 'top':
+        confessions_list = confessions_list.order_by('-like_count', '-created_at')
+    else:
+        confessions_list = confessions_list.order_by('-created_at')
     
-    # Add Paginator for infinite scroll
-    paginator = Paginator(confessions_list, 10) # Load 10 at a time
+    paginator = Paginator(confessions_list, 10)
     page_number = request.GET.get('page', 1)
     
     try:
         confessions = paginator.page(page_number)
     except Exception:
-        # If page is out of range, return empty HTML to signal end of feed
-        return JsonResponse({'html': ''})
+        empty = HttpResponse("", status=200)
+        empty['X-Has-Next'] = 'false'
+        return empty
 
     # Adding is_liked attr for the template
     if request.user.is_authenticated:
-        user_likes = request.user.liked_confessions.values_list('id', flat=True)
+        user_likes = set(request.user.liked_confessions.values_list('id', flat=True))
         for conf in confessions:
             conf.is_liked = conf.id in user_likes
             
-    html = render_to_string('newapp/partials/_confession_list.html', {'confessions': confessions}, request=request)
-    return JsonResponse({'html': html})
+    if not confessions.object_list:
+        empty = HttpResponse("", status=200)
+        empty['X-Has-Next'] = 'false'
+        return empty
+
+    response = render(request, 'newapp/partials/_confession_list.html', {'confessions': confessions, 'sort': sort})
+    response['X-Has-Next'] = 'true' if confessions.has_next() else 'false'
+    return response
+
+
+def get_confession_comments_ajax(request, confession_id):
+    confession = get_object_or_404(Confession, id=confession_id)
+    comments = ConfessionComment.objects.filter(confession=confession).select_related('user').order_by('created_at')
+    html = render_to_string('newapp/partials/_confession_comments.html', {'confession': confession, 'comments': comments}, request=request)
+    return JsonResponse({'success': True, 'html': html, 'comment_count': comments.count()})
 
 @require_POST
 def add_confession_ajax(request):
@@ -1460,6 +1745,8 @@ def add_confession_ajax(request):
         confession = Confession.objects.create(content=content, user=user)
         if request.user.is_authenticated:
             confession.is_liked = False
+        confession.like_count = 0
+        confession.comment_count = 0
         html = render_to_string('newapp/partials/_confession_list.html', {'confessions': [confession]}, request=request)
         return JsonResponse({'success': True, 'html': html})
     return JsonResponse({'success': False})
@@ -1487,8 +1774,8 @@ def add_confession_comment_ajax(request, confession_id):
             content=content,
             user=request.user
         )
-        html = render_to_string('newapp/partials/_confession_list.html', {'confessions': [confession]}, request=request)
-        return JsonResponse({'success': True, 'html': html})
+        html = render_to_string('newapp/partials/_confession_comment.html', {'comment': comment, 'confession': confession}, request=request)
+        return JsonResponse({'success': True, 'html': html, 'comment_count': confession.comments.count()})
     return JsonResponse({'success': False})
 
 @login_required

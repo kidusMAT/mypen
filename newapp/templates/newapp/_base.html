@@ -8,6 +8,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     {% load static %}
     <link rel="stylesheet" href="{% static 'newapp/css/style.css' %}?v=3">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800;900&family=Playfair+Display:wght@600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <title>{% block title %} Document {% endblock %}</title>
     {% block extra_head %}{% endblock %}
@@ -27,6 +30,7 @@
             <nav class="header-center">
                 <ul class="nav-links">
                     <li><a href="/discover/">Discover</a></li>
+                    <li><a href="{% url 'feed' %}">{% if user.is_authenticated %}For You{% else %}Trending{% endif %}</a></li>
 
                     <li><a href="/poems/">Poems</a></li>
                     <li><a href="/scripts/">Scripts</a></li>
@@ -67,6 +71,7 @@
                 </div>
                 <ul class="mobile-nav-links">
                     <li><a href="/discover/">Discover</a></li>
+                    <li><a href="{% url 'feed' %}">{% if user.is_authenticated %}For You{% else %}Trending{% endif %}</a></li>
                     <li><a href="/poems/">Poems</a></li>
                     <li><a href="/scripts/">Scripts</a></li>
                     <li><a href="/books/">Books</a></li>
@@ -141,11 +146,13 @@
             </div>
         </section>
         <section class="lower">
-            <p>© 2025 Mypen. All rights reserved. Made with love for writers everywhere.</p>
+            <p>&copy; 2025 Mypen. All rights reserved. Made with love for writers everywhere.</p>
         </section>
     </footer>
     {% endblock %}
     <script src="{% static 'newapp/js/common.js' %}"></script>
+    <script src="{% static 'newapp/js/paged_loader.js' %}?v=1"></script>
+    <script src="{% static 'newapp/js/feed_actions.js' %}?v=1"></script>
     <script type="module" src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.esm.js"></script>
     <script nomodule src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.js"></script>
 

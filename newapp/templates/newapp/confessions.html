@@ -10,7 +10,21 @@
             <i class="fa-solid fa-eye-slash" style="color: #d89f5a;"></i> 100% Anonymous
         </div>
         <h1 class="reveal-scale delay-200">Confessions</h1>
-        <p class="reveal delay-300">Unburden your soul. No names, no judgement — just raw honesty.</p>
+        <p class="reveal delay-300">Unburden your soul. No names, no judgement - just raw honesty.</p>
+
+        <form class="confessions-sort reveal delay-350" method="GET" action="." style="margin-top: 18px;">
+            <label style="display: inline-flex; align-items: center; gap: 10px; background: rgba(255,255,255,0.8); border: 1px solid #eee; padding: 10px 14px; border-radius: 999px;">
+                <span style="font-size: 13px; font-weight: 700; color: #555;">Sort</span>
+                <select name="sort" onchange="this.form.submit()"
+                    style="border: none; background: transparent; font-weight: 700; color: #222; outline: none; cursor: pointer;">
+                    <option value="latest" {% if sort == 'latest' %}selected{% endif %}>Latest</option>
+                    <option value="top" {% if sort == 'top' %}selected{% endif %}>Top</option>
+                </select>
+            </label>
+            <noscript>
+                <button type="submit" class="btn-confess" style="margin-left: 10px;">Apply</button>
+            </noscript>
+        </form>
     </div>
 
     <div class="confession-composer reveal delay-400">
@@ -30,76 +44,29 @@
     </div>
 
     <div class="confessions-feed" id="confessions-feed">
-        <!-- Confessions will be loaded here via AJAX -->
+        {% include "newapp/partials/_confession_list.html" %}
     </div>
 
     <div class="feed-footer" style="text-align: center; margin-top: 30px; margin-bottom: 20px;">
-        <div class="loading-spinner" id="loading-spinner" style="display: none;">
-            <i class="fa-solid fa-spinner fa-spin"></i> Loading...
+        {% if has_next %}
+        <div id="confessions-load-more-wrap" style="display: flex; justify-content: center;">
+            <button class="btn-confess" id="confessions-load-more" type="button"
+                data-paged-loader data-endpoint="/ajax/confessions/" data-append-target="#confessions-feed"
+                data-page="{{ next_page|default:2 }}" data-page-param="page"
+                data-hide-selector="#confessions-load-more-wrap" data-end-selector="#no-more-msg"
+                data-sentinel="#confessions-sentinel" data-loading-text="Loading..." data-done-text="Load More"
+                style="border-radius: 999px; padding: 12px 22px;">
+                Load More
+            </button>
         </div>
-        <div id="no-more-msg" style="display: none; color: #888; font-style: italic;">You have reached the end. No other
+        <div id="confessions-sentinel" style="height: 1px;" aria-hidden="true"></div>
+        {% endif %}
+        <div id="no-more-msg" style="display: {% if not has_next %}block{% else %}none{% endif %}; color: #888; font-style: italic;">You have reached the end. No other
             confessions.</div>
     </div>
 </main>
 
 <script>
-    let currentPage = 1;
-    let isLoading = false;
-    let hasMore = true;
-
-    document.addEventListener("DOMContentLoaded", () => {
-        loadConfessions();
-
-        window.addEventListener('scroll', () => {
-            if (isLoading || !hasMore) return;
-            if ((window.innerHeight + window.scrollY) >= document.body.offsetHeight - 500) {
-                currentPage++;
-                loadConfessions();
-            }
-        });
-    });
-
-    function loadConfessions() {
-        if (!hasMore) {
-            document.getElementById('no-more-msg').style.display = 'block';
-            return;
-        }
-        isLoading = true;
-        document.getElementById('loading-spinner').style.display = 'block';
-
-        fetch(`/ajax/confessions/?page=${currentPage}`)
-            .then(response => {
-                if (!response.ok) throw new Error("No more pages");
-                return response.json();
-            })
-            .then(data => {
-                if (!data.html || data.html.trim() === '') {
-                    hasMore = false;
-                    document.getElementById('no-more-msg').style.display = 'block';
-                } else {
-                    const feed = document.getElementById('confessions-feed');
-                    const tempDiv = document.createElement('div');
-                    tempDiv.innerHTML = data.html;
-
-                    // Initialize animations for new items
-                    window.initRevealAnimations(tempDiv);
-
-                    while (tempDiv.firstChild) {
-                        feed.appendChild(tempDiv.firstChild);
-                    }
-                }
-            })
-            .catch(error => {
-                hasMore = false;
-                document.getElementById('no-more-msg').style.display = 'block';
-            })
-            .finally(() => {
-                isLoading = false;
-                document.getElementById('loading-spinner').style.display = 'none';
-            });
-    }
-
-
     function updateCharCount(textarea) {
         document.getElementById('char-count').innerText = `${textarea.value.length}/500`;
         const btn = document.getElementById('btn-confess');
@@ -202,12 +169,37 @@
 
     function toggleConfessionComments(id) {
         const section = document.getElementById(`comments-section-${id}`);
+        const list = document.getElementById(`comments-list-${id}`);
         if (!section) return;
-        if (section.style.display === 'none') {
-            section.style.display = 'block';
-        } else {
+
+        const isHidden = section.style.display === 'none' || section.style.display === '';
+        if (!isHidden) {
             section.style.display = 'none';
+            return;
         }
+
+        section.style.display = 'block';
+        if (!list) return;
+
+        if (section.dataset.loaded === 'true') return;
+
+        list.innerHTML = '<div style="padding: 10px; text-align: center; color: #888;"><i class="fa-solid fa-spinner fa-spin"></i> Loading comments...</div>';
+
+        fetch(`/ajax/confessions/${id}/comments/`, { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    list.innerHTML = data.html;
+                    section.dataset.loaded = 'true';
+                    const countEl = document.getElementById(`comment-count-${id}`);
+                    if (countEl && data.comment_count !== undefined) countEl.innerText = data.comment_count;
+                } else {
+                    list.innerHTML = '<div class="no-comments">Failed to load comments.</div>';
+                }
+            })
+            .catch(() => {
+                list.innerHTML = '<div class="no-comments">Failed to load comments.</div>';
+            });
     }
 
     function submitConfessionComment(e, id) {
@@ -228,22 +220,21 @@
             .then(res => res.json())
             .then(data => {
                 if (data.success && data.html) {
-                    const card = document.getElementById(`confession-${id}`);
-                    if (card) {
-                        // Replace the entire card HTML with the updated partial
-                        const tempDiv = document.createElement('div');
-                        tempDiv.innerHTML = data.html;
-                        const newCard = tempDiv.firstElementChild;
+                    const section = document.getElementById(`comments-section-${id}`);
+                    const list = document.getElementById(`comments-list-${id}`);
+                    if (section) section.dataset.loaded = 'true';
 
-                        if (newCard) {
-                            card.replaceWith(newCard);
-                            // Keep comments section open
-                            const newSection = document.getElementById(`comments-section-${id}`);
-                            if (newSection) newSection.style.display = 'block';
-
-                            if (window.showToast) showToast("Comment added", "info");
-                        }
+                    if (list) {
+                        const noComments = list.querySelector('.no-comments');
+                        if (noComments) noComments.remove();
+                        list.insertAdjacentHTML('afterbegin', data.html);
                     }
+
+                    const countEl = document.getElementById(`comment-count-${id}`);
+                    if (countEl && data.comment_count !== undefined) countEl.innerText = data.comment_count;
+
+                    form.reset();
+                    if (window.showToast) showToast("Comment added", "info");
                 }
             })
             .catch(err => {
