@@ -6535,3 +6535,45 @@ body.poem-mode .formcont {
 .feed-empty-cta:hover {
     background: var(--primary-hover);
 }
+
+/* --- Mobile Centering for Contact Page --- */
+@media (max-width: 768px) {
+    .static-container {
+        padding: 0 20px;
+    }
+
+    .contact-info-grid {
+        grid-template-columns: 1fr;
+        gap: 30px;
+        width: 100%;
+    }
+
+    .static-text-box {
+        text-align: center;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        padding: 40px 20px;
+        width: 100%;
+        margin: 0 auto;
+    }
+
+    .contact-item {
+        width: 100%;
+        max-width: 100%;
+        justify-content: flex-start; /* Better for text alignment if centered within parent */
+        text-align: left;
+        margin: 20px auto 0;
+        display: flex;
+        align-items: center;
+    }
+
+    .contact-form-premium {
+        width: 100%;
+        text-align: left;
+    }
+
+    .static-header h1 {
+        font-size: 42px;
+    }
+}
