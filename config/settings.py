@@ -23,6 +23,8 @@ ALLOWED_HOSTS = [
     '127.0.0.1',
     '.vercel.app',
     '.now.sh',
+    'mypen.pro.et',
+    'www.mypen.pro.et',
 ]
 # Allow any custom domain from env
 VERCEL_URL = os.getenv('VERCEL_URL')
@@ -32,6 +34,8 @@ if VERCEL_URL:
 CSRF_TRUSTED_ORIGINS = [
     'https://*.vercel.app',
     'https://*.now.sh',
+    'https://mypen.pro.et',
+    'https://www.mypen.pro.et',
 ]
 
 
