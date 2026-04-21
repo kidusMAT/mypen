@@ -857,6 +857,18 @@
             }
         });
 
+        // Strip leading empty nodes to avoid massive top spacing on the first page
+        while (temp.firstChild) {
+            let first = temp.firstChild;
+            if (first.nodeType === 3 && first.textContent.trim() === '') {
+                temp.removeChild(first);
+            } else if (first.nodeType === 1 && (first.tagName === 'BR' || (first.tagName === 'P' && first.innerHTML.replace(/(&nbsp;|<br>|\s)/ig, '') === ''))) {
+                temp.removeChild(first);
+            } else {
+                break;
+            }
+        }
+
         const nodes = Array.from(temp.childNodes);
 
         let pIndex = 1;

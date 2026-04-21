@@ -17,6 +17,7 @@
 </head>
 
 <body>
+    <canvas id="star-sparks-bg" style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: -1; pointer-events: none; opacity: 1;"></canvas>
     {% block header %}
     <header class="global-header">
         <div class="header-container">
@@ -152,6 +153,7 @@
     {% endblock %}
     <script src="{% static 'newapp/js/common.js' %}"></script>
     <script src="{% static 'newapp/js/paged_loader.js' %}?v=2"></script>
+    <script src="{% static 'newapp/js/shooting_stars.js' %}"></script>
     <script type="module" src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.esm.js"></script>
     <script nomodule src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.js"></script>
 
