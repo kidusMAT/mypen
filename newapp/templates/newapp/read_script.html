@@ -869,6 +869,18 @@
             }
         }
 
+        // Strip trailing empty nodes to avoid massive bottom spacing on the last page
+        while (temp.lastChild) {
+            let last = temp.lastChild;
+            if (last.nodeType === 3 && last.textContent.trim() === '') {
+                temp.removeChild(last);
+            } else if (last.nodeType === 1 && (last.tagName === 'BR' || (last.tagName === 'P' && last.innerHTML.replace(/(&nbsp;|<br>|\s)/ig, '') === ''))) {
+                temp.removeChild(last);
+            } else {
+                break;
+            }
+        }
+
         const nodes = Array.from(temp.childNodes);
 
         let pIndex = 1;
