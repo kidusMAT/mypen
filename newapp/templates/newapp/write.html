@@ -217,7 +217,8 @@
                     value="{% if episode %}{{ episode.content|default:'' }}{% else %}{{ script.content|default:'' }}{% endif %}">
                 <div contenteditable="true" class="editor-content" id="editor-script"
                     oninput="syncEditor('editor-script', 'hidden-script')" placeholder="Start your script here...">
-                    {% if episode %}{{ episode.content|default:''|safe }}{% else %}{{ script.content|default:''|safe }}{% endif %}</div>
+                    {% if episode %}{{ episode.content|default:''|safe }}{% else %}{{ script.content|default:''|safe
+                    }}{% endif %}</div>
             </form>
         </div>
 
@@ -241,6 +242,76 @@
         }
     </script>
 
+    <style>
+        /* Dynamic Writing Progress Bar Styles */
+        .writing-progress-container {
+            position: fixed;
+            top: 50%;
+            right: 20px;
+            transform: translateY(-50%);
+            width: 4px;
+            height: 400px;
+            background-color: rgba(48, 36, 25, 0.08);
+            border-radius: 10px;
+            z-index: 998;
+            box-shadow: inset 0 1px 3px rgba(0,0,0,0.1);
+        }
+        
+        .writing-progress-fill {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 0%;
+            background: linear-gradient(0deg, #D48C11, #f4a216);
+            border-radius: 10px;
+            transition: height 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 0 10px rgba(244, 162, 22, 0.4);
+        }
+
+        /* Floating particles spawned via JS */
+        .progress-particle {
+            position: absolute;
+            width: 4px;
+            height: 4px;
+            background: #ffffff;
+            border-radius: 50%;
+            box-shadow: 0 0 6px 2px rgba(244, 162, 22, 0.8);
+            pointer-events: none;
+            z-index: 999;
+            opacity: 1;
+            animation: floatAway 1.2s forwards cubic-bezier(0.25, 1, 0.5, 1);
+        }
+
+        @keyframes floatAway {
+            0% { transform: translate(0, 0) scale(1); opacity: 1; }
+            100% { transform: translate(var(--dx), var(--dy)) scale(0); opacity: 0; }
+        }
+
+        /* Fix for sticky positioning: overflow: hidden breaks it */
+        html, body {
+            overflow-x: clip !important;
+        }
+        .headeded, .editor-toolbar, .desktop-customize {
+            position: sticky !important;
+            z-index: 999 !important;
+            transition: transform 0.3s ease-in-out !important;
+            /* Ensure background is opaque so content doesn't show behind when sticky */
+            background-color: var(--bg-main, #fbf9f6); 
+        }
+        .headeded {
+            top: 0 !important;
+        }
+        .editor-toolbar, .desktop-customize {
+            top: var(--header-height, 60px) !important;
+        }
+        
+        body.is-scrolling-down .headeded,
+        body.is-scrolling-down .editor-toolbar,
+        body.is-scrolling-down .desktop-customize {
+            transform: translateY(-150%) !important;
+        }
+    </style>
     <script>
         document.addEventListener('DOMContentLoaded', () => {
             const urlParams = new URLSearchParams(window.location.search);
@@ -259,6 +330,89 @@
                 switchMode('poem');
             }
             updatePageIndicators();
+
+            // Dynamic Writing Progress Bar Logic
+            const PAGE_PIXELS = 1000;
+            const progressContainer = document.getElementById('writing-progress-container');
+            const progressFill = document.getElementById('writing-progress-fill');
+            const pageValDisplay = document.getElementById('floating-page-val');
+
+            const spawnParticle = (progressPercentage) => {
+                if (!progressContainer) return;
+                const particle = document.createElement('div');
+                particle.className = 'progress-particle';
+                
+                // Position at the tip of the fill line
+                particle.style.bottom = `${progressPercentage}%`;
+                
+                // Random drift direction
+                const dx = (Math.random() - 0.5) * 60 + 'px';
+                const dy = -(Math.random() * 60 + 20) + 'px'; // Float upwards
+                particle.style.setProperty('--dx', dx);
+                particle.style.setProperty('--dy', dy);
+                
+                progressContainer.appendChild(particle);
+                setTimeout(() => { if(particle.parentNode) particle.remove(); }, 1200);
+            };
+
+            const updateProgressBar = (editor) => {
+                if (!editor) return;
+                const totalHeight = editor.scrollHeight;
+                
+                // Calculate percentage of the current page (max 100%)
+                let currentProgress = (totalHeight % PAGE_PIXELS) / PAGE_PIXELS * 100;
+                
+                // If it's exactly a multiple, it should show 100% momentarily before resetting
+                if (currentProgress === 0 && totalHeight > 0) currentProgress = 100;
+                
+                const pageCount = Math.floor(totalHeight / PAGE_PIXELS) + 1;
+                
+                if (progressFill) {
+                    progressFill.style.height = `${currentProgress}%`;
+                }
+                if (pageValDisplay) {
+                    pageValDisplay.innerText = `Page ${pageCount}`;
+                }
+
+                // Spawn particles when actively typing (height > 0)
+                if (currentProgress > 0 && Math.random() > 0.3) {
+                    spawnParticle(currentProgress);
+                }
+            };
+
+            const editors = document.querySelectorAll('.editor-content');
+            editors.forEach(editor => {
+                editor.addEventListener('input', () => updateProgressBar(editor));
+            });
+            
+            // Set initial state for the visible editor
+            setTimeout(() => {
+                const activeEditor = Array.from(editors).find(ed => ed.offsetParent !== null);
+                if (activeEditor) updateProgressBar(activeEditor);
+            }, 300);
+
+            // Native CSS sticky scroll behavior
+            let lastScrollTop = 0;
+            const header = document.querySelector('.headeded');
+            
+            const adjustToolbarTop = () => {
+                if (header) {
+                    document.documentElement.style.setProperty('--header-height', header.offsetHeight + 'px');
+                }
+            };
+            
+            setTimeout(adjustToolbarTop, 100);
+            window.addEventListener('resize', adjustToolbarTop);
+
+            window.addEventListener('scroll', function() {
+                let currentScroll = window.pageYOffset || document.documentElement.scrollTop;
+                if (currentScroll > lastScrollTop && currentScroll > 60) {
+                    document.body.classList.add('is-scrolling-down');
+                } else {
+                    document.body.classList.remove('is-scrolling-down');
+                }
+                lastScrollTop = currentScroll <= 0 ? 0 : currentScroll;
+            });
         });
     </script>
     {% endblock %}
@@ -362,6 +516,11 @@
 
     <!-- Toast Notification Container -->
     <div id="toast-container"></div>
+
+    <!-- Dynamic Writing Progress Bar -->
+    <div id="writing-progress-container" class="writing-progress-container">
+        <div id="writing-progress-fill" class="writing-progress-fill"></div>
+    </div>
 
     <!-- Floating Page Indicator -->
     <div id="floating-page-indicator" class="page-indicator-floating">

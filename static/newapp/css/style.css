@@ -4985,7 +4985,8 @@ html {
     text-transform: uppercase;
     margin: 15px 0 5px 0 !important;
     position: relative;
-    padding-right: 30px; /* Leave space for JS-injected number */
+    padding-right: 30px;
+    /* Leave space for JS-injected number */
 }
 
 .editor-content div,
@@ -6561,7 +6562,8 @@ body.poem-mode .formcont {
     .contact-item {
         width: 100%;
         max-width: 100%;
-        justify-content: flex-start; /* Better for text alignment if centered within parent */
+        justify-content: flex-start;
+        /* Better for text alignment if centered within parent */
         text-align: left;
         margin: 20px auto 0;
         display: flex;
@@ -6577,3 +6579,135 @@ body.poem-mode .formcont {
         font-size: 42px;
     }
 }
+/* ==========================================================================
+   ATMOSPHERIC WEATHER STYLES
+   ========================================================================== */
+
+#atmospheric-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    pointer-events: none;
+    z-index: 0;
+    overflow: hidden;
+    transition: background 2s ease;
+}
+
+.sun-rays {
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: radial-gradient(circle at 20% 20%, rgba(212, 140, 17, 0.1) 0%, transparent 50%);
+    opacity: var(--sun-opacity, 0);
+    transition: opacity 2s ease;
+    animation: atmosphere-rotate 120s linear infinite;
+}
+
+@keyframes atmosphere-rotate {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
+.mist-layer {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(180deg, rgba(251, 249, 246, 0) 0%, rgba(122, 115, 109, 0.08) 100%);
+    opacity: var(--mist-opacity, 1);
+    transition: opacity 3s ease;
+}
+
+.stars-layer {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    background-image: radial-gradient(1.5px 1.5px at 10% 20%, rgba(212, 140, 17, 0.3), transparent),
+                      radial-gradient(1px 1px at 50% 50%, rgba(48, 36, 25, 0.2), transparent),
+                      radial-gradient(2px 2px at 80% 30%, rgba(212, 140, 17, 0.2), transparent);
+    background-size: 300px 300px;
+    opacity: var(--stars-opacity, 0);
+    transition: opacity 5s ease;
+}
+
+.writeing-section {
+    position: relative;
+    z-index: 5;
+}
+
+.editor-content {
+    background: rgba(255, 255, 255, 0.7) !important;
+    backdrop-filter: blur(12px);
+    border: 1px solid rgba(48, 36, 25, 0.05) !important;
+    transition: all 1s ease;
+}
+
+.zen-glow-active .editor-content {
+    background: rgba(255, 255, 255, 0.9) !important;
+    box-shadow: 0 0 60px rgba(212, 140, 17, 0.1) !important;
+}
+
+
+/* Remove the white box from editor */
+.editor-content {
+    background: transparent !important;
+    backdrop-filter: none !important;
+    border: none !important;
+    box-shadow: none !important;
+}
+
+.zen-glow-active .editor-content {
+    background: rgba(255, 255, 255, 0.05) !important;
+    box-shadow: 0 0 100px rgba(212, 140, 17, 0.05) !important;
+}
+
+
+/* Smart Reveal Header */
+.headeded {
+    transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), background-color 0.3s ease, backdrop-filter 0.3s ease;
+}
+
+.headeded.hidden-nav {
+    transform: translateY(-100%);
+}
+
+.headeded.scrolled {
+    background-color: rgba(251, 249, 246, 0.8) !important;
+    backdrop-filter: blur(15px);
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.05);
+}
+
+
+/* Total Smart Reveal (Toolbar) */
+.desktop-customize, .mobile-toolbar-toggle {
+    position: sticky;
+    top: 60px; /* Header height approximation */
+    z-index: 999;
+    transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.3s ease;
+}
+
+.hidden-nav {
+    transform: translateY(-100%);
+}
+
+/* Ensure the header and toolbar hide together */
+.headeded.hidden-nav, .desktop-customize.hidden-nav, .mobile-toolbar-toggle.hidden-nav {
+    transform: translateY(-150%); /* Hide them further up */
+    opacity: 0;
+}
+
+
+/* Force Smart Reveal visibility */
+.headeded, .desktop-customize, .mobile-toolbar-toggle {
+    transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.2s ease !important;
+}
+
+.hidden-nav {
+    transform: translateY(-120%) !important;
+    opacity: 0 !important;
+    pointer-events: none;
+}
+

@@ -13,6 +13,16 @@ document.addEventListener('DOMContentLoaded', () => {
             e.preventDefault();
         });
     });
+
+    // Initialize Atmospheric Weather
+    if (document.getElementById('atmospheric-overlay')) {
+        window.atmosphereEngine = new AtmosphereEngine();
+    }
+
+    // Initialize Nav Reveal
+    if (document.querySelector('.headeded')) {
+        window.navEngine = new NavEngine();
+    }
 });
 
 
@@ -1455,3 +1465,101 @@ switchMode = function (type) {
         editor?.focus();
     }
 }
+
+
+/* ==========================================================================
+   ATMOSPHERIC WEATHER ENGINE
+   ========================================================================== */
+
+class AtmosphereEngine {
+    constructor() {
+        this.overlay = document.getElementById('atmospheric-overlay');
+        if (!this.overlay) return;
+        this.momentum = 0;
+        this.maxMomentum = 100;
+        this.decayRate = 0.8;
+        this.lastTypeTime = Date.now();
+        this.update();
+        this.updateInterval = setInterval(() => this.update(), 100);
+        document.addEventListener('input', (e) => {
+            if (e.target.classList.contains('editor-content')) {
+                this.onType();
+            }
+        });
+    }
+    onType() {
+        this.momentum = Math.min(this.maxMomentum, this.momentum + 3);
+        this.lastTypeTime = Date.now();
+    }
+    update() {
+        const now = Date.now();
+        const timeSinceLastType = now - this.lastTypeTime;
+        if (timeSinceLastType > 1000) {
+            this.momentum = Math.max(0, this.momentum - this.decayRate);
+        }
+        const sunOpacity = Math.max(0, (this.momentum - 30) / 70);
+        const mistOpacity = Math.max(0, 1 - (this.momentum / 40));
+        const starsOpacity = timeSinceLastType > 15000 ? Math.min(0.8, (timeSinceLastType - 15000) / 30000) : 0;
+        document.documentElement.style.setProperty('--sun-opacity', sunOpacity);
+        document.documentElement.style.setProperty('--mist-opacity', mistOpacity);
+        document.documentElement.style.setProperty('--stars-opacity', starsOpacity);
+        if (this.momentum > 60) {
+            document.body.classList.add('zen-glow-active');
+        } else {
+            document.body.classList.remove('zen-glow-active');
+        }
+    }
+}
+
+/* ==========================================================================
+   SMART NAV REVEAL ENGINE
+   ========================================================================== */
+
+class NavEngine {
+    constructor() {
+        // Elements that form the 'top bar'
+        this.navElements = [
+            document.querySelector('.headeded'),
+            document.querySelector('.desktop-customize'),
+            document.querySelector('.mobile-toolbar-toggle')
+        ].filter(el => el !== null);
+        
+        if (this.navElements.length === 0) return;
+        
+        this.lastScrollY = window.scrollY;
+        window.addEventListener('scroll', () => this.onScroll(), { passive: true });
+    }
+
+    onScroll() {
+        const currentScrollY = window.pageYOffset || document.documentElement.scrollTop;
+        const diff = currentScrollY - this.lastScrollY;
+        
+        // Ignore tiny movements to avoid flickering
+        if (Math.abs(diff) < 3) return;
+        
+        const isAtTop = currentScrollY < 40;
+        
+        this.navElements.forEach(el => {
+            if (isAtTop) {
+                el.classList.remove('hidden-nav');
+                el.classList.remove('scrolled');
+            } else {
+                el.classList.add('scrolled');
+                
+                // SCROLLING UP (Reveal)
+                // We show the nav if the user scrolls up even a little bit
+                if (diff < 0) {
+                    el.classList.remove('hidden-nav');
+                } 
+                // SCROLLING DOWN (Hide)
+                // We hide the nav if scrolling down and not at the very top
+                else if (diff > 0 && currentScrollY > 100) {
+                    el.classList.add('hidden-nav');
+                }
+            }
+        });
+        
+        this.lastScrollY = currentScrollY;
+    }
+}
+
