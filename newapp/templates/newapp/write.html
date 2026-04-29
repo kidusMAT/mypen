@@ -217,8 +217,7 @@
                     value="{% if episode %}{{ episode.content|default:'' }}{% else %}{{ script.content|default:'' }}{% endif %}">
                 <div contenteditable="true" class="editor-content" id="editor-script"
                     oninput="syncEditor('editor-script', 'hidden-script')" placeholder="Start your script here...">
-                    {% if episode %}{{ episode.content|default:''|safe }}{% else %}{{ script.content|default:''|safe
-                    }}{% endif %}</div>
+                    {% if episode %}{{ episode.content|default:''|safe }}{% else %}{{ script.content|default:''|safe }}{% endif %}</div>
             </form>
         </div>
 
