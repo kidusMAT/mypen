@@ -331,7 +331,7 @@
             updatePageIndicators();
 
             // Dynamic Writing Progress Bar Logic
-            const PAGE_PIXELS = 1000;
+
             const progressContainer = document.getElementById('writing-progress-container');
             const progressFill = document.getElementById('writing-progress-fill');
             const pageValDisplay = document.getElementById('floating-page-val');
@@ -356,16 +356,37 @@
 
             const updateProgressBar = (editor) => {
                 if (!editor) return;
-                const totalHeight = editor.scrollHeight;
                 
-                // Calculate percentage of the current page (max 100%)
-                let currentProgress = (totalHeight % PAGE_PIXELS) / PAGE_PIXELS * 100;
-                
-                // If it's exactly a multiple, it should show 100% momentarily before resetting
-                if (currentProgress === 0 && totalHeight > 0) currentProgress = 100;
-                
-                const pageCount = Math.floor(totalHeight / PAGE_PIXELS) + 1;
-                
+                const text = (editor.innerText || "").trim();
+                let pageCount = 1;
+                let currentProgress = 0;
+
+                // Use global currentMode from script.js
+                const mode = typeof currentMode !== 'undefined' ? currentMode : 'story';
+
+                if (mode === 'script') {
+                    // Scripts use 55 lines per page (A4 standard)
+                    const lines = text.split(/\r\n|\r|\n/).length;
+                    const LINES_PER_PAGE = 55;
+                    pageCount = Math.max(1, Math.ceil(lines / LINES_PER_PAGE));
+                    currentProgress = (lines % LINES_PER_PAGE) / LINES_PER_PAGE * 100;
+                    if (currentProgress === 0 && lines > 0) currentProgress = 100;
+                } else if (mode === 'poem') {
+                    // Poems use 40 lines per page
+                    const lines = text.split('\n').length;
+                    const LINES_PER_PAGE = 40;
+                    pageCount = Math.max(1, Math.ceil(lines / LINES_PER_PAGE));
+                    currentProgress = (lines % LINES_PER_PAGE) / LINES_PER_PAGE * 100;
+                    if (currentProgress === 0 && lines > 0) currentProgress = 100;
+                } else {
+                    // Stories use 300 words per page
+                    const words = text.split(/\s+/).filter(w => w.length > 0).length;
+                    const WORDS_PER_PAGE = 300;
+                    pageCount = Math.max(1, Math.ceil(words / WORDS_PER_PAGE));
+                    currentProgress = (words % WORDS_PER_PAGE) / WORDS_PER_PAGE * 100;
+                    if (currentProgress === 0 && words > 0) currentProgress = 100;
+                }
+
                 if (progressFill) {
                     progressFill.style.height = `${currentProgress}%`;
                 }
@@ -373,7 +394,7 @@
                     pageValDisplay.innerText = `Page ${pageCount}`;
                 }
 
-                // Spawn particles when actively typing (height > 0)
+                // Spawn particles when actively typing (progress > 0)
                 if (currentProgress > 0 && Math.random() > 0.3) {
                     spawnParticle(currentProgress);
                 }

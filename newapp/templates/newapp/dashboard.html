@@ -4,7 +4,10 @@
 {% block title %} Writer Dashboard - Mypen {% endblock %}
 
 {% block content %}
-<main class="dashboard-page">
+<main class="dashboard-page" style="position: relative; z-index: 1;">
+    <!-- Shooting Stars Background -->
+    <canvas id="star-sparks-bg" style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: -1; pointer-events: none;"></canvas>
+
     <section class="dashboard-header">
         <div class="dashboard-container">
             <h1>Welcome back, <a href="{% url 'profile_view' user.username %}" class="dashboard-profile-link">{{ user.username }}</a></h1>
@@ -807,5 +810,8 @@
             </div>
         </div>
     </div>
+
+    <!-- Shooting Stars Script -->
+    <script src="{% static 'newapp/js/shooting_stars.js' %}"></script>
 </main>
 {% endblock %}
