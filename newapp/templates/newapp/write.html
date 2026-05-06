@@ -12,7 +12,7 @@
         rel="stylesheet">
     <title>{% block title %} Document {% endblock %}</title>
     <script src="{% static 'newapp/js/common.js' %}"></script>
-    <script src="{% static 'newapp/js/script.js' %}?reset=1"></script>
+    <script src="{% static 'newapp/js/script.js' %}?v=1.0.2"></script>
 </head>
 
 <body>
@@ -161,7 +161,7 @@
             <form method="post" class="Story active" id="Form-story">
                 {% csrf_token %}
                 <input type="hidden" name="chapter_id" value="{{ chapter.id|default:'' }}">
-                <input type="hidden" name="book_id" value="{{ chapter.book.id|default:'' }}">
+                <input type="hidden" name="book_id" value="{% if chapter and chapter.book %}{{ chapter.book.id }}{% endif %}">
                 <input type="hidden" name="type" value="story">
                 <input type="hidden" id="book-has-metadata"
                     value="{% if chapter and chapter.book and chapter.book.description %}true{% else %}false{% endif %}">
@@ -243,79 +243,148 @@
 
     <style>
         /* Dynamic Writing Progress Bar Styles */
-        .writing-progress-container {
-            position: fixed;
-            top: 50%;
-            right: 20px;
-            transform: translateY(-50%);
-            width: 4px;
-            height: 400px;
-            background-color: rgba(48, 36, 25, 0.08);
-            border-radius: 10px;
-            z-index: 998;
-            box-shadow: inset 0 1px 3px rgba(0,0,0,0.1);
-        }
-        
-        .writing-progress-fill {
-            position: absolute;
-            bottom: 0;
-            left: 0;
-            width: 100%;
-            height: 0%;
-            background: linear-gradient(0deg, #D48C11, #f4a216);
-            border-radius: 10px;
-            transition: height 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            box-shadow: 0 0 10px rgba(244, 162, 22, 0.4);
-        }
+        /* High-End Glassmorphism Container */
+    .writing-progress-container {
+        position: fixed;
+        right: 40px;
+        top: 50%;
+        transform: translateY(-50%);
+        width: 10px; /* Slightly wider for liquid look */
+        height: 280px;
+        background: rgba(255, 255, 255, 0.12);
+        backdrop-filter: blur(4px); /* Reduced for performance */
+        -webkit-backdrop-filter: blur(4px);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 50px;
+        z-index: 1000;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+        overflow: hidden;
+        will-change: transform; /* Hint for GPU acceleration */
+    }
 
-        /* Floating particles spawned via JS */
+    /* Precision Measurement Notches */
+    .writing-progress-container::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-image: linear-gradient(to bottom, 
+            transparent 0%, 
+            transparent calc(25% - 0.5px), 
+            rgba(255, 255, 255, 0.2) 25%, 
+            transparent calc(25% + 0.5px),
+            transparent calc(50% - 0.5px), 
+            rgba(255, 255, 255, 0.2) 50%, 
+            transparent calc(50% + 0.5px),
+            transparent calc(75% - 0.5px), 
+            rgba(255, 255, 255, 0.2) 75%, 
+            transparent calc(75% + 0.5px)
+        );
+        pointer-events: none;
+        z-index: 3;
+    }
+
+    /* Glowing Liquid Filler with Bounce Physics */
+    .writing-progress-fill {
+        width: 100%;
+        height: 0%;
+        background: linear-gradient(to top, #D48C11, #ef4444, #ff8c00);
+        border-radius: 50px;
+        /* Dynamic Physics: Ease-Out Cubic-Bezier for 'Bounce' effect */
+        transition: height 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        position: relative;
+        z-index: 1;
+        will-change: height; /* GPU acceleration */
+        /* Inner & Outer Glow (Bloom) */
+        box-shadow: 
+            inset 0 0 8px rgba(255, 255, 255, 0.3),
+            0 0 15px rgba(239, 68, 68, 0.2);
+    }
+
+    /* Liquid Bubble Particles */
+    .liquid-bubble {
+        position: absolute;
+        background: rgba(255, 255, 255, 0.6);
+        border-radius: 50%;
+        pointer-events: none;
+        z-index: 2;
+        animation: bubbleRise 2s ease-out forwards;
+    }
+
+    @keyframes bubbleRise {
+        0% { transform: translateY(0) scale(0.5); opacity: 0.8; }
+        100% { transform: translateY(-40px) scale(1.2); opacity: 0; }
+    }
+
+        /* Dimmer, Theme-Matched Sparkles */
         .progress-particle {
             position: absolute;
-            width: 4px;
-            height: 4px;
-            background: #ffffff;
+            width: 5px;
+            height: 5px;
+            background: #d4c8b8; /* Matches the page's tan/earthy tone */
             border-radius: 50%;
-            box-shadow: 0 0 6px 2px rgba(244, 162, 22, 0.8);
             pointer-events: none;
             z-index: 999;
-            opacity: 1;
-            animation: floatAway 1.2s forwards cubic-bezier(0.25, 1, 0.5, 1);
+            opacity: 0;
+            filter: blur(0.5px);
+            animation: sparkleGlow 1.8s forwards ease-out;
         }
 
-        @keyframes floatAway {
-            0% { transform: translate(0, 0) scale(1); opacity: 1; }
-            100% { transform: translate(var(--dx), var(--dy)) scale(0); opacity: 0; }
+        @keyframes sparkleGlow {
+            0% { 
+                transform: translate(0, 0) scale(0); 
+                opacity: 0;
+            }
+            20% { 
+                opacity: 0.6; 
+                transform: translate(calc(var(--dx) * 0.2), calc(var(--dy) * 0.2)) scale(1.2);
+                box-shadow: 0 0 10px 2px rgba(48, 36, 25, 0.15); /* Subtle dark brown glow */
+            }
+            100% { 
+                transform: translate(var(--dx), var(--dy)) scale(0.3); 
+                opacity: 0;
+            }
         }
 
-        /* Fix for sticky positioning: overflow: hidden breaks it */
+        /* Restore Scroll Freedom - Essential for Sticky to work */
         html, body {
-            overflow-x: clip !important;
+            overflow: visible !important;
+            overflow-x: clip !important; /* Prevents horizontal scroll without blocking sticky */
         }
+
+        /* Natural Layout with Sticky Reveal */
         .headeded, .editor-toolbar, .desktop-customize {
             position: sticky !important;
-            z-index: 999 !important;
-            transition: transform 0.3s ease-in-out !important;
-            /* Ensure background is opaque so content doesn't show behind when sticky */
-            background-color: var(--bg-main, #fbf9f6); 
-        }
-        .headeded {
+            z-index: 1000 !important;
             top: 0 !important;
+            background-color: var(--bg-main, #fbf9f6);
+            transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s ease !important;
         }
+
         .editor-toolbar, .desktop-customize {
             top: var(--header-height, 60px) !important;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.02);
         }
-        
-        body.is-scrolling-down .headeded,
-        body.is-scrolling-down .editor-toolbar,
-        body.is-scrolling-down .desktop-customize {
-            transform: translateY(-150%) !important;
+
+        /* Safe reveal that doesn't break the layout */
+        .headeded.hidden-nav, 
+        .editor-toolbar.hidden-nav, 
+        .desktop-customize.hidden-nav {
+            transform: translateY(-110%) !important;
+            opacity: 0;
+            pointer-events: none;
         }
     </style>
     <script>
         document.addEventListener('DOMContentLoaded', () => {
+            // Safety check: only run if we are in the editor
+            if (!document.querySelector('.editor-content')) return;
+
             const urlParams = new URLSearchParams(window.location.search);
             const typeParam = urlParams.get('type');
-            const genre = "{{ chapter.book.genre|default:'' }}".toLowerCase();
+            const genre = "{% if chapter and chapter.book %}{{ chapter.book.genre }}{% endif %}".toLowerCase();
             const isEditingScript = "{{ script|yesno:'true,false' }}" === "true";
             const isEditingPoem = "{{ poem|yesno:'true,false' }}" === "true";
 
@@ -357,29 +426,28 @@
             const updateProgressBar = (editor) => {
                 if (!editor) return;
                 
+                // --- Optimized Line Counting ---
+                // We use a fixed estimation for line-height (roughly 27px) to avoid heavy layout recalculations
+                const visualLines = Math.max(1, Math.round(editor.scrollHeight / 27));
+                
                 const text = (editor.innerText || "").trim();
+                const mode = typeof currentMode !== 'undefined' ? currentMode : 'story';
+                
                 let pageCount = 1;
                 let currentProgress = 0;
-
-                // Use global currentMode from script.js
-                const mode = typeof currentMode !== 'undefined' ? currentMode : 'story';
+                let LINES_PER_PAGE = 55;
 
                 if (mode === 'script') {
-                    // Scripts use 55 lines per page (A4 standard)
-                    const lines = text.split(/\r\n|\r|\n/).length;
-                    const LINES_PER_PAGE = 55;
-                    pageCount = Math.max(1, Math.ceil(lines / LINES_PER_PAGE));
-                    currentProgress = (lines % LINES_PER_PAGE) / LINES_PER_PAGE * 100;
-                    if (currentProgress === 0 && lines > 0) currentProgress = 100;
+                    LINES_PER_PAGE = 55;
+                    pageCount = Math.max(1, Math.ceil(visualLines / LINES_PER_PAGE));
+                    currentProgress = (visualLines % LINES_PER_PAGE) / LINES_PER_PAGE * 100;
+                    if (currentProgress === 0 && visualLines > 0) currentProgress = 100;
                 } else if (mode === 'poem') {
-                    // Poems use 40 lines per page
-                    const lines = text.split('\n').length;
-                    const LINES_PER_PAGE = 40;
-                    pageCount = Math.max(1, Math.ceil(lines / LINES_PER_PAGE));
-                    currentProgress = (lines % LINES_PER_PAGE) / LINES_PER_PAGE * 100;
-                    if (currentProgress === 0 && lines > 0) currentProgress = 100;
+                    LINES_PER_PAGE = 40;
+                    pageCount = Math.max(1, Math.ceil(visualLines / LINES_PER_PAGE));
+                    currentProgress = (visualLines % LINES_PER_PAGE) / LINES_PER_PAGE * 100;
+                    if (currentProgress === 0 && visualLines > 0) currentProgress = 100;
                 } else {
-                    // Stories use 300 words per page
                     const words = text.split(/\s+/).filter(w => w.length > 0).length;
                     const WORDS_PER_PAGE = 300;
                     pageCount = Math.max(1, Math.ceil(words / WORDS_PER_PAGE));
@@ -387,17 +455,31 @@
                     if (currentProgress === 0 && words > 0) currentProgress = 100;
                 }
 
-                if (progressFill) {
-                    progressFill.style.height = `${currentProgress}%`;
-                }
-                if (pageValDisplay) {
-                    pageValDisplay.innerText = `Page ${pageCount}`;
-                }
+                currentProgress = Math.min(100, Math.max(0, currentProgress));
 
-                // Spawn particles when actively typing (progress > 0)
-                if (currentProgress > 0 && Math.random() > 0.3) {
+                if (progressFill) progressFill.style.height = `${currentProgress}%`;
+                if (pageValDisplay) pageValDisplay.innerText = `Page ${pageCount}`;
+
+                // Spawn "Glowing and Dying" particles (sparkles)
+                if (currentProgress > 0 && Math.random() > 0.65) {
                     spawnParticle(currentProgress);
+                    spawnBubble(currentProgress); // Add liquid bubbles
                 }
+            };
+
+            const spawnBubble = (progress) => {
+                if (!progressContainer) return;
+                const bubble = document.createElement('div');
+                bubble.className = 'liquid-bubble';
+                const size = Math.random() * 2 + 1.5;
+                bubble.style.width = size + 'px';
+                bubble.style.height = size + 'px';
+                bubble.style.left = Math.random() * 60 + 20 + '%';
+                // Position at the current surface of the liquid
+                bubble.style.bottom = `${progress - 2}%`; 
+                
+                progressContainer.appendChild(bubble);
+                setTimeout(() => bubble.remove(), 1500);
             };
 
             const editors = document.querySelectorAll('.editor-content');
@@ -421,18 +503,9 @@
                 }
             };
             
-            setTimeout(adjustToolbarTop, 100);
+            // Native CSS sticky scroll behavior is now handled by NavEngine in script.js
             window.addEventListener('resize', adjustToolbarTop);
-
-            window.addEventListener('scroll', function() {
-                let currentScroll = window.pageYOffset || document.documentElement.scrollTop;
-                if (currentScroll > lastScrollTop && currentScroll > 60) {
-                    document.body.classList.add('is-scrolling-down');
-                } else {
-                    document.body.classList.remove('is-scrolling-down');
-                }
-                lastScrollTop = currentScroll <= 0 ? 0 : currentScroll;
-            });
+            setTimeout(adjustToolbarTop, 100);
         });
     </script>
     {% endblock %}

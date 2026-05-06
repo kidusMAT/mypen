@@ -1521,7 +1521,8 @@ class NavEngine {
         this.navElements = [
             document.querySelector('.headeded'),
             document.querySelector('.desktop-customize'),
-            document.querySelector('.mobile-toolbar-toggle')
+            document.querySelector('.mobile-toolbar-toggle'),
+            document.querySelector('.editor-toolbar')
         ].filter(el => el !== null);
         
         if (this.navElements.length === 0) return;

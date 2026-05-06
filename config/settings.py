@@ -108,7 +108,7 @@ if DATABASE_URL:
     }
     # Neon pooler connection options (keepalives omitted — not supported on Windows)
     DATABASES['default']['OPTIONS'] = {
-        'connect_timeout': 10,
+        'connect_timeout': 60,
         'sslmode': 'require',
     }
 else:

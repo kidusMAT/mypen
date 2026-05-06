@@ -44,35 +44,35 @@
             class="reveal-scale delay-100">
             <p class="icons"><i class="fa-solid fa-book-open" style="color: #8B5CF6;"></i></p>
             <p class="titles">Fiction</p>
-            <p class="numbers">{{ genre_counts.Fiction|default:"15.2k" }} stories</p>
+            <p class="numbers">{{ genre_counts.Fiction|default:0|format_stats }} stor{{ genre_counts.Fiction|default:0|pluralize:"y,ies" }}</p>
         </div>
         <div onclick="window.location.href='/scripts/';" style="cursor: pointer;" class="reveal-scale delay-200">
             <p class="icons"><i class="fa-solid fa-scroll" style="color: #d946ef;"></i></p>
             <p class="titles">Scripts</p>
-            <p class="numbers">{{ genre_counts.Scripts|default:"8.4k" }} stories</p>
+            <p class="numbers">{{ genre_counts.Scripts|default:0|format_stats }} script{{ genre_counts.Scripts|default:0|pluralize }}</p>
         </div>
         <div onclick="window.location.href='/poems/';" style="cursor: pointer;" class="reveal-scale delay-300">
             <p class="icons"><i class="fa-solid fa-feather-pointed" style="color: #f59e0b;"></i></p>
             <p class="titles">Poems</p>
-            <p class="numbers">{{ poems_count|default:"4.2k" }} stories</p>
+            <p class="numbers">{{ genre_counts.Poetry|default:0|format_stats }} poem{{ genre_counts.Poetry|default:0|pluralize }}</p>
         </div>
         <div onclick="window.location.href='/books/?genre=Fantasy';" style="cursor: pointer;"
             class="reveal-scale delay-400">
             <p class="icons"><i class="fa-solid fa-wand-magic-sparkles" style="color: #3b82f6;"></i></p>
             <p class="titles">Fantasy</p>
-            <p class="numbers">{{ genre_counts.Fantasy|default:"12.8k" }} stories</p>
+            <p class="numbers">{{ genre_counts.Fantasy|default:0|format_stats }} stor{{ genre_counts.Fantasy|default:0|pluralize:"y,ies" }}</p>
         </div>
         <div onclick="window.location.href='/books/?genre=Romance';" style="cursor: pointer;"
             class="reveal-scale delay-500">
             <p class="icons"><i class="fa-solid fa-heart" style="color: #ef4444;"></i></p>
             <p class="titles">Romance</p>
-            <p class="numbers">{{ genre_counts.Romance|default:"9.7k" }} stories</p>
+            <p class="numbers">{{ genre_counts.Romance|default:0|format_stats }} stor{{ genre_counts.Romance|default:0|pluralize:"y,ies" }}</p>
         </div>
         <div onclick="window.location.href='/books/?genre=Adventure';" style="cursor: pointer;"
             class="reveal-scale delay-600">
             <p class="icons"><i class="fa-solid fa-compass" style="color: #10b981;"></i></p>
             <p class="titles">Adventure</p>
-            <p class="numbers">{{ genre_counts.Adventure|default:"7.3k" }} stories</p>
+            <p class="numbers">{{ genre_counts.Adventure|default:0|format_stats }} stor{{ genre_counts.Adventure|default:0|pluralize:"y,ies" }}</p>
         </div>
 
     </div>
