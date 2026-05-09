@@ -376,6 +376,30 @@
             opacity: 0;
             pointer-events: none;
         }
+
+        /* Visual Page Break Dividers */
+        .editor-content {
+            line-height: 27px !important;
+            /* Create a subtle line every 55 lines (Standard Page) */
+            background-image: linear-gradient(to bottom, 
+                transparent calc(100% - 1px), 
+                rgba(0, 0, 0, 0.04) 100%
+            ) !important;
+            background-size: 100% 1485px; /* 55 lines * 27px */
+            background-attachment: local;
+            background-repeat: repeat-y;
+        }
+
+        /* Mode-specific page breaks */
+        body.script-mode .editor-content {
+            background-size: 100% 1485px; /* 55 lines */
+        }
+        body.poem-mode .editor-content {
+            background-size: 100% 1080px; /* 40 lines */
+        }
+        body:not(.script-mode):not(.poem-mode) .editor-content {
+            background-size: 100% 1350px; /* ~50 lines for story */
+        }
     </style>
     <script>
         document.addEventListener('DOMContentLoaded', () => {
@@ -426,34 +450,32 @@
             const updateProgressBar = (editor) => {
                 if (!editor) return;
                 
-                // --- Optimized Line Counting ---
-                // We use a fixed estimation for line-height (roughly 27px) to avoid heavy layout recalculations
-                const visualLines = Math.max(1, Math.round(editor.scrollHeight / 27));
-                
                 const text = (editor.innerText || "").trim();
                 const mode = typeof currentMode !== 'undefined' ? currentMode : 'story';
                 
+                // 1. Accurate Page Count (Content-aware)
+                const lines = text.split('\n').length;
+                const words = text.split(/\s+/).filter(w => w.length > 0).length;
+                
                 let pageCount = 1;
-                let currentProgress = 0;
+                let WORDS_PER_PAGE = 250;
                 let LINES_PER_PAGE = 55;
 
                 if (mode === 'script') {
-                    LINES_PER_PAGE = 55;
-                    pageCount = Math.max(1, Math.ceil(visualLines / LINES_PER_PAGE));
-                    currentProgress = (visualLines % LINES_PER_PAGE) / LINES_PER_PAGE * 100;
-                    if (currentProgress === 0 && visualLines > 0) currentProgress = 100;
+                    pageCount = Math.max(1, Math.ceil(lines / 55));
                 } else if (mode === 'poem') {
-                    LINES_PER_PAGE = 40;
-                    pageCount = Math.max(1, Math.ceil(visualLines / LINES_PER_PAGE));
-                    currentProgress = (visualLines % LINES_PER_PAGE) / LINES_PER_PAGE * 100;
-                    if (currentProgress === 0 && visualLines > 0) currentProgress = 100;
+                    pageCount = Math.max(1, Math.ceil(lines / 40));
                 } else {
-                    const words = text.split(/\s+/).filter(w => w.length > 0).length;
-                    const WORDS_PER_PAGE = 300;
-                    pageCount = Math.max(1, Math.ceil(words / WORDS_PER_PAGE));
-                    currentProgress = (words % WORDS_PER_PAGE) / WORDS_PER_PAGE * 100;
-                    if (currentProgress === 0 && words > 0) currentProgress = 100;
+                    pageCount = Math.max(1, Math.ceil(words / 250));
                 }
+
+                // 2. Smooth Liquid Fill (Pixel-aware)
+                // We use the pixel height of the current 'page' to make it move smoothly
+                const pixelsPerLine = 27;
+                const pixelsPerPage = (mode === 'script' ? 55 : mode === 'poem' ? 40 : 25) * pixelsPerLine;
+                
+                let currentProgress = (editor.scrollHeight % pixelsPerPage) / pixelsPerPage * 100;
+                if (currentProgress === 0 && editor.scrollHeight > 0) currentProgress = 100;
 
                 currentProgress = Math.min(100, Math.max(0, currentProgress));
 

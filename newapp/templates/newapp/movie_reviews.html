@@ -421,10 +421,9 @@
         mainAddBtn.innerHTML = `<i class="fa-solid fa-plus"></i> Add ${tab === 'movies' ? 'Movie' : 'Book'}`;
     }
 
-    function toggleAddForm() {
+    async function toggleAddForm() {
         {% if not user.is_authenticated %}
-        alert("Please log in to add reviews.");
-        window.location.href = "{% url 'account_login' %}?next={{ request.path }}";
+        await window.requireLogin("Please log in to add reviews.");
         return;
         {% endif %}
 
@@ -458,10 +457,9 @@
         }
     }
 
-    function rateMovieInline(id, rating) {
+    async function rateMovieInline(id, rating) {
         {% if not user.is_authenticated %}
-        alert("Please log in to rate.");
-        window.location.href = "{% url 'account_login' %}?next={{ request.path }}";
+        await window.requireLogin("Please log in to rate.");
         return;
         {% endif %}
 
@@ -491,10 +489,9 @@
             });
     }
 
-    function rateBookInline(id, rating) {
+    async function rateBookInline(id, rating) {
         {% if not user.is_authenticated %}
-        alert("Please log in to rate.");
-        window.location.href = "{% url 'account_login' %}?next={{ request.path }}";
+        await window.requireLogin("Please log in to rate.");
         return;
         {% endif %}
 

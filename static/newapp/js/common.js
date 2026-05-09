@@ -406,10 +406,10 @@ window.showCustomConfirm = function (options) {
         iconBox.innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i>';
         confirmBtn.style.background = '#ef4444';
     } else {
-        iconBox.style.background = 'rgba(17, 17, 17, 0.1)';
-        iconBox.style.color = '#111';
-        iconBox.innerHTML = '<i class="fa-solid fa-circle-question"></i>';
-        confirmBtn.style.background = '#111';
+        iconBox.style.background = 'rgba(207, 124, 28, 0.1)';
+        iconBox.style.color = '#cf7c1c';
+        iconBox.innerHTML = '<i class="fa-solid fa-user-lock"></i>';
+        confirmBtn.style.background = '#cf7c1c';
     }
 
     overlay.style.display = 'flex';
@@ -442,4 +442,21 @@ window.showCustomConfirm = function (options) {
             }
         };
     });
+};
+
+// Global Require Login Helper
+window.requireLogin = async function (message = "Please log in to interact.") {
+    console.log("requireLogin prompt triggered:", message);
+    const confirmed = await showCustomConfirm({
+        title: 'Login Required',
+        message: message,
+        confirmText: 'Log In',
+        cancelText: 'Maybe Later',
+        type: 'info'
+    });
+
+    if (confirmed) {
+        // Redirect to login with next parameter
+        window.location.href = `/accounts/login/?next=${encodeURIComponent(window.location.pathname)}`;
+    }
 };
