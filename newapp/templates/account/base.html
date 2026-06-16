@@ -144,5 +144,45 @@
         background: #eee;
         margin: 0 10px;
     }
+
+    .form-field {
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+
+    .form-field label {
+        font-weight: 600;
+        color: #302419;
+        font-size: 0.95rem;
+    }
+
+    .remember-field label {
+        flex-direction: row;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-weight: 500;
+        cursor: pointer;
+    }
+
+    .form-errors {
+        background: rgba(239, 68, 68, 0.08);
+        border: 1px solid rgba(239, 68, 68, 0.2);
+        border-radius: 8px;
+        padding: 0.75rem 1rem;
+    }
+
+    .error-msg {
+        color: #dc2626;
+        font-size: 0.85rem;
+        margin: 0;
+        text-align: left;
+    }
+
+    .field-error {
+        color: #dc2626;
+        font-size: 0.8rem;
+    }
 </style>
 {% endblock %}

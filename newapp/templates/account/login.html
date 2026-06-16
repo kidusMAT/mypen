@@ -21,7 +21,38 @@
 
 <form class="login" method="POST" action="{% url 'account_login' %}">
     {% csrf_token %}
-    {{ form.as_p }}
+    <div class="form-field">
+        <label for="{{ form.login.id_for_label }}">Username or Email:</label>
+        {{ form.login }}
+    </div>
+    <div class="form-field">
+        <label for="{{ form.password.id_for_label }}">Password:</label>
+        {{ form.password }}
+        {% if form.password.errors %}
+        <span class="field-error">{{ form.password.errors.0 }}</span>
+        {% endif %}
+    </div>
+    {% if form.remember %}
+    <div class="form-field remember-field">
+        <label for="{{ form.remember.id_for_label }}">
+            {{ form.remember }} Remember Me
+        </label>
+    </div>
+    {% endif %}
+    {% if form.login.errors %}
+    <div class="form-errors">
+        {% for error in form.login.errors %}
+        <p class="error-msg">{{ error }}</p>
+        {% endfor %}
+    </div>
+    {% endif %}
+    {% if form.non_field_errors %}
+    <div class="form-errors">
+        {% for error in form.non_field_errors %}
+        <p class="error-msg">{{ error }}</p>
+        {% endfor %}
+    </div>
+    {% endif %}
     {% if redirect_field_value %}
     <input type="hidden" name="{{ redirect_field_name }}" value="{{ redirect_field_value }}" />
     {% endif %}
