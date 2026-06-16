@@ -17,8 +17,6 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path, include
 from newapp.views import index, scripts , books , poems, write, write_chapter , create_content, discover, feed, dashboard, manage_book, add_chapter, save_chapter_ajax, add_chapter_ajax, update_book_metadata_ajax, view_book_public, delete_book, delete_script, delete_poem, read_chapter, about, contact, privacy, terms, toggle_like_chapter, toggle_bookmark_book, toggle_like_book, writing_tips, contests, write_script, save_script_ajax, create_script_ajax, read_script, read_poem, coming_soon, write_poem, create_poem_ajax, save_poem_ajax, toggle_like_script, toggle_bookmark_script, toggle_like_poem, toggle_bookmark_poem, delete_book_ajax, submit_contest_entry, update_phone_number, reviews_page, movie_detail_page, ajax_add_movie, ajax_add_movie_comment, ajax_rate_movie, ajax_delete_movie_comment, book_review_detail_page, ajax_add_book_review, ajax_add_book_comment, ajax_rate_book_review, ajax_delete_book_comment, ajax_delete_profile_comment, profile_view, edit_profile, add_profile_comment, get_profile_comments_ajax, authors_list, confessions_page, get_confessions_ajax, get_confession_comments_ajax, add_confession_ajax, toggle_like_confession, add_confession_comment_ajax, ajax_delete_confession, ajax_delete_confession_comment, ajax_delete_movie, ajax_delete_book_review, ajax_upload_cover, ajax_remove_cover, ajax_update_status, write_episode, read_episode, save_episode_ajax, add_episode_ajax, manage_script
-from django.views.generic import TemplateView
-
 
 
 urlpatterns = [
@@ -114,8 +112,6 @@ urlpatterns = [
     path('ajax/update-status/<str:item_type>/<int:item_id>/', ajax_update_status, name='ajax_update_status'),
     #google search console verification
 
-    path('google7826ffaa7c20e53a.html', 
-         TemplateView.as_view(template_name='google7826ffaa7c20e53a.html')),
 ]
 
 
