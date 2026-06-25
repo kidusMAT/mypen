@@ -903,14 +903,15 @@ def contact(request):
             message_content = form.cleaned_data['message']
             
             try:
-                send_mail(
-                    f"New Contact Message from {name}",
-                    f"Name: {name}\nEmail: {email}\n\nMessage:\n{message_content}",
-                    settings.DEFAULT_FROM_EMAIL,
-                    ['kidusmezgebe2@gmail.com'],
+                from django.core.mail import EmailMessage
+                email_msg = EmailMessage(
+                    subject=f"New Contact Message from {name}",
+                    body=f"Name: {name}\nEmail: {email}\n\nMessage:\n{message_content}",
+                    from_email=settings.DEFAULT_FROM_EMAIL,
+                    to=['kidusmezgebe2@gmail.com'],
                     reply_to=[email],
-                    fail_silently=True,
                 )
+                email_msg.send(fail_silently=True)
             except:
                 pass
                 

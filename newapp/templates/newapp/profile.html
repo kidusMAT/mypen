@@ -42,7 +42,7 @@
                         <div class="work-badge">{{ work.genre|default:"Writing" }}</div>
                         <h3>{{ work.title }}</h3>
                         <p>{{ work.description|truncatewords:20 }}</p>
-                        <a href="{% if work.chapters %}{% url 'view_book_public' work.id %}{% elif work.script_file %}{% url 'read_script' work.id %}{% else %}{% url 'read_poem' work.id %}{% endif %}"
+                        <a href="{% if work.chapters %}{% url 'view_book_public' work.id %}{% elif work.script_format %}{% url 'read_script' work.id %}{% else %}{% url 'read_poem' work.id %}{% endif %}"
                             class="read-more">Read More →</a>
                     </div>
                     {% empty %}
