@@ -24,10 +24,10 @@
         <div class="mini-posts-row">
             {% for work in profile.latest_works %}
             <div class="micro-post"
-                onclick="location.href='{% if work.chapters %}{% url 'view_book_public' work.id %}{% elif work.script_file %}{% url 'read_script' work.id %}{% else %}{% url 'read_poem' work.id %}{% endif %}';"
+                onclick="location.href='{% if work.chapters %}{% url 'view_book_public' work.id %}{% elif work.script_format %}{% url 'read_script' work.id %}{% else %}{% url 'read_poem' work.id %}{% endif %}';"
                 title="{{ work.title }}">
                 <i
-                    class="fa-solid {% if work.chapters %}fa-book{% elif work.script_file %}fa-scroll{% else %}fa-feather-pointed{% endif %}"></i>
+                    class="fa-solid {% if work.chapters %}fa-book{% elif work.script_format %}fa-scroll{% else %}fa-feather-pointed{% endif %}"></i>
                 <span class="work-title">{{ work.title|truncatechars:20 }}</span>
             </div>
             {% empty %}
