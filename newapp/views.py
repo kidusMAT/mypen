@@ -908,7 +908,7 @@ def contact(request):
                     subject=f"New Contact Message from {name}",
                     body=f"Name: {name}\nEmail: {email}\n\nMessage:\n{message_content}",
                     from_email=settings.DEFAULT_FROM_EMAIL,
-                    to=['kidusmezgebe2@gmail.com'],
+                    to=['mypen.official@gmail.com'],
                     reply_to=[email],
                 )
                 email_msg.send(fail_silently=True)
