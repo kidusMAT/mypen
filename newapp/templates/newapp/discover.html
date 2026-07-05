@@ -17,10 +17,15 @@
                 <div class="search-bar">
                     <i class="fa-solid fa-magnifying-glass" onclick="document.getElementById('search-form').submit();"
                         style="cursor: pointer;"></i>
-                    <input type="text" name="q" value="{{ search_query|default:'' }}"
+                    <input type="text" name="q" id="live-search-input" value="{{ search_query|default:'' }}"
                         placeholder="Search stories, authors, or genres..."
-                        onkeypress="if(event.key === 'Enter') this.form.submit();">
+                        autocomplete="off">
+                    <div class="live-search-spinner" id="live-search-spinner" style="display:none;">
+                        <i class="fa-solid fa-circle-notch fa-spin"></i>
+                    </div>
                 </div>
+                <!-- Live search dropdown -->
+                <div class="live-search-dropdown" id="live-search-dropdown"></div>
             </form>
         </div>
     </section>
@@ -32,32 +37,239 @@
                 <h2>{% if search_query %}Search Results for "{{ search_query }}"{% else %}Trending Now{% endif %}</h2>
             </div>
 
-            <div class="trending-grid">
-                {% for book in trending_books %}
-                <div class="trending-card" onclick="window.location.href='/book/{{ book.id }}/view/';"
-                    style="cursor: pointer;">
-                    <div class="trending-rank">0{{ forloop.counter }}</div>
-                    <div class="trending-info">
-                        <h3>{{ book.title }}</h3>
-                        <p class="author">by {{ book.author.authorprofile.pen_name|default:book.author.username }}</p>
-                        <div class="stats">
-                            <span><i class="fa-solid fa-eye"></i> {{ book.views }}</span>
-                            <span onclick="toggleBookLike(event, {{ book.id }})" style="cursor: pointer;">
-                                {% if user in book.likes.all %}
-                                <i class="fa-solid fa-heart" style="color: #ef4444;"></i>
-                                {% else %}
-                                <i class="fa-regular fa-heart"></i>
-                                {% endif %}
-                                <span class="like-count">{{ book.total_likes|default:0 }}</span>
-                            </span>
+            {% if search_query %}
+                {% if not search_books and not search_scripts and not search_poems %}
+                    <p class="no-results">No stories found matching your search.</p>
+                {% endif %}
+
+                {% if search_books %}
+                <div class="results-category">
+                    <h3 class="results-category-label"><i class="fa-solid fa-book"></i> Books</h3>
+                    <div class="trending-grid">
+                        {% for book in search_books %}
+                        <div class="trending-card" onclick="window.location.href='/book/{{ book.id }}/view/';"
+                            style="cursor: pointer;">
+                            <div class="trending-rank">{{ forloop.counter|stringformat:"02d" }}</div>
+                            <div class="trending-info">
+                                <h3>{{ book.title }}</h3>
+                                <p class="author">by {{ book.author.authorprofile.pen_name|default:book.author.username }}</p>
+                                <div class="stats">
+                                    <span><i class="fa-solid fa-eye"></i> {{ book.views }}</span>
+                                    <span>
+                                        <i class="fa-regular fa-heart"></i>
+                                        <span class="like-count">{{ book.total_likes|default:0 }}</span>
+                                    </span>
+                                </div>
+                            </div>
                         </div>
+                        {% endfor %}
                     </div>
                 </div>
-                {% empty %}
-                <p class="no-results">No stories found matching your search.</p>
-                {% endfor %}
-            </div>
+                {% endif %}
+
+                {% if search_scripts %}
+                <div class="results-category">
+                    <h3 class="results-category-label"><i class="fa-solid fa-film"></i> Scripts</h3>
+                    <div class="trending-grid">
+                        {% for script in search_scripts %}
+                        <div class="trending-card" onclick="window.location.href='/script/read/{{ script.id }}/';"
+                            style="cursor: pointer;">
+                            <div class="trending-rank">{{ forloop.counter|stringformat:"02d" }}</div>
+                            <div class="trending-info">
+                                <h3>{{ script.title }}</h3>
+                                <p class="author">by {{ script.author.authorprofile.pen_name|default:script.author.username }}</p>
+                                <div class="stats">
+                                    <span><i class="fa-solid fa-eye"></i> {{ script.views }}</span>
+                                    <span>
+                                        <i class="fa-regular fa-heart"></i>
+                                        <span class="like-count">{{ script.total_likes|default:0 }}</span>
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% endif %}
+
+                {% if search_poems %}
+                <div class="results-category">
+                    <h3 class="results-category-label"><i class="fa-solid fa-feather-pointed"></i> Poems</h3>
+                    <div class="trending-grid">
+                        {% for poem in search_poems %}
+                        <div class="trending-card" onclick="window.location.href='/poem/read/{{ poem.id }}/';"
+                            style="cursor: pointer;">
+                            <div class="trending-rank">{{ forloop.counter|stringformat:"02d" }}</div>
+                            <div class="trending-info">
+                                <h3>{{ poem.title }}</h3>
+                                <p class="author">by {{ poem.author.authorprofile.pen_name|default:poem.author.username }}</p>
+                                <div class="stats">
+                                    <span><i class="fa-solid fa-eye"></i> {{ poem.views }}</span>
+                                    <span>
+                                        <i class="fa-regular fa-heart"></i>
+                                        <span class="like-count">{{ poem.total_likes|default:0 }}</span>
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% endif %}
+
+            {% else %}
+                <!-- Default: show trending books only -->
+                <div class="trending-grid">
+                    {% for book in search_books %}
+                    <div class="trending-card" onclick="window.location.href='/book/{{ book.id }}/view/';"
+                        style="cursor: pointer;">
+                        <div class="trending-rank">0{{ forloop.counter }}</div>
+                        <div class="trending-info">
+                            <h3>{{ book.title }}</h3>
+                            <p class="author">by {{ book.author.authorprofile.pen_name|default:book.author.username }}</p>
+                            <div class="stats">
+                                <span><i class="fa-solid fa-eye"></i> {{ book.views }}</span>
+                                <span>
+                                    <i class="fa-regular fa-heart"></i>
+                                    <span class="like-count">{{ book.total_likes|default:0 }}</span>
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                    {% empty %}
+                    <p class="no-results">No trending stories yet.</p>
+                    {% endfor %}
+                </div>
+            {% endif %}
         </div>
     </section>
 </main>
+
+<script>
+(function() {
+    const input = document.getElementById('live-search-input');
+    const dropdown = document.getElementById('live-search-dropdown');
+    const spinner = document.getElementById('live-search-spinner');
+    let debounceTimer = null;
+    let currentRequest = null;
+
+    const typeIcons = {
+        book: 'fa-book',
+        script: 'fa-film',
+        poem: 'fa-feather-pointed',
+    };
+
+    const typeLabels = {
+        book: 'Book',
+        script: 'Script',
+        poem: 'Poem',
+    };
+
+    input.addEventListener('input', function() {
+        const q = this.value.trim();
+        clearTimeout(debounceTimer);
+
+        if (q.length < 2) {
+            dropdown.innerHTML = '';
+            dropdown.classList.remove('active');
+            spinner.style.display = 'none';
+            return;
+        }
+
+        spinner.style.display = 'flex';
+
+        debounceTimer = setTimeout(() => {
+            if (currentRequest) currentRequest.abort();
+            const controller = new AbortController();
+            currentRequest = controller;
+
+            fetch(`/ajax/live-search/?q=${encodeURIComponent(q)}`, { signal: controller.signal })
+                .then(res => res.json())
+                .then(data => {
+                    spinner.style.display = 'none';
+                    if (!data.results || data.results.length === 0) {
+                        dropdown.innerHTML = '<div class="live-search-empty"><i class="fa-regular fa-face-frown"></i> No results found</div>';
+                        dropdown.classList.add('active');
+                        return;
+                    }
+
+                    let html = '';
+                    data.results.forEach(item => {
+                        const icon = typeIcons[item.type] || 'fa-file';
+                        const label = typeLabels[item.type] || item.type;
+                        html += `
+                            <a href="${item.url}" class="live-search-item">
+                                <div class="live-search-item-icon">
+                                    <i class="fa-solid ${icon}"></i>
+                                </div>
+                                <div class="live-search-item-info">
+                                    <span class="live-search-item-title">${escapeHtml(item.title)}</span>
+                                    <span class="live-search-item-meta">by ${escapeHtml(item.author)} · <span class="live-search-type-badge">${label}</span></span>
+                                </div>
+                                <div class="live-search-item-views">
+                                    <i class="fa-solid fa-eye"></i> ${item.views}
+                                </div>
+                            </a>
+                        `;
+                    });
+
+                    html += `<a href="/discover/?q=${encodeURIComponent(q)}" class="live-search-view-all">View all results <i class="fa-solid fa-arrow-right"></i></a>`;
+                    dropdown.innerHTML = html;
+                    dropdown.classList.add('active');
+                })
+                .catch(err => {
+                    if (err.name !== 'AbortError') {
+                        spinner.style.display = 'none';
+                    }
+                });
+        }, 300);
+    });
+
+    // Close dropdown when clicking outside
+    document.addEventListener('click', function(e) {
+        if (!e.target.closest('.search-container')) {
+            dropdown.classList.remove('active');
+        }
+    });
+
+    // Re-open on focus if there's content
+    input.addEventListener('focus', function() {
+        if (dropdown.innerHTML.trim() && this.value.trim().length >= 2) {
+            dropdown.classList.add('active');
+        }
+    });
+
+    // Keyboard navigation
+    input.addEventListener('keydown', function(e) {
+        const items = dropdown.querySelectorAll('.live-search-item');
+        if (!items.length) return;
+
+        let focused = dropdown.querySelector('.live-search-item.focused');
+        let idx = Array.from(items).indexOf(focused);
+
+        if (e.key === 'ArrowDown') {
+            e.preventDefault();
+            if (focused) focused.classList.remove('focused');
+            idx = (idx + 1) % items.length;
+            items[idx].classList.add('focused');
+            items[idx].scrollIntoView({ block: 'nearest' });
+        } else if (e.key === 'ArrowUp') {
+            e.preventDefault();
+            if (focused) focused.classList.remove('focused');
+            idx = (idx - 1 + items.length) % items.length;
+            items[idx].classList.add('focused');
+            items[idx].scrollIntoView({ block: 'nearest' });
+        } else if (e.key === 'Enter' && focused) {
+            e.preventDefault();
+            window.location.href = focused.getAttribute('href');
+        }
+    });
+
+    function escapeHtml(text) {
+        const el = document.createElement('span');
+        el.textContent = text;
+        return el.innerHTML;
+    }
+})();
+</script>
 {% endblock %}

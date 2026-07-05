@@ -515,24 +515,130 @@ def write(request):
 def discover(request):
     query = request.GET.get('q')
     if query:
-        trending_books = Book.objects.filter(
+        search_books = Book.objects.filter(
             Q(status__in=['PUBLISHED', 'FINISHED']) & (
                 Q(title__icontains=query) | 
                 Q(author__username__icontains=query) |
                 Q(genre__icontains=query)
             )
         ).annotate(total_likes=Count('likes', distinct=True)).order_by('-views', '-total_likes', '-id')
+
+        search_scripts = Script.objects.filter(
+            Q(status='PUBLISHED') & (
+                Q(title__icontains=query) |
+                Q(author__username__icontains=query) |
+                Q(genre__icontains=query)
+            )
+        ).annotate(total_likes=Count('likes', distinct=True)).order_by('-views', '-total_likes', '-id')
+
+        search_poems = Poem.objects.filter(
+            Q(status__in=['PUBLISHED', 'FINISHED']) & (
+                Q(title__icontains=query) |
+                Q(author__username__icontains=query)
+            )
+        ).annotate(total_likes=Count('likes', distinct=True)).order_by('-views', '-total_likes', '-id')
     else:
-        # Get top 4 trending books
-        trending_books = Book.objects.filter(status__in=['PUBLISHED', 'FINISHED']).annotate(
+        search_books = Book.objects.filter(status__in=['PUBLISHED', 'FINISHED']).annotate(
             total_likes=Count('likes', distinct=True)
         ).order_by('-views', '-total_likes', '-id')[:4]
+        search_scripts = Script.objects.none()
+        search_poems = Poem.objects.none()
     
     context = {
-        'trending_books': trending_books,
+        'search_books': search_books,
+        'search_scripts': search_scripts,
+        'search_poems': search_poems,
         'search_query': query,
     }
     return render(request, 'newapp/discover.html', context)
+
+
+def ajax_live_search(request):
+    """AJAX endpoint for live search — returns JSON results across Books, Scripts, and Poems."""
+    query = request.GET.get('q', '').strip()
+    results = []
+
+    if len(query) < 2:
+        return JsonResponse({'results': []})
+
+    # Search Books
+    books_qs = Book.objects.filter(
+        Q(status__in=['PUBLISHED', 'FINISHED']) & (
+            Q(title__icontains=query) |
+            Q(author__username__icontains=query) |
+            Q(genre__icontains=query)
+        )
+    ).select_related('author', 'author__authorprofile').order_by('-views')[:5]
+
+    for b in books_qs:
+        pen = ''
+        try:
+            pen = b.author.authorprofile.pen_name
+        except Exception:
+            pass
+        results.append({
+            'type': 'book',
+            'id': b.id,
+            'title': b.title,
+            'author': pen or b.author.username,
+            'url': f'/book/{b.id}/view/',
+            'views': b.views,
+            'cover': b.cover_image.url if b.cover_image else '',
+        })
+
+    # Search Scripts
+    scripts_qs = Script.objects.filter(
+        Q(status='PUBLISHED') & (
+            Q(title__icontains=query) |
+            Q(author__username__icontains=query) |
+            Q(genre__icontains=query)
+        )
+    ).select_related('author', 'author__authorprofile').order_by('-views')[:5]
+
+    for s in scripts_qs:
+        pen = ''
+        try:
+            pen = s.author.authorprofile.pen_name
+        except Exception:
+            pass
+        results.append({
+            'type': 'script',
+            'id': s.id,
+            'title': s.title,
+            'author': pen or s.author.username,
+            'url': f'/script/read/{s.id}/',
+            'views': s.views,
+            'cover': s.cover_image.url if s.cover_image else '',
+        })
+
+    # Search Poems
+    poems_qs = Poem.objects.filter(
+        Q(status__in=['PUBLISHED', 'FINISHED']) & (
+            Q(title__icontains=query) |
+            Q(author__username__icontains=query)
+        )
+    ).select_related('author', 'author__authorprofile').order_by('-views')[:5]
+
+    for p in poems_qs:
+        pen = ''
+        try:
+            pen = p.author.authorprofile.pen_name
+        except Exception:
+            pass
+        results.append({
+            'type': 'poem',
+            'id': p.id,
+            'title': p.title,
+            'author': pen or p.author.username,
+            'url': f'/poem/read/{p.id}/',
+            'views': p.views,
+            'cover': p.cover_image.url if p.cover_image else '',
+        })
+
+    # Sort all combined results by views descending
+    results.sort(key=lambda x: x['views'], reverse=True)
+
+    return JsonResponse({'results': results[:10]})
 
 
 def feed(request):

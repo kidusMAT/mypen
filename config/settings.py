@@ -162,6 +162,9 @@ if CLOUDINARY_URL:
     MEDIA_ROOT = '/tmp/media' if os.getenv('VERCEL') else os.path.join(BASE_DIR, 'media')
 else:
     # Local development fallback
+    STORAGES["default"] = {
+        "BACKEND": "django.core.files.storage.FileSystemStorage",
+    }
     MEDIA_URL = '/media/'
     MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
