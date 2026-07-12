@@ -177,13 +177,15 @@
     .account-inner-content input[type="email"],
     .account-inner-content input[type="url"] {
         width: 100%;
-        padding: 14px 18px;
+        padding: 14px 18px 14px 40px !important;
         border-radius: 12px;
         border: 2px solid #ebedee;
         background: #fbf9f6;
         font-family: system-ui, sans-serif;
         font-size: 1rem;
         transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        box-sizing: border-box;
+        text-indent: 0 !important;
     }
 
     .account-inner-content input:focus {

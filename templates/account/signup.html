@@ -36,9 +36,173 @@
     </div>
 </div>
 
+<style>
+    .auth-field {
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+
+    .auth-input-wrap {
+        position: relative;
+        display: flex;
+        align-items: center;
+    }
+
+    .auth-input-icon {
+        position: absolute;
+        left: 16px;
+        color: #9ca3af;
+        font-size: 0.9rem;
+        pointer-events: none;
+        z-index: 10;
+        width: 20px;
+        text-align: center;
+        top: 50%;
+        transform: translateY(-50%);
+    }
+
+    .auth-input-wrap .auth-input,
+    .auth-input {
+        width: 100%;
+        padding: 14px 18px 14px 70px !important;
+        border-radius: 12px;
+        border: 2px solid #ebedee;
+        background: #fbf9f6;
+        font-family: system-ui, sans-serif;
+        font-size: 1rem;
+        transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        box-sizing: border-box;
+        text-indent: 0 !important;
+        padding-left: 70px !important;
+    }
+
+    .auth-input::placeholder {
+        text-indent: 0 !important;
+        color: #9ca3af;
+    }
+
+    .auth-field--error .auth-input {
+        border-color: #f87171;
+        background: #fff5f5;
+    }
+
+    .auth-field--error .auth-input:focus {
+        border-color: #dc2626;
+        box-shadow: 0 0 0 4px rgba(220, 38, 38, 0.1);
+    }
+
+    .auth-input-wrap .auth-input:focus {
+        outline: none;
+        border-color: #D48C11;
+        background: #fff;
+        box-shadow: 0 0 0 4px rgba(212, 140, 17, 0.1);
+    }
+
+    .auth-password-toggle {
+        position: absolute !important;
+        right: 12px !important;
+        background: none !important;
+        border: none !important;
+        color: #9ca3af !important;
+        cursor: pointer !important;
+        padding: 6px !important;
+        margin: 0 !important;
+        width: auto !important;
+        box-shadow: none !important;
+        font-size: 1rem !important;
+        border-radius: 0 !important;
+        transform: none !important;
+        top: 50% !important;
+        translate: 0 -50% !important;
+    }
+
+    .auth-password-toggle:hover {
+        color: #D48C11 !important;
+        background: none !important;
+        transform: none !important;
+        box-shadow: none !important;
+    }
+
+    .auth-field-errors {
+        list-style: none;
+        margin: 0;
+        padding: 0;
+        color: #dc2626;
+        font-size: 0.85rem;
+        font-weight: 600;
+    }
+</style>
+
 <form class="signup" id="signup_form" method="post" action="{% url 'account_signup' %}">
   {% csrf_token %}
-  {{ form.as_p }}
+
+  <div class="auth-field{% if form.username.errors %} auth-field--error{% endif %}">
+      <label for="{{ form.username.id_for_label }}">{{ form.username.label }}</label>
+      <div class="auth-input-wrap">
+          <i class="fa-solid fa-user auth-input-icon" aria-hidden="true"></i>
+          {{ form.username }}
+      </div>
+      {% if form.username.errors %}
+      <ul class="auth-field-errors">
+          {% for error in form.username.errors %}
+          <li>{{ error }}</li>
+          {% endfor %}
+      </ul>
+      {% endif %}
+  </div>
+
+  <div class="auth-field{% if form.email.errors %} auth-field--error{% endif %}">
+      <label for="{{ form.email.id_for_label }}">{{ form.email.label }}</label>
+      <div class="auth-input-wrap">
+          <i class="fa-solid fa-envelope auth-input-icon" aria-hidden="true"></i>
+          {{ form.email }}
+      </div>
+      {% if form.email.errors %}
+      <ul class="auth-field-errors">
+          {% for error in form.email.errors %}
+          <li>{{ error }}</li>
+          {% endfor %}
+      </ul>
+      {% endif %}
+  </div>
+
+  <div class="auth-field{% if form.password1.errors %} auth-field--error{% endif %}">
+      <label for="{{ form.password1.id_for_label }}">{% trans "Password" %}</label>
+      <div class="auth-input-wrap">
+          <i class="fa-solid fa-lock auth-input-icon" aria-hidden="true"></i>
+          {{ form.password1 }}
+          <button type="button" class="auth-password-toggle" aria-label="{% trans 'Show password' %}" data-target="{{ form.password1.id_for_label }}">
+              <i class="fa-solid fa-eye" aria-hidden="true"></i>
+          </button>
+      </div>
+      {% if form.password1.errors %}
+      <ul class="auth-field-errors">
+          {% for error in form.password1.errors %}
+          <li>{{ error }}</li>
+          {% endfor %}
+      </ul>
+      {% endif %}
+  </div>
+
+  <div class="auth-field{% if form.password2.errors %} auth-field--error{% endif %}">
+      <label for="{{ form.password2.id_for_label }}">{% trans "Confirm Password" %}</label>
+      <div class="auth-input-wrap">
+          <i class="fa-solid fa-lock auth-input-icon" aria-hidden="true"></i>
+          {{ form.password2 }}
+          <button type="button" class="auth-password-toggle" aria-label="{% trans 'Show password' %}" data-target="{{ form.password2.id_for_label }}">
+              <i class="fa-solid fa-eye" aria-hidden="true"></i>
+          </button>
+      </div>
+      {% if form.password2.errors %}
+      <ul class="auth-field-errors">
+          {% for error in form.password2.errors %}
+          <li>{{ error }}</li>
+          {% endfor %}
+      </ul>
+      {% endif %}
+  </div>
+
   {% if redirect_field_value %}
   <input type="hidden" name="{{ redirect_field_name }}" value="{{ redirect_field_value }}" />
   {% endif %}
@@ -48,4 +212,17 @@
 <div class="account-links">
     {% blocktrans %}Already have an account? <a href="{{ login_url }}">Sign in</a>{% endblocktrans %}
 </div>
+
+<script>
+    document.querySelectorAll('.auth-password-toggle').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+            var input = document.getElementById(btn.dataset.target);
+            if (!input) return;
+            var isHidden = input.type === 'password';
+            input.type = isHidden ? 'text' : 'password';
+            btn.querySelector('i').className = isHidden ? 'fa-solid fa-eye-slash' : 'fa-solid fa-eye';
+            btn.setAttribute('aria-label', isHidden ? 'Hide password' : 'Show password');
+        });
+    });
+</script>
 {% endblock %}

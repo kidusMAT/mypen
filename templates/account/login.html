@@ -177,20 +177,33 @@
         position: absolute;
         left: 16px;
         color: #9ca3af;
-        font-size: 0.95rem;
+        font-size: 0.9rem;
         pointer-events: none;
-        z-index: 1;
+        z-index: 10;
+        width: 20px;
+        text-align: center;
+        top: 50%;
+        transform: translateY(-50%);
     }
 
-    .auth-input-wrap .auth-input {
+    .auth-input-wrap .auth-input,
+    .auth-input {
         width: 100%;
-        padding: 14px 18px 14px 44px;
+        padding: 14px 18px 14px 70px !important;
         border-radius: 12px;
         border: 2px solid #ebedee;
         background: #fbf9f6;
         font-family: system-ui, sans-serif;
         font-size: 1rem;
         transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        box-sizing: border-box;
+        text-indent: 0 !important;
+        padding-left: 70px !important;
+    }
+
+    .auth-input::placeholder {
+        text-indent: 0 !important;
+        color: #9ca3af;
     }
 
     .auth-field--error .auth-input {
@@ -211,24 +224,28 @@
     }
 
     .auth-password-toggle {
-        position: absolute;
-        right: 12px;
-        background: none;
-        border: none;
-        color: #9ca3af;
-        cursor: pointer;
-        padding: 6px;
-        margin: 0;
-        width: auto;
-        box-shadow: none;
-        font-size: 1rem;
+        position: absolute !important;
+        right: 12px !important;
+        background: none !important;
+        border: none !important;
+        color: #9ca3af !important;
+        cursor: pointer !important;
+        padding: 6px !important;
+        margin: 0 !important;
+        width: auto !important;
+        box-shadow: none !important;
+        font-size: 1rem !important;
+        border-radius: 0 !important;
+        transform: none !important;
+        top: 50% !important;
+        translate: 0 -50% !important;
     }
 
     .auth-password-toggle:hover {
-        color: #D48C11;
-        background: none;
-        transform: none;
-        box-shadow: none;
+        color: #D48C11 !important;
+        background: none !important;
+        transform: none !important;
+        box-shadow: none !important;
     }
 
     .auth-field-errors {
