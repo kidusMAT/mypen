@@ -1,8 +1,26 @@
 from django import forms
 from django.contrib.auth import get_user_model
+from allauth.account.forms import LoginForm
 from .models import ContactMessage, AuthorProfile
 
 User = get_user_model()
+
+
+class CustomLoginForm(LoginForm):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['login'].label = 'Username or email'
+        self.fields['login'].widget.attrs.update({
+            'placeholder': 'Enter your username or email',
+            'autocomplete': 'username',
+            'class': 'auth-input',
+        })
+        self.fields['password'].widget.attrs.update({
+            'placeholder': 'Enter your password',
+            'autocomplete': 'current-password',
+            'class': 'auth-input',
+        })
+        self.fields['remember'].widget.attrs.update({'class': 'auth-checkbox'})
 
 
 class ContactForm(forms.ModelForm):

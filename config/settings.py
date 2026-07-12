@@ -142,9 +142,17 @@ STATIC_ROOT = BASE_DIR / 'staticfiles'
 STATICFILES_DIRS = [
     os.path.join(BASE_DIR, 'static'),
 ]
+# Use hashed manifest storage only when the manifest exists (production / after collectstatic).
+# Plain storage keeps local dev working without running collectstatic first.
+_manifest_path = BASE_DIR / 'staticfiles' / 'staticfiles.json'
+_use_manifest_static = bool(os.getenv('VERCEL') or _manifest_path.exists())
 STORAGES = {
     "staticfiles": {
-        "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage",
+        "BACKEND": (
+            "whitenoise.storage.CompressedManifestStaticFilesStorage"
+            if _use_manifest_static
+            else "django.contrib.staticfiles.storage.StaticFilesStorage"
+        ),
     },
 }
 
@@ -211,6 +219,10 @@ if not EMAIL_HOST:
 
 
 # Allauth settings
+ACCOUNT_ADAPTER = 'newapp.adapters.MyAccountAdapter'
+ACCOUNT_FORMS = {
+    'login': 'newapp.forms.CustomLoginForm',
+}
 ACCOUNT_SIGNUP_FIELDS = ['email*', 'username*', 'password1*', 'password2*']
 ACCOUNT_EMAIL_REQUIRED = True
 ACCOUNT_EMAIL_VERIFICATION = "mandatory"

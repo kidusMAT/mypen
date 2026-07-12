@@ -40,9 +40,64 @@
 </div>
 {% endif %}
 
-<form class="login" method="POST" action="{% url 'account_login' %}">
+<form class="login{% if form.errors %} login--has-errors{% endif %}" method="POST" action="{% url 'account_login' %}" novalidate>
     {% csrf_token %}
-    {{ form.as_p }}
+
+    {% if form.non_field_errors %}
+    <div class="auth-error-banner" role="alert">
+        <i class="fa-solid fa-circle-exclamation" aria-hidden="true"></i>
+        <div class="auth-error-banner__content">
+            {% for error in form.non_field_errors %}
+            <p>{{ error }}</p>
+            {% endfor %}
+            <a href="{% url 'account_reset_password' %}" class="auth-error-banner__link">
+                {% trans "Forgot your password?" %}
+            </a>
+        </div>
+    </div>
+    {% endif %}
+
+    <div class="auth-field{% if form.login.errors %} auth-field--error{% endif %}">
+        <label for="{{ form.login.id_for_label }}">{{ form.login.label }}</label>
+        <div class="auth-input-wrap">
+            <i class="fa-solid fa-user auth-input-icon" aria-hidden="true"></i>
+            {{ form.login }}
+        </div>
+        {% if form.login.errors %}
+        <ul class="auth-field-errors">
+            {% for error in form.login.errors %}
+            <li>{{ error }}</li>
+            {% endfor %}
+        </ul>
+        {% endif %}
+    </div>
+
+    <div class="auth-field{% if form.password.errors %} auth-field--error{% endif %}">
+        <label for="{{ form.password.id_for_label }}">{% trans "Password" %}</label>
+        <div class="auth-input-wrap">
+            <i class="fa-solid fa-lock auth-input-icon" aria-hidden="true"></i>
+            {{ form.password }}
+            <button type="button" class="auth-password-toggle" aria-label="{% trans 'Show password' %}" data-target="{{ form.password.id_for_label }}">
+                <i class="fa-solid fa-eye" aria-hidden="true"></i>
+            </button>
+        </div>
+        {% if form.password.errors %}
+        <ul class="auth-field-errors">
+            {% for error in form.password.errors %}
+            <li>{{ error }}</li>
+            {% endfor %}
+        </ul>
+        {% endif %}
+    </div>
+
+    <div class="auth-remember-row">
+        <label class="auth-remember-label" for="{{ form.remember.id_for_label }}">
+            {{ form.remember }}
+            <span>{% trans "Remember me" %}</span>
+        </label>
+        <a href="{% url 'account_reset_password' %}" class="auth-forgot-link">{% trans "Forgot Password?" %}</a>
+    </div>
+
     {% if redirect_field_value %}
     <input type="hidden" name="{{ redirect_field_name }}" value="{{ redirect_field_value }}" />
     {% endif %}
@@ -50,7 +105,183 @@
 </form>
 
 <div class="account-links">
-    <a href="{% url 'account_reset_password' %}">{% trans "Forgot Password?" %}</a><br>
     {% blocktrans %}Don't have an account? <a href="{{ signup_url }}">Sign up</a>{% endblocktrans %}
 </div>
+
+<style>
+    .auth-error-banner {
+        display: flex;
+        align-items: flex-start;
+        gap: 12px;
+        background: #fef2f2;
+        border: 1px solid #fecaca;
+        border-left: 4px solid #dc2626;
+        border-radius: 12px;
+        padding: 14px 16px;
+        margin-bottom: 1.25rem;
+        text-align: left;
+        animation: auth-shake 0.45s ease;
+    }
+
+    .auth-error-banner i {
+        color: #dc2626;
+        font-size: 1.1rem;
+        margin-top: 2px;
+        flex-shrink: 0;
+    }
+
+    .auth-error-banner__content p {
+        margin: 0 0 6px;
+        color: #991b1b;
+        font-size: 0.95rem;
+        font-weight: 600;
+        line-height: 1.4;
+    }
+
+    .auth-error-banner__link {
+        color: #b45309;
+        font-size: 0.9rem;
+        font-weight: 700;
+        text-decoration: none;
+    }
+
+    .auth-error-banner__link:hover {
+        text-decoration: underline;
+    }
+
+    .auth-field {
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+
+    .auth-input-wrap {
+        position: relative;
+        display: flex;
+        align-items: center;
+    }
+
+    .auth-input-icon {
+        position: absolute;
+        left: 16px;
+        color: #9ca3af;
+        font-size: 0.95rem;
+        pointer-events: none;
+        z-index: 1;
+    }
+
+    .auth-input-wrap .auth-input {
+        width: 100%;
+        padding: 14px 18px 14px 44px;
+        border-radius: 12px;
+        border: 2px solid #ebedee;
+        background: #fbf9f6;
+        font-family: system-ui, sans-serif;
+        font-size: 1rem;
+        transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .auth-field--error .auth-input {
+        border-color: #f87171;
+        background: #fff5f5;
+    }
+
+    .auth-field--error .auth-input:focus {
+        border-color: #dc2626;
+        box-shadow: 0 0 0 4px rgba(220, 38, 38, 0.1);
+    }
+
+    .auth-input-wrap .auth-input:focus {
+        outline: none;
+        border-color: #D48C11;
+        background: #fff;
+        box-shadow: 0 0 0 4px rgba(212, 140, 17, 0.1);
+    }
+
+    .auth-password-toggle {
+        position: absolute;
+        right: 12px;
+        background: none;
+        border: none;
+        color: #9ca3af;
+        cursor: pointer;
+        padding: 6px;
+        margin: 0;
+        width: auto;
+        box-shadow: none;
+        font-size: 1rem;
+    }
+
+    .auth-password-toggle:hover {
+        color: #D48C11;
+        background: none;
+        transform: none;
+        box-shadow: none;
+    }
+
+    .auth-field-errors {
+        list-style: none;
+        margin: 0;
+        padding: 0;
+        color: #dc2626;
+        font-size: 0.85rem;
+        font-weight: 600;
+    }
+
+    .auth-remember-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        margin-top: 0.25rem;
+    }
+
+    .auth-remember-label {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin: 0;
+        font-size: 0.9rem;
+        font-weight: 600;
+        color: #302419;
+        cursor: pointer;
+    }
+
+    .auth-forgot-link {
+        color: #D48C11;
+        font-size: 0.9rem;
+        font-weight: 700;
+        text-decoration: none;
+        white-space: nowrap;
+    }
+
+    .auth-forgot-link:hover {
+        text-decoration: underline;
+    }
+
+    .login--has-errors {
+        animation: auth-shake 0.45s ease;
+    }
+
+    @keyframes auth-shake {
+        0%, 100% { transform: translateX(0); }
+        20% { transform: translateX(-6px); }
+        40% { transform: translateX(6px); }
+        60% { transform: translateX(-4px); }
+        80% { transform: translateX(4px); }
+    }
+</style>
+
+<script>
+    document.querySelectorAll('.auth-password-toggle').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+            var input = document.getElementById(btn.dataset.target);
+            if (!input) return;
+            var isHidden = input.type === 'password';
+            input.type = isHidden ? 'text' : 'password';
+            btn.querySelector('i').className = isHidden ? 'fa-solid fa-eye-slash' : 'fa-solid fa-eye';
+            btn.setAttribute('aria-label', isHidden ? 'Hide password' : 'Show password');
+        });
+    });
+</script>
 {% endblock %}

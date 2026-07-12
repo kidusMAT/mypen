@@ -1,8 +1,24 @@
+from allauth.account.adapter import DefaultAccountAdapter
 from allauth.socialaccount.adapter import DefaultSocialAccountAdapter
 from django.contrib.auth import get_user_model
 from newapp.models import AuthorProfile
 
 User = get_user_model()
+
+
+class MyAccountAdapter(DefaultAccountAdapter):
+    error_messages = {
+        **DefaultAccountAdapter.error_messages,
+        'email_password_mismatch': (
+            "That password doesn't match this account. "
+            "Please try again or use Forgot Password below."
+        ),
+        'username_password_mismatch': (
+            "That password doesn't match this account. "
+            "Please try again or use Forgot Password below."
+        ),
+    }
+
 
 class MySocialAccountAdapter(DefaultSocialAccountAdapter):
     def pre_social_login(self, request, sociallogin):
