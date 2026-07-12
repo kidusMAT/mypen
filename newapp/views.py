@@ -1846,12 +1846,12 @@ def get_confession_comments_ajax(request, confession_id):
 
 @require_POST
 def add_confession_ajax(request):
+    if not request.user.is_authenticated:
+        return JsonResponse({'success': False, 'login_required': True}, status=401)
     content = request.POST.get('content')
     if content:
-        user = request.user if request.user.is_authenticated else None
-        confession = Confession.objects.create(content=content, user=user)
-        if request.user.is_authenticated:
-            confession.is_liked = False
+        confession = Confession.objects.create(content=content, user=request.user)
+        confession.is_liked = False
         confession.like_count = 0
         confession.comment_count = 0
         html = render_to_string('newapp/partials/_confession_list.html', {'confessions': [confession]}, request=request)

@@ -11,11 +11,11 @@
             <button class="action-btn like-btn {% if confession.is_liked %}liked{% endif %}"
                 onclick="toggleLikeConfession({{ confession.id }})" id="like-btn-{{ confession.id }}">
                 <i class="fa-{% if confession.is_liked %}solid{% else %}regular{% endif %} fa-heart"></i>
-                <span id="like-count-{{ confession.id }}">{{ confession.like_count|default:confession.likes.count }}</span>
+                <span id="like-count-{{ confession.id }}">{{ confession.like_count|default:"0" }}</span>
             </button>
             <button class="action-btn comment-btn" onclick="toggleConfessionComments({{ confession.id }})">
                 <i class="fa-regular fa-comment"></i>
-                <span id="comment-count-{{ confession.id }}">{{ confession.comment_count|default:confession.comments.count }}</span>
+                <span id="comment-count-{{ confession.id }}">{{ confession.comment_count|default:"0" }}</span>
             </button>
             {% if user.is_staff or user == confession.user %}
             <button class="action-btn delete-btn" onclick="deleteConfession({{ confession.id }})"

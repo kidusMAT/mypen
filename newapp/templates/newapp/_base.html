@@ -279,6 +279,43 @@
             // showToast('{{ message|escapejs }}', type); // Removed showToast call
             {% endfor %}
             {% endif %}
+
+            // Custom Sign Out confirmation popup
+            document.querySelectorAll(`a[href="{% url 'account_logout' %}"]`).forEach(link => {
+                link.addEventListener('click', async function(e) {
+                    e.preventDefault();
+                    
+                    // Close mobile overlay if it's open
+                    const mobileOverlay = document.getElementById('mobile-nav-overlay');
+                    if (mobileOverlay && mobileOverlay.classList.contains('active')) {
+                        mobileOverlay.classList.remove('active');
+                        document.body.classList.remove('no-scroll');
+                        document.documentElement.classList.remove('no-scroll');
+                    }
+
+                    const confirmed = await window.showCustomConfirm({
+                        title: 'Sign Out',
+                        message: 'Are you sure you want to sign out of your account?',
+                        type: 'info',
+                        confirmText: 'Sign Out'
+                    });
+
+                    if (confirmed) {
+                        const form = document.createElement('form');
+                        form.method = 'POST';
+                        form.action = "{% url 'account_logout' %}";
+                        
+                        const csrf = document.createElement('input');
+                        csrf.type = 'hidden';
+                        csrf.name = 'csrfmiddlewaretoken';
+                        csrf.value = '{{ csrf_token }}';
+                        
+                        form.appendChild(csrf);
+                        document.body.appendChild(form);
+                        form.submit();
+                    }
+                });
+            });
         });
 
         function toggleLike(event, type, id) {

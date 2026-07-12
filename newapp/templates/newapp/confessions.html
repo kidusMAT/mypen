@@ -79,6 +79,12 @@
 
     function submitConfession(e) {
         e.preventDefault();
+
+        {% if not user.is_authenticated %}
+        window.requireLogin('You need to be logged in to post a confession. Your identity will stay 100% anonymous to other users.');
+        return;
+        {% endif %}
+
         const form = e.target;
         const btn = document.getElementById('btn-confess');
         const formData = new FormData(form);
@@ -97,8 +103,15 @@
                 'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
             }
         })
-            .then(response => response.json())
+            .then(response => {
+                if (response.status === 401) {
+                    window.requireLogin('You need to be logged in to post a confession.');
+                    return null;
+                }
+                return response.json();
+            })
             .then(data => {
+                if (!data) return;
                 if (data.success && data.html) {
                     const feed = document.getElementById('confessions-feed');
                     const tempDiv = document.createElement('div');
@@ -151,7 +164,7 @@
                 const btn = document.getElementById(`like-btn-${id}`);
                 const icon = btn.querySelector('i');
 
-                if (countSpan) countSpan.innerText = data.count;
+                if (countSpan && data.count !== undefined) countSpan.innerText = data.count;
                 if (btn && icon) {
                     if (data.liked) {
                         btn.classList.add('liked');

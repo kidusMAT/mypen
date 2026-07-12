@@ -8,9 +8,6 @@
 <h1>{% trans "Welcome Back" %}</h1>
 <p>{% trans "Sign in to continue your creative journey." %}</p>
 
-{% get_providers as socialaccount_providers %}
-
-{% if socialaccount_providers %}
 <div class="socialaccount_ballot">
     <div class="socialaccount_providers">
         <a title="Google" class="socialaccount_provider google" href="{% provider_login_url 'google' process='login' %}"
@@ -18,7 +15,7 @@
             <i class="fa-brands fa-google" style="font-size: 22px; color: #4285F4;"></i>
             Continue with Google
         </a>
-    </div>
+</div>
     <style>
         .socialaccount_provider.google:hover {
             transform: translateY(-2px);
@@ -30,6 +27,22 @@
         .socialaccount_provider.google:active {
             transform: translateY(0);
         }
+
+        .forgot-password-link {
+            display: block;
+            text-align: right;
+            margin-top: -10px;
+            font-size: 0.9rem;
+            font-family: system-ui, sans-serif;
+            font-weight: 600;
+            color: #7a736d;
+            text-decoration: none;
+            transition: color 0.2s ease;
+        }
+
+        .forgot-password-link:hover {
+            color: #D48C11;
+        }
     </style>
     <div class="login-or"
         style="text-align: center; margin: 24px 0; color: #888; position: relative; font-size: 14px; font-weight: 500; text-transform: uppercase; letter-spacing: 1px;">
@@ -38,7 +51,6 @@
             style="position: absolute; top: 50%; left: 0; right: 0; border: none; border-top: 1px solid #eee; margin: 0;">
     </div>
 </div>
-{% endif %}
 
 <form class="login{% if form.errors %} login--has-errors{% endif %}" method="POST" action="{% url 'account_login' %}" novalidate>
     {% csrf_token %}
