@@ -6,8 +6,8 @@ from django.views.decorators.http import require_POST
 from collections import Counter
 import json
 from django.core.paginator import Paginator
-from django.db.models import Count, Q, F, Value, Case, When, ExpressionWrapper, FloatField, CharField
-from .models import Book, Chapter, Contest, Script, ScriptEpisode, Poem, ContactMessage
+from django.db.models import Count, Q, F, Value, Case, When, ExpressionWrapper, FloatField, CharField, Sum
+from .models import Book, Chapter, Contest, ContestParticipant, Script, ScriptEpisode, Poem, ContactMessage, AuthorProfile
 from .forms import ContactForm
 from django.contrib import messages
 from django.core.mail import send_mail
@@ -23,6 +23,16 @@ def create_content(request):
     if request.method == 'POST':
         print(f"DEBUG: create_content POST: {request.POST}")
         contest_id = request.POST.get('contest_id')
+        
+        # If entering a contest, require phone number
+        if contest_id:
+            from newapp.models import AuthorProfile
+            profile, _ = AuthorProfile.objects.get_or_create(user=request.user)
+            if not profile.phone_number:
+                from django.contrib import messages as django_messages
+                django_messages.error(request, 'You must add a phone number to your profile before entering a contest.')
+                return redirect('edit_profile')
+        
         content_type = request.POST.get('type')
         
         if content_type == 'script':
@@ -1042,7 +1052,7 @@ def writing_tips(request):
 
 
 def contests(request):
-    return render(request, 'newapp/coming_soon.html', {'feature': 'Contests'})
+    return contest_list(request)
 
 
 @login_required
@@ -1190,6 +1200,13 @@ def create_script_ajax(request):
             status = data.get('status', 'DRAFT')
             contest_id = data.get('contest_id')
             script_format = data.get('script_format', 'FEATURE_FILM')
+            
+            # If entering a contest, require phone number
+            if contest_id:
+                from newapp.models import AuthorProfile
+                profile, _ = AuthorProfile.objects.get_or_create(user=request.user)
+                if not profile.phone_number:
+                    return JsonResponse({'status': 'error', 'message': 'You must add a phone number to your profile before entering a contest.', 'phone_required': True}, status=400)
             
             script = Script.objects.create(
                 author=request.user,
@@ -1396,6 +1413,13 @@ def create_poem_ajax(request):
             title = data.get('title', 'Untitled Poem')
             description = data.get('description', '')
             contest_id = data.get('contest_id')
+            
+            # If entering a contest, require phone number
+            if contest_id:
+                from newapp.models import AuthorProfile
+                profile, _ = AuthorProfile.objects.get_or_create(user=request.user)
+                if not profile.phone_number:
+                    return JsonResponse({'status': 'error', 'message': 'You must add a phone number to your profile before entering a contest.', 'phone_required': True}, status=400)
             
             status = data.get('status', 'DRAFT')
             poem = Poem.objects.create(
@@ -1679,14 +1703,28 @@ def edit_profile(request):
             if request.user.username != new_username:
                 request.user.username = new_username
                 request.user.save(update_fields=['username'])
+            
+            # Check if user should be redirected back to contest join
+            next_action = request.POST.get('next')
+            contest_id = request.POST.get('contest_id')
+            if next_action == 'join_contest' and contest_id:
+                return redirect('join_contest', contest_id=contest_id)
+            
             return redirect('profile_view', username=request.user.username)
     else:
         form = AuthorProfileForm(instance=profile, user=request.user)
 
-    return render(request, 'newapp/edit_profile.html', {
+    # Pass next parameters to template for form submission
+    context = {
         'form': form,
         'profile': profile
-    })
+    }
+    if request.GET.get('next'):
+        context['next'] = request.GET.get('next')
+    if request.GET.get('contest_id'):
+        context['contest_id'] = request.GET.get('contest_id')
+
+    return render(request, 'newapp/edit_profile.html', context)
 
 @login_required
 @require_POST
@@ -1966,6 +2004,16 @@ def ajax_delete_book_review(request, review_id):
 
 @login_required
 @require_POST
+def ajax_delete_contest(request, contest_id):
+    if not request.user.is_staff:
+        return JsonResponse({'status': 'error', 'message': 'Permission denied. Admin access required.'}, status=403)
+    
+    contest = get_object_or_404(Contest, id=contest_id)
+    contest.delete()
+    return JsonResponse({'status': 'success', 'message': 'Contest deleted successfully.'})
+
+@login_required
+@require_POST
 def ajax_upload_cover(request, item_type, item_id):
     from .models import Book, Script, Poem
     cover_image = request.FILES.get('cover_image')
@@ -2054,3 +2102,225 @@ def ajax_update_status(request, item_type, item_id):
         return JsonResponse({'success': True})
     except Exception as e:
         return JsonResponse({'success': False, 'message': str(e)})
+
+# Contest Views
+from django.contrib.admin.views.decorators import staff_member_required
+from django.shortcuts import render, redirect, get_object_or_404
+from django.contrib import messages
+from .forms import ContestForm
+
+@staff_member_required
+def create_contest(request):
+    if request.method == 'POST':
+        form = ContestForm(request.POST)
+        if form.is_valid():
+            contest = form.save()
+            messages.success(request, 'Contest created successfully!')
+            return redirect('manage_contests')
+    else:
+        form = ContestForm()
+    
+    return render(request, 'newapp/create_contest.html', {'form': form})
+
+@staff_member_required
+def manage_contests(request):
+    from .models import Contest
+    contests = Contest.objects.all().order_by('-created_at')
+    return render(request, 'newapp/manage_contests.html', {'contests': contests})
+
+@staff_member_required
+def edit_contest(request, contest_id):
+    from .models import Contest
+    contest = get_object_or_404(Contest, id=contest_id)
+    
+    # Get participants with their entries
+    participants = contest.participants.select_related('user').prefetch_related('user__authorprofile')
+    participant_entries = []
+    for participant in participants:
+        try:
+            if participant.entry_type == 'BOOK':
+                entry = Book.objects.get(id=participant.entry_id)
+            elif participant.entry_type == 'SCRIPT':
+                entry = Script.objects.get(id=participant.entry_id)
+            elif participant.entry_type == 'POEM':
+                entry = Poem.objects.get(id=participant.entry_id)
+            else:
+                entry = None
+            
+            participant_entries.append({
+                'participant': participant,
+                'entry': entry,
+                'entry_type': participant.entry_type
+            })
+        except (Book.DoesNotExist, Script.DoesNotExist, Poem.DoesNotExist):
+            continue
+    
+    if request.method == 'POST':
+        form = ContestForm(request.POST, instance=contest)
+        if form.is_valid():
+            # Handle winner selection
+            winner_entry_id = request.POST.get('winner_entry')
+            if winner_entry_id:
+                try:
+                    participant = contest.participants.get(id=winner_entry_id)
+                    contest.winner = participant.user
+                    contest.winning_entry_id = participant.entry_id
+                except ContestParticipant.DoesNotExist:
+                    pass
+            
+            form.save()
+            messages.success(request, 'Contest updated successfully!')
+            return redirect('manage_contests')
+    else:
+        form = ContestForm(instance=contest)
+    
+    return render(request, 'newapp/edit_contest.html', {
+        'form': form, 
+        'contest': contest,
+        'participant_entries': participant_entries
+    })
+def contest_list(request):
+    from django.utils import timezone
+    from .models import Contest, Book, Script, Poem
+    
+    active_contests = Contest.objects.filter(status='ACTIVE').order_by('-start_date')
+    upcoming_contests = Contest.objects.filter(status='DRAFT').order_by('start_date')
+    completed_contests = Contest.objects.filter(status='COMPLETED').order_by('-end_date')
+
+    user_books = []
+    user_scripts = []
+    user_poems = []
+    if request.user.is_authenticated:
+        user_books = list(Book.objects.filter(author=request.user, status='PUBLISHED').values('id', 'title'))
+        user_scripts = list(Script.objects.filter(author=request.user, status='PUBLISHED').values('id', 'title'))
+        user_poems = list(Poem.objects.filter(author=request.user, status='PUBLISHED').values('id', 'title'))
+
+    return render(request, 'newapp/contests.html', {
+        'active_contests': active_contests,
+        'upcoming_contests': upcoming_contests,
+        'completed_contests': completed_contests,
+        'user_books': user_books,
+        'user_scripts': user_scripts,
+        'user_poems': user_poems,
+    })
+
+def contest_detail(request, contest_id):
+    contest = get_object_or_404(Contest, id=contest_id)
+    participants = contest.participants.select_related('user').prefetch_related('user__authorprofile')
+    
+    # Get participant entries
+    participant_entries = []
+    for participant in participants:
+        try:
+            if participant.entry_type == 'BOOK':
+                entry = Book.objects.get(id=participant.entry_id)
+                # Get first published chapter for reading
+                first_chapter = entry.chapters.filter(status='PUBLISHED').first()
+                entry_url = None
+                if first_chapter:
+                    entry_url = f'/chapter/{first_chapter.id}/read/'
+            elif participant.entry_type == 'SCRIPT':
+                entry = Script.objects.get(id=participant.entry_id)
+                entry_url = f'/script/read/{entry.id}/'
+            elif participant.entry_type == 'POEM':
+                entry = Poem.objects.get(id=participant.entry_id)
+                entry_url = f'/poem/read/{entry.id}/'
+            else:
+                entry = None
+                entry_url = None
+            
+            participant_entries.append({
+                'participant': participant,
+                'entry': entry,
+                'entry_type': participant.entry_type,
+                'entry_url': entry_url
+            })
+        except (Book.DoesNotExist, Script.DoesNotExist, Poem.DoesNotExist):
+            continue
+    
+    user_has_joined = False
+    user_entry = None
+    if request.user.is_authenticated:
+        try:
+            user_participant = contest.participants.get(user=request.user)
+            user_has_joined = True
+            if user_participant.entry_type == 'BOOK':
+                user_entry = Book.objects.filter(id=user_participant.entry_id).first()
+            elif user_participant.entry_type == 'SCRIPT':
+                user_entry = Script.objects.filter(id=user_participant.entry_id).first()
+            elif user_participant.entry_type == 'POEM':
+                user_entry = Poem.objects.filter(id=user_participant.entry_id).first()
+        except ContestParticipant.DoesNotExist:
+            pass
+    
+    return render(request, 'newapp/contest_detail.html', {
+        'contest': contest,
+        'participant_entries': participant_entries,
+        'user_has_joined': user_has_joined,
+        'user_entry': user_entry
+    })
+
+@login_required
+def join_contest(request, contest_id):
+    contest = get_object_or_404(Contest, id=contest_id)
+    
+    if contest.status != 'ACTIVE':
+        messages.error(request, 'This contest is not currently accepting entries.')
+        return redirect('contest_detail', contest_id=contest_id)
+    
+    # Check if user has phone number
+    try:
+        profile = request.user.authorprofile
+        if not profile.phone_number:
+            messages.warning(request, 'Please add your phone number before joining a contest.')
+            return redirect('edit_profile') + f'?next=join_contest&contest_id={contest_id}'
+    except AuthorProfile.DoesNotExist:
+        messages.warning(request, 'Please complete your profile before joining a contest.')
+        return redirect('edit_profile') + f'?next=join_contest&contest_id={contest_id}'
+    
+    # Check if already joined
+    if contest.participants.filter(user=request.user).exists():
+        messages.warning(request, 'You have already joined this contest.')
+        return redirect('contest_detail', contest_id=contest_id)
+    
+    if request.method == 'POST':
+        entry_type = request.POST.get('entry_type')
+        entry_id = request.POST.get('entry_id')
+        
+        if not entry_type or not entry_id:
+            messages.error(request, 'Please select an entry to submit.')
+            return redirect('contest_detail', contest_id=contest_id)
+        
+        # Validate entry exists and belongs to user
+        if entry_type == 'BOOK':
+            entry = get_object_or_404(Book, id=entry_id, author=request.user)
+        elif entry_type == 'SCRIPT':
+            entry = get_object_or_404(Script, id=entry_id, author=request.user)
+        elif entry_type == 'POEM':
+            entry = get_object_or_404(Poem, id=entry_id, author=request.user)
+        else:
+            messages.error(request, 'Invalid entry type.')
+            return redirect('contest_detail', contest_id=contest_id)
+        
+        # Create participant entry
+        ContestParticipant.objects.create(
+            contest=contest,
+            user=request.user,
+            entry_type=entry_type,
+            entry_id=entry_id
+        )
+        
+        messages.success(request, 'You have successfully joined the contest!')
+        return redirect('contest_detail', contest_id=contest_id)
+    
+    # Get user's published works for selection (include both PUBLISHED and FINISHED)
+    user_books = Book.objects.filter(author=request.user, status__in=['PUBLISHED', 'FINISHED'])
+    user_scripts = Script.objects.filter(author=request.user, status='PUBLISHED')
+    user_poems = Poem.objects.filter(author=request.user, status__in=['PUBLISHED', 'FINISHED'])
+    
+    return render(request, 'newapp/join_contest.html', {
+        'contest': contest,
+        'user_books': user_books,
+        'user_scripts': user_scripts,
+        'user_poems': user_poems
+    })

@@ -219,6 +219,7 @@ if not EMAIL_HOST:
 ACCOUNT_ADAPTER = 'newapp.adapters.MyAccountAdapter'
 ACCOUNT_FORMS = {
     'login': 'newapp.forms.CustomLoginForm',
+    'signup': 'newapp.forms.CustomSignupForm',
 }
 ACCOUNT_SIGNUP_FIELDS = ['email*', 'username*', 'password1*', 'password2*']
 ACCOUNT_EMAIL_REQUIRED = True

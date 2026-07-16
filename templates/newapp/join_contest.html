@@ -1,0 +1,349 @@
+{% extends "newapp/_base.html" %}
+
+{% block title %}Join {{ contest.title }}{% endblock %}
+
+{% block content %}
+<div class="join-contest-page">
+    <div class="join-header">
+        <a href="{% url 'contest_detail' contest.id %}" class="back-link">
+            <i class="fa-solid fa-arrow-left"></i>
+            Back to Contest
+        </a>
+        <h1>Join Contest: {{ contest.title }}</h1>
+        <p>Select one of your published works to submit as your entry</p>
+    </div>
+
+    <form method="post" class="join-form">
+        {% csrf_token %}
+        
+        <div class="entry-selection">
+            <h2>Your Published Works</h2>
+            
+            {% if user_books or user_scripts or user_poems %}
+            <div class="works-grid">
+                {% if user_books %}
+                <div class="work-category">
+                    <h3><i class="fa-solid fa-book"></i> Books</h3>
+                    {% for book in user_books %}
+                    <label class="work-option">
+                        <input type="radio" name="entry_id" value="{{ book.id }}" data-type="BOOK" required>
+                        <div class="work-card">
+                            {% if book.cover_image %}
+                            <div class="work-cover">
+                                <img src="{{ book.cover_image.url }}" alt="{{ book.title }}">
+                            </div>
+                            {% endif %}
+                            <div class="work-info">
+                                <h4>{{ book.title }}</h4>
+                                <p>{{ book.description|truncatewords:15 }}</p>
+                                <span class="work-meta">{{ book.chapter_count }} chapters</span>
+                            </div>
+                        </div>
+                    </label>
+                    {% endfor %}
+                </div>
+                {% endif %}
+                
+                {% if user_scripts %}
+                <div class="work-category">
+                    <h3><i class="fa-solid fa-film"></i> Scripts</h3>
+                    {% for script in user_scripts %}
+                    <label class="work-option">
+                        <input type="radio" name="entry_id" value="{{ script.id }}" data-type="SCRIPT" required>
+                        <div class="work-card">
+                            {% if script.cover_image %}
+                            <div class="work-cover">
+                                <img src="{{ script.cover_image.url }}" alt="{{ script.title }}">
+                            </div>
+                            {% endif %}
+                            <div class="work-info">
+                                <h4>{{ script.title }}</h4>
+                                <p>{{ script.description|truncatewords:15 }}</p>
+                                <span class="work-meta">{{ script.get_script_format_display }}</span>
+                            </div>
+                        </div>
+                    </label>
+                    {% endfor %}
+                </div>
+                {% endif %}
+                
+                {% if user_poems %}
+                <div class="work-category">
+                    <h3><i class="fa-solid fa-feather"></i> Poems</h3>
+                    {% for poem in user_poems %}
+                    <label class="work-option">
+                        <input type="radio" name="entry_id" value="{{ poem.id }}" data-type="POEM" required>
+                        <div class="work-card">
+                            {% if poem.cover_image %}
+                            <div class="work-cover">
+                                <img src="{{ poem.cover_image.url }}" alt="{{ poem.title }}">
+                            </div>
+                            {% endif %}
+                            <div class="work-info">
+                                <h4>{{ poem.title }}</h4>
+                                <p>{{ poem.description|truncatewords:15 }}</p>
+                                <span class="work-meta">Poem</span>
+                            </div>
+                        </div>
+                    </label>
+                    {% endfor %}
+                </div>
+                {% endif %}
+            </div>
+            
+            <input type="hidden" name="entry_type" id="entry_type" value="">
+            
+            <div class="form-actions">
+                <button type="submit" class="submit-btn">
+                    <i class="fa-solid fa-paper-plane"></i>
+                    Submit Entry
+                </button>
+            </div>
+            {% else %}
+            <div class="no-works">
+                <i class="fa-solid fa-pen-fancy"></i>
+                <h3>No Published Works</h3>
+                <p>You need to publish at least one book, script, or poem to join this contest.</p>
+                <a href="{% url 'write' %}" class="create-link">Create Content</a>
+            </div>
+            {% endif %}
+        </div>
+    </form>
+</div>
+
+<script>
+document.querySelectorAll('.work-option input[type="radio"]').forEach(function(radio) {
+    radio.addEventListener('change', function() {
+        document.getElementById('entry_type').value = this.dataset.type;
+        
+        // Update visual selection
+        document.querySelectorAll('.work-option').forEach(function(opt) {
+            opt.classList.remove('selected');
+        });
+        this.closest('.work-option').classList.add('selected');
+    });
+});
+</script>
+
+<style>
+    .join-contest-page {
+        max-width: 1000px;
+        margin: 0 auto;
+        padding: 40px 20px;
+    }
+
+    .join-header {
+        margin-bottom: 32px;
+    }
+
+    .back-link {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        color: #7a736d;
+        text-decoration: none;
+        font-weight: 600;
+        margin-bottom: 16px;
+        transition: color 0.2s;
+    }
+
+    .back-link:hover {
+        color: #D48C11;
+    }
+
+    .join-header h1 {
+        font-family: Georgia, serif;
+        font-size: 2.5rem;
+        color: #302419;
+        margin-bottom: 8px;
+    }
+
+    .join-header p {
+        color: #7a736d;
+        font-size: 1.1rem;
+    }
+
+    .join-form {
+        background: #fff;
+        border-radius: 20px;
+        padding: 32px;
+        border: 1px solid #ebedee;
+    }
+
+    .entry-selection h2 {
+        font-family: Georgia, serif;
+        color: #302419;
+        margin-bottom: 24px;
+    }
+
+    .works-grid {
+        display: grid;
+        gap: 32px;
+        margin-bottom: 32px;
+    }
+
+    .work-category h3 {
+        color: #302419;
+        margin-bottom: 16px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        font-size: 1.3rem;
+    }
+
+    .work-category h3 i {
+        color: #D48C11;
+    }
+
+    .work-category {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+        gap: 16px;
+    }
+
+    .work-option {
+        cursor: pointer;
+    }
+
+    .work-option input[type="radio"] {
+        display: none;
+    }
+
+    .work-card {
+        background: #fbf9f6;
+        border: 2px solid #ebedee;
+        border-radius: 12px;
+        padding: 16px;
+        transition: all 0.3s;
+    }
+
+    .work-card:hover {
+        border-color: #D48C11;
+    }
+
+    .work-option.selected .work-card {
+        border-color: #D48C11;
+        background: #fff;
+        box-shadow: 0 4px 12px rgba(212, 140, 17, 0.2);
+    }
+
+    .work-cover {
+        border-radius: 8px;
+        overflow: hidden;
+        margin-bottom: 12px;
+        aspect-ratio: 16/9;
+    }
+
+    .work-cover img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+
+    .work-info h4 {
+        color: #302419;
+        margin-bottom: 8px;
+        font-weight: 600;
+    }
+
+    .work-info p {
+        color: #7a736d;
+        font-size: 0.9rem;
+        line-height: 1.5;
+        margin-bottom: 8px;
+    }
+
+    .work-meta {
+        background: #D48C11;
+        color: #fff;
+        padding: 4px 10px;
+        border-radius: 6px;
+        font-size: 0.8rem;
+        font-weight: 600;
+    }
+
+    .form-actions {
+        text-align: right;
+    }
+
+    .submit-btn {
+        background: linear-gradient(135deg, #D48C11 0%, #f3c677 100%);
+        color: #fff;
+        padding: 16px 40px;
+        border: none;
+        border-radius: 12px;
+        font-weight: 700;
+        font-size: 1.1rem;
+        cursor: pointer;
+        transition: all 0.3s;
+        box-shadow: 0 4px 12px rgba(212, 140, 17, 0.3);
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .submit-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 20px rgba(212, 140, 17, 0.4);
+    }
+
+    .no-works {
+        text-align: center;
+        padding: 60px 20px;
+        background: #fbf9f6;
+        border-radius: 16px;
+        border: 2px dashed #ebedee;
+    }
+
+    .no-works i {
+        font-size: 3rem;
+        color: #D48C11;
+        margin-bottom: 16px;
+    }
+
+    .no-works h3 {
+        font-family: Georgia, serif;
+        color: #302419;
+        margin-bottom: 8px;
+    }
+
+    .no-works p {
+        color: #7a736d;
+        margin-bottom: 20px;
+    }
+
+    .create-link {
+        display: inline-block;
+        background: #D48C11;
+        color: #fff;
+        padding: 12px 24px;
+        border-radius: 8px;
+        text-decoration: none;
+        font-weight: 600;
+        transition: all 0.3s;
+    }
+
+    .create-link:hover {
+        background: #b87a0f;
+    }
+
+    @media (max-width: 768px) {
+        .join-header h1 {
+            font-size: 2rem;
+        }
+
+        .work-category {
+            grid-template-columns: 1fr;
+        }
+
+        .form-actions {
+            text-align: center;
+        }
+
+        .submit-btn {
+            width: 100%;
+            justify-content: center;
+        }
+    }
+</style>
+{% endblock %}

@@ -1,6 +1,6 @@
 from django import forms
 from django.contrib.auth import get_user_model
-from allauth.account.forms import LoginForm
+from allauth.account.forms import LoginForm, SignupForm
 from .models import ContactMessage, AuthorProfile
 
 User = get_user_model()
@@ -21,6 +21,31 @@ class CustomLoginForm(LoginForm):
             'class': 'auth-input',
         })
         self.fields['remember'].widget.attrs.update({'class': 'auth-checkbox'})
+
+
+class CustomSignupForm(SignupForm):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['username'].widget.attrs.update({
+            'placeholder': 'Choose a username',
+            'autocomplete': 'username',
+            'class': 'auth-input',
+        })
+        self.fields['email'].widget.attrs.update({
+            'placeholder': 'Enter your email',
+            'autocomplete': 'email',
+            'class': 'auth-input',
+        })
+        self.fields['password1'].widget.attrs.update({
+            'placeholder': 'Choose a password',
+            'autocomplete': 'new-password',
+            'class': 'auth-input',
+        })
+        self.fields['password2'].widget.attrs.update({
+            'placeholder': 'Confirm your password',
+            'autocomplete': 'new-password',
+            'class': 'auth-input',
+        })
 
 
 class ContactForm(forms.ModelForm):
@@ -52,6 +77,7 @@ class AuthorProfileForm(forms.ModelForm):
         widgets = {
             'pen_name': forms.TextInput(attrs={'class': 'form-input', 'placeholder': 'Your Pen Name'}),
             'bio': forms.Textarea(attrs={'class': 'form-textarea', 'placeholder': 'Tell us about yourself...', 'rows': 4}),
+            'profile_picture': forms.FileInput(attrs={'class': 'form-input', 'accept': 'image/*'}),
             'phone_number': forms.TextInput(attrs={'class': 'form-input', 'placeholder': '+999999999'}),
         }
 
@@ -71,3 +97,21 @@ class AuthorProfileForm(forms.ModelForm):
         if qs.exists():
             raise forms.ValidationError('That username is already taken.')
         return username
+
+from .models import Contest
+
+class ContestForm(forms.ModelForm):
+    class Meta:
+        model = Contest
+        fields = ['title', 'description', 'start_date', 'end_date', 'prize', 'contest_type', 'status', 'winner', 'winning_entry_id']
+        widgets = {
+            'title': forms.TextInput(attrs={'class': 'form-input', 'placeholder': 'Contest Title'}),
+            'description': forms.Textarea(attrs={'class': 'form-textarea', 'placeholder': 'Describe the contest...', 'rows': 4}),
+            'start_date': forms.DateTimeInput(attrs={'class': 'form-input', 'type': 'datetime-local'}),
+            'end_date': forms.DateTimeInput(attrs={'class': 'form-input', 'type': 'datetime-local'}),
+            'prize': forms.TextInput(attrs={'class': 'form-input', 'placeholder': 'e.g., $1000 Cash Prize'}),
+            'contest_type': forms.Select(attrs={'class': 'form-input'}),
+            'status': forms.Select(attrs={'class': 'form-input'}),
+            'winner': forms.Select(attrs={'class': 'form-input'}),
+            'winning_entry_id': forms.NumberInput(attrs={'class': 'form-input', 'placeholder': 'Entry ID'}),
+        }

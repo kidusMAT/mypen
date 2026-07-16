@@ -12,6 +12,25 @@
 
             <form method="POST" enctype="multipart/form-data" class="premium-form">
                 {% csrf_token %}
+                {% if next %}
+                <input type="hidden" name="next" value="{{ next }}">
+                {% endif %}
+                {% if contest_id %}
+                <input type="hidden" name="contest_id" value="{{ contest_id }}">
+                {% endif %}
+
+                {% if form.errors %}
+                <div style="background: #fef2f2; border: 1px solid #fecaca; border-radius: 10px; padding: 15px; margin-bottom: 25px; color: #991b1b;">
+                    <strong><i class="fa-solid fa-circle-exclamation"></i> Please fix the errors below:</strong>
+                    {% for field, errors in form.errors.items %}
+                    <ul style="margin: 5px 0 0 15px; font-size: 14px;">
+                        {% for error in errors %}
+                        <li>{{ field|title }}: {{ error }}</li>
+                        {% endfor %}
+                    </ul>
+                    {% endfor %}
+                </div>
+                {% endif %}
 
                 <div class="form-group profile-pic-upload">
                     <label>Profile Picture</label>
@@ -25,9 +44,12 @@
                         {% endif %}
                         <div class="upload-btn-wrapper">
                             <button class="btn-subtle" type="button">Choose Image</button>
-                            <input type="file" name="profile_picture" accept="image/*" onchange="previewImage(this)">
+                            {{ form.profile_picture }}
                         </div>
                     </div>
+                    {% if form.profile_picture.errors %}
+                    <small style="color:#e53e3e;">{{ form.profile_picture.errors|join:", " }}</small>
+                    {% endif %}
                 </div>
 
                 <div class="form-group">
@@ -43,19 +65,31 @@
                 <div class="form-group">
                     <label>Pen Name</label>
                     {{ form.pen_name }}
+                    {% if form.pen_name.errors %}
+                    <small style="color:#e53e3e;">{{ form.pen_name.errors|join:", " }}</small>
+                    {% else %}
                     <small>This name will be displayed on your stories.</small>
+                    {% endif %}
                 </div>
 
                 <div class="form-group">
                     <label>Bio</label>
                     {{ form.bio }}
+                    {% if form.bio.errors %}
+                    <small style="color:#e53e3e;">{{ form.bio.errors|join:", " }}</small>
+                    {% else %}
                     <small>Tell your readers a bit about yourself.</small>
+                    {% endif %}
                 </div>
 
                 <div class="form-group">
                     <label>Phone Number </label>
                     {{ form.phone_number }}
-                    <small>Optional. Format: +999999999</small>
+                    {% if form.phone_number.errors %}
+                    <small style="color:#e53e3e;">{{ form.phone_number.errors|join:", " }}</small>
+                    {% else %}
+                    <small>Optional. Format: +999999999 (digits only, no spaces or dashes)</small>
+                    {% endif %}
                 </div>
 
                 <div class="form-group security-section"
@@ -188,10 +222,12 @@
         cursor: pointer;
     }
 
-    .upload-btn-wrapper input[type=file] {
+    .upload-btn-wrapper input[type="file"] {
         position: absolute;
         left: 0;
         top: 0;
+        width: 100%;
+        height: 100%;
         opacity: 0;
         cursor: pointer;
     }
@@ -232,26 +268,31 @@
 </style>
 
 <script>
-    function previewImage(input) {
-        if (input.files && input.files[0]) {
-            var reader = new FileReader();
-            reader.onload = function (e) {
-                let preview = document.getElementById('pic-preview');
-                if (preview) {
-                    preview.src = e.target.result;
-                } else {
-                    let placeholder = document.getElementById('pic-preview-placeholder');
-                    if (placeholder) {
-                        let img = document.createElement('img');
-                        img.id = 'pic-preview';
-                        img.className = 'current-pic';
-                        img.src = e.target.result;
-                        placeholder.parentNode.replaceChild(img, placeholder);
+    document.addEventListener('DOMContentLoaded', function() {
+        const fileInput = document.querySelector('input[name="profile_picture"]');
+        if (fileInput) {
+            fileInput.addEventListener('change', function() {
+                if (this.files && this.files[0]) {
+                    var reader = new FileReader();
+                    reader.onload = function (e) {
+                        let preview = document.getElementById('pic-preview');
+                        if (preview) {
+                            preview.src = e.target.result;
+                        } else {
+                            let placeholder = document.getElementById('pic-preview-placeholder');
+                            if (placeholder) {
+                                let img = document.createElement('img');
+                                img.id = 'pic-preview';
+                                img.className = 'current-pic';
+                                img.src = e.target.result;
+                                placeholder.parentNode.replaceChild(img, placeholder);
+                            }
+                        }
                     }
+                    reader.readAsDataURL(fileInput.files[0]);
                 }
-            }
-            reader.readAsDataURL(input.files[0]);
+            });
         }
-    }
+    });
 </script>
 {% endblock %}

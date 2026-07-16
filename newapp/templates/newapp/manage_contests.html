@@ -1,0 +1,289 @@
+{% extends "newapp/_base.html" %}
+{% load static %}
+
+{% block title %} Manage Contests - Mypen {% endblock %}
+
+{% block content %}
+<main class="static-page">
+    <section class="static-header">
+        <div class="static-container">
+            <h1><i class="fa-solid fa-gear"></i> Manage Contests</h1>
+            <p class="subtitle">Update statuses, choose winners, and oversee all writing contests.</p>
+            <div style="margin-top: 20px;">
+                <a href="{% url 'contest_list' %}" class="btn-subtle" style="text-decoration: none; display: inline-block; padding: 10px 20px; background: rgba(255,255,255,0.1); color: white; border-radius: 8px;">Back to Contests</a>
+                <a href="{% url 'create_contest' %}" class="btn-primary" style="background-color: #28a745; text-decoration: none; display: inline-block; padding: 10px 20px; border-radius: 8px; margin-left: 10px;"><i class="fa-solid fa-plus"></i> New Contest</a>
+            </div>
+        </div>
+    </section>
+
+    <section class="static-content" style="padding: 40px 20px;">
+        <div class="static-container">
+            <div class="table-responsive" style="background: white; border-radius: 15px; overflow: hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.05);">
+                <table style="width: 100%; border-collapse: collapse; text-align: left;">
+                    <thead>
+                        <tr style="background: #f9fafb; border-bottom: 2px solid #eee;">
+                            <th style="padding: 15px 20px; color: #666; font-weight: 600;">Title</th>
+                            <th style="padding: 15px 20px; color: #666; font-weight: 600;">Status</th>
+                            <th style="padding: 15px 20px; color: #666; font-weight: 600;">Type</th>
+                            <th style="padding: 15px 20px; color: #666; font-weight: 600;">Start Date</th>
+                            <th style="padding: 15px 20px; color: #666; font-weight: 600;">End Date</th>
+                            <th style="padding: 15px 20px; color: #666; font-weight: 600;">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for contest in contests %}
+                        <tr style="border-bottom: 1px solid #eee; transition: background 0.2s;">
+                            <td style="padding: 15px 20px; color: #111; font-weight: 500;">
+                                <a href="{% url 'contest_detail' contest.id %}" style="color: inherit; text-decoration: none;">{{ contest.title }}</a>
+                            </td>
+                            <td style="padding: 15px 20px;">
+                                {% if contest.status == 'ACTIVE' %}
+                                <span style="background: #e6f4ea; color: #1e8e3e; padding: 4px 10px; border-radius: 20px; font-size: 12px; font-weight: bold;">Active</span>
+                                {% elif contest.status == 'COMPLETED' %}
+                                <span style="background: #fce8e6; color: #d93025; padding: 4px 10px; border-radius: 20px; font-size: 12px; font-weight: bold;">Completed</span>
+                                {% else %}
+                                <span style="background: #f1f3f4; color: #5f6368; padding: 4px 10px; border-radius: 20px; font-size: 12px; font-weight: bold;">Draft</span>
+                                {% endif %}
+                            </td>
+                            <td style="padding: 15px 20px; color: #444;">{{ contest.get_contest_type_display }}</td>
+                            <td style="padding: 15px 20px; color: #666; font-size: 14px;">{{ contest.start_date|date:"M d, Y" }}</td>
+                            <td style="padding: 15px 20px; color: #666; font-size: 14px;">{{ contest.end_date|date:"M d, Y" }}</td>
+                            <td style="padding: 15px 20px;">
+                                <div style="display: flex; gap: 8px; align-items: center;">
+                                    <a href="{% url 'edit_contest' contest.id %}" class="btn-primary" style="font-size: 12px; padding: 5px 10px; text-decoration: none; border-radius: 4px; background-color: #111; color: white; white-space: nowrap;">Edit</a>
+                                    <button onclick="deleteContest({{ contest.id }}, '{{ contest.title }}')" class="btn-delete" style="font-size: 12px; padding: 5px 10px; border-radius: 4px; background-color: #dc3545; color: white; border: none; cursor: pointer; white-space: nowrap; transition: background-color 0.2s;">Delete</button>
+                                </div>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="6" style="padding: 40px; text-align: center; color: #888;">
+                                No contests found. Create your first one above!
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </section>
+</main>
+
+<!-- Custom Confirmation Modal -->
+<div id="confirmModal" class="modal" style="display: none;">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3>Confirm Deletion</h3>
+            <button class="modal-close" onclick="closeModal()">&times;</button>
+        </div>
+        <div class="modal-body">
+            <p id="modalMessage">Are you sure you want to delete this contest?</p>
+        </div>
+        <div class="modal-footer">
+            <button class="btn-cancel" onclick="closeModal()">Cancel</button>
+            <button class="btn-confirm-delete" id="confirmDeleteBtn">Delete</button>
+        </div>
+    </div>
+</div>
+
+<style>
+    tbody tr:hover {
+        background-color: #f9fafb;
+    }
+    
+    .btn-delete:hover {
+        background-color: #c82333;
+    }
+    
+    /* Modal Styles */
+    .modal {
+        position: fixed;
+        z-index: 1000;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.5);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    
+    .modal-content {
+        background-color: white;
+        border-radius: 12px;
+        width: 90%;
+        max-width: 400px;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+        animation: modalSlideIn 0.3s ease-out;
+    }
+    
+    @keyframes modalSlideIn {
+        from {
+            transform: translateY(-50px);
+            opacity: 0;
+        }
+        to {
+            transform: translateY(0);
+            opacity: 1;
+        }
+    }
+    
+    .modal-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 20px 24px;
+        border-bottom: 1px solid #e5e7eb;
+    }
+    
+    .modal-header h3 {
+        margin: 0;
+        color: #111;
+        font-size: 18px;
+        font-weight: 600;
+    }
+    
+    .modal-close {
+        background: none;
+        border: none;
+        font-size: 24px;
+        color: #6b7280;
+        cursor: pointer;
+        padding: 0;
+        width: 32px;
+        height: 32px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 4px;
+        transition: background-color 0.2s;
+    }
+    
+    .modal-close:hover {
+        background-color: #f3f4f6;
+        color: #111;
+    }
+    
+    .modal-body {
+        padding: 24px;
+    }
+    
+    .modal-body p {
+        margin: 0;
+        color: #4b5563;
+        line-height: 1.5;
+        font-size: 15px;
+    }
+    
+    .modal-footer {
+        display: flex;
+        justify-content: flex-end;
+        gap: 12px;
+        padding: 16px 24px;
+        border-top: 1px solid #e5e7eb;
+    }
+    
+    .btn-cancel {
+        padding: 8px 16px;
+        background-color: white;
+        border: 1px solid #d1d5db;
+        border-radius: 6px;
+        color: #374151;
+        font-size: 14px;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+    
+    .btn-cancel:hover {
+        background-color: #f9fafb;
+        border-color: #9ca3af;
+    }
+    
+    .btn-confirm-delete {
+        padding: 8px 16px;
+        background-color: #dc3545;
+        border: none;
+        border-radius: 6px;
+        color: white;
+        font-size: 14px;
+        font-weight: 500;
+        cursor: pointer;
+        transition: background-color 0.2s;
+    }
+    
+    .btn-confirm-delete:hover {
+        background-color: #c82333;
+    }
+</style>
+
+<script>
+    let contestToDelete = null;
+    
+    function deleteContest(contestId, contestTitle) {
+        contestToDelete = contestId;
+        document.getElementById('modalMessage').textContent = 
+            `Are you sure you want to delete "${contestTitle}"? This action cannot be undone.`;
+        document.getElementById('confirmModal').style.display = 'flex';
+        
+        // Set up the confirm button
+        document.getElementById('confirmDeleteBtn').onclick = function() {
+            performDelete(contestId);
+        };
+    }
+    
+    function closeModal() {
+        document.getElementById('confirmModal').style.display = 'none';
+        contestToDelete = null;
+    }
+    
+    function performDelete(contestId) {
+        fetch(`/ajax/delete-contest/${contestId}/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken'),
+                'Content-Type': 'application/json',
+            },
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.status === 'success') {
+                closeModal();
+                location.reload();
+            } else {
+                closeModal();
+                alert(data.message || 'Failed to delete contest');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            closeModal();
+            alert('An error occurred while deleting the contest');
+        });
+    }
+    
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+    
+    // Close modal when clicking outside
+    window.onclick = function(event) {
+        const modal = document.getElementById('confirmModal');
+        if (event.target == modal) {
+            closeModal();
+        }
+    }
+</script>
+{% endblock %}

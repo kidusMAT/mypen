@@ -117,9 +117,9 @@ class Contest(models.Model):
     )
 
     TYPE_CHOICES = (
-        ('Book', 'Book'),
-        ('Script', 'Script'),
-        ('Poem', 'Poem'),
+        ('BOOK', 'Book'),
+        ('SCRIPT', 'Script'),
+        ('POEM', 'Poem'),
     )
 
     title = models.CharField(max_length=200)
@@ -130,18 +130,55 @@ class Contest(models.Model):
     status = models.CharField(max_length=15, choices=STATUS_CHOICES, default='DRAFT')
     created_at = models.DateTimeField(auto_now_add=True)
     
-    contest_type = models.CharField(max_length=10, choices=TYPE_CHOICES, default='Book')
-    entry_books = models.ManyToManyField('Book', related_name='contest_entries', blank=True)
-    entry_scripts = models.ManyToManyField('Script', related_name='contest_entries', blank=True)
-    entry_poems = models.ManyToManyField('Poem', related_name='contest_entries', blank=True)
+    contest_type = models.CharField(max_length=10, choices=TYPE_CHOICES, default='BOOK')
     
     # Winner fields
-    winning_book = models.ForeignKey('Book', related_name='won_contests', on_delete=models.SET_NULL, null=True, blank=True)
-    winning_script = models.ForeignKey('Script', related_name='won_contests', on_delete=models.SET_NULL, null=True, blank=True)
-    winning_poem = models.ForeignKey('Poem', related_name='won_contests', on_delete=models.SET_NULL, null=True, blank=True)
+    winner = models.ForeignKey(User, related_name='won_contests', on_delete=models.SET_NULL, null=True, blank=True)
+    winning_entry_id = models.PositiveIntegerField(null=True, blank=True)  # ID of the winning book/script/poem
 
     def __str__(self):
         return self.title
+
+    @property
+    def participant_count(self):
+        return self.participants.count()
+
+    @property
+    def winning_book(self):
+        if self.contest_type == 'BOOK' and self.winning_entry_id:
+            from .models import Book
+            return Book.objects.filter(id=self.winning_entry_id).first()
+        return None
+
+    @property
+    def winning_script(self):
+        if self.contest_type == 'SCRIPT' and self.winning_entry_id:
+            from .models import Script
+            return Script.objects.filter(id=self.winning_entry_id).first()
+        return None
+
+    @property
+    def winning_poem(self):
+        if self.contest_type == 'POEM' and self.winning_entry_id:
+            from .models import Poem
+            return Poem.objects.filter(id=self.winning_entry_id).first()
+        return None
+
+class ContestParticipant(models.Model):
+    contest = models.ForeignKey(Contest, related_name='participants', on_delete=models.CASCADE)
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    joined_at = models.DateTimeField(auto_now_add=True)
+    
+    # Entry submission
+    entry_type = models.CharField(max_length=10, choices=[('BOOK', 'Book'), ('SCRIPT', 'Script'), ('POEM', 'Poem')])
+    entry_id = models.PositiveIntegerField()  # ID of the submitted book/script/poem
+    
+    class Meta:
+        unique_together = ('contest', 'user')
+        ordering = ['-joined_at']
+
+    def __str__(self):
+        return f"{self.user.username} - {self.contest.title}"
 
 class Script(models.Model):
     STATUS_CHOICES = (

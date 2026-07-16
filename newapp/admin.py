@@ -1,7 +1,7 @@
 from django.contrib import admin
 from django import forms
 
-from .models import AuthorProfile, Book, Chapter, Contest, Script, Poem
+from .models import AuthorProfile, Book, Chapter, Contest, ContestParticipant, Script, Poem
 
 admin.site.register(AuthorProfile)
 admin.site.register(Book)
@@ -15,24 +15,25 @@ class ContestAdminForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         
-        # If editing an existing contest, filter winner choices to only show entries
+        # If editing an existing contest, filter winner choices to only show participants
         if self.instance and self.instance.pk:
-            # Filter winning_book to only show books that are in entry_books
-            self.fields['winning_book'].queryset = self.instance.entry_books.all()
-            
-            # Filter winning_script to only show scripts that are in entry_scripts
-            self.fields['winning_script'].queryset = self.instance.entry_scripts.all()
-            
-            # Filter winning_poem to only show poems that are in entry_poems
-            self.fields['winning_poem'].queryset = self.instance.entry_poems.all()
+            participant_users = self.instance.participants.values_list('user', flat=True)
+            self.fields['winner'].queryset = self.fields['winner'].queryset.filter(id__in=participant_users)
 
 @admin.register(Contest)
 class ContestAdmin(admin.ModelAdmin):
     form = ContestAdminForm
-    list_display = ('title', 'contest_type', 'status', 'start_date', 'end_date')
+    list_display = ('title', 'contest_type', 'status', 'participant_count', 'start_date', 'end_date', 'winner')
     list_filter = ('status', 'contest_type', 'created_at')
     search_fields = ('title', 'description')
-    filter_horizontal = ('entry_books', 'entry_scripts', 'entry_poems')
+    readonly_fields = ('participant_count', 'created_at')
+
+@admin.register(ContestParticipant)
+class ContestParticipantAdmin(admin.ModelAdmin):
+    list_display = ('contest', 'user', 'entry_type', 'joined_at')
+    list_filter = ('contest', 'entry_type', 'joined_at')
+    search_fields = ('user__username', 'contest__title')
+    readonly_fields = ('joined_at',)
 
 @admin.register(Script)
 class ScriptAdmin(admin.ModelAdmin):

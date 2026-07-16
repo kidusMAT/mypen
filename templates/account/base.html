@@ -288,8 +288,19 @@
         display: none !important;
     }
 
-    .account-card ul:not(.errorlist):not(.socialaccount_providers) {
+    /* Only hide specific lists, not error lists or socialaccount providers */
+    .account-card .account-inner-content > ul:not(.errorlist):not(.socialaccount_providers):not(.auth-field-errors) {
         display: none !important;
+    }
+
+    /* Make sure form fields are visible */
+    .account-card form input,
+    .account-card form button {
+        display: block !important;
+    }
+
+    .account-card form .auth-field {
+        display: flex !important;
     }
 
     /* Checkbox Styling (Remember Me) */
