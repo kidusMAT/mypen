@@ -11,7 +11,7 @@
                 {{ contest.get_status_display }}
             </div>
             <h1 style="font-size: 40px; margin-bottom: 15px;">{{ contest.title }}</h1>
-            <p class="subtitle" style="font-size: 18px; max-width: 800px; margin: 0 auto; line-height: 1.6;">{{ contest.description }}</p>
+            <p class="subtitle" style="font-size: 18px; max-width: 800px; margin: 0 auto; line-height: 1.6; white-space: pre-wrap;">{{ contest.description }}</p>
             
             <div class="contest-prizes" style="margin-top: 30px; display: flex; justify-content: center; gap: 20px; font-size: 16px;">
                 <span><i class="fa-solid fa-medal" style="color: #ffd700;"></i> {{ contest.prize }}</span>

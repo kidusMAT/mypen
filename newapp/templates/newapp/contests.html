@@ -24,7 +24,7 @@
             <div class="active-contest">
                 <div class="contest-badge">Active Now</div>
                 <h2>{{ contest.title }}</h2>
-                <p>{{ contest.description }}</p>
+                <p style="white-space: pre-wrap;">{{ contest.description }}</p>
                 <div class="contest-prizes">
                     <span><i class="fa-solid fa-medal"></i> {{ contest.prize }}</span>
                     <span><i class="fa-solid fa-calendar-days"></i> Ends {{ contest.end_date|date:"F d, Y" }}</span>
