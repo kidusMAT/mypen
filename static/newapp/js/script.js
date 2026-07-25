@@ -1262,7 +1262,9 @@ document.addEventListener('keydown', (e) => {
 
     if (e.key === 'Enter') {
         e.preventDefault();
+        console.log('DEBUG ENTER: mode=' + currentMode + ', editor=' + editorId);
         const currentBlock = getBlock(editor, selection);
+        console.log('DEBUG ENTER: currentBlock=', currentBlock, 'tag=', currentBlock?.tagName, 'class=', currentBlock?.className);
         let newBlock = document.createElement('div');
         newBlock.innerHTML = '<br>';
 
@@ -1357,6 +1359,7 @@ document.addEventListener('keydown', (e) => {
         newRange.collapse(true);
         selection.removeAllRanges();
         selection.addRange(newRange);
+        editor.focus();
         newBlock.scrollIntoView({ behavior: 'auto', block: 'nearest' });
 
         // Ensure indicators update after manual block insertion

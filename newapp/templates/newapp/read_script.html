@@ -660,6 +660,10 @@
 
         /* Removed redundant height-constrained script-page block */
 
+        .script-content {
+            white-space: pre-line !important;
+        }
+
         .script-character,
         .script-parenthetical {
             margin-left: 0 !important;
@@ -836,7 +840,7 @@
         container.innerHTML = '';
 
         const temp = document.createElement('div');
-        temp.innerHTML = rawContent;
+        temp.innerHTML = rawContent.replace(/&nbsp;/g, ' ').replace(/\u00A0/g, ' ');
         
         // Remove saved "PAGE BREAK" dividers from the writer so they don't break reading flow
         temp.querySelectorAll('.page-divider').forEach(d => d.remove());
