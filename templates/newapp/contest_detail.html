@@ -10,7 +10,7 @@
             <span class="contest-status status-{{ contest.status|lower }}">{{ contest.get_status_display }}</span>
         </div>
         <h1>{{ contest.title }}</h1>
-        <p class="contest-description">{{ contest.description }}</p>
+        <div class="contest-description editor-content">{{ contest.description|safe }}</div>
         
         <div class="contest-info">
             <div class="info-item">
@@ -223,7 +223,6 @@
         line-height: 1.7;
         font-size: 1.1rem;
         margin-bottom: 24px;
-        white-space: pre-wrap;
     }
 
     .contest-info {

@@ -17,7 +17,7 @@
                 <span class="contest-status status-{{ contest.status|lower }}">{{ contest.get_status_display }}</span>
             </div>
             <h2 class="contest-title">{{ contest.title }}</h2>
-            <p class="contest-description">{{ contest.description|truncatewords:30 }}</p>
+            <div class="contest-description editor-content">{{ contest.description|safe|truncatewords_html:30 }}</div>
             
             <div class="contest-meta">
                 <div class="meta-item">
@@ -148,7 +148,6 @@
         line-height: 1.6;
         margin-bottom: 20px;
         font-size: 0.95rem;
-        white-space: pre-wrap;
     }
 
     .contest-meta {

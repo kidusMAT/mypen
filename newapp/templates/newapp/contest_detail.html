@@ -12,9 +12,9 @@
             </div>
             <h1 style="font-size: 40px; margin-bottom: 15px;">{{ contest.title }}</h1>
             {% if contest.contest_type == 'SCRIPT' %}
-              <div style="white-space: pre; overflow-x: auto; font-family: 'Courier Prime', 'Courier New', Courier, monospace; background: rgba(0,0,0,0.02); padding: 25px; border-radius: 12px; margin: 0 auto 30px auto; border: 1px solid rgba(0,0,0,0.05); text-align: left; font-size: 16px; max-width: 800px; line-height: 1.2;">{{ contest.description }}</div>
+              <div class="editor-content" style="overflow-x: auto; font-family: 'Courier Prime', 'Courier New', Courier, monospace; background: rgba(0,0,0,0.02); padding: 25px; border-radius: 12px; margin: 0 auto 30px auto; border: 1px solid rgba(0,0,0,0.05); text-align: left; font-size: 16px; max-width: 800px; line-height: 1.2;">{{ contest.description|safe }}</div>
               {% else %}
-              <p class="subtitle" style="font-size: 18px; max-width: 800px; margin: 0 auto; line-height: 1.6; white-space: pre-wrap;">{{ contest.description }}</p>
+              <div class="subtitle editor-content" style="font-size: 18px; max-width: 800px; margin: 0 auto; line-height: 1.6;">{{ contest.description|safe }}</div>
               {% endif %}
             
             <div class="contest-prizes" style="margin-top: 30px; display: flex; justify-content: center; gap: 20px; font-size: 16px;">
