@@ -5038,10 +5038,82 @@ html {
 @media (max-width: 768px) {
     .contest-prizes {
         flex-direction: column;
-        align-items: center;
-        gap: 20px;
+        align-items: flex-start;
+        gap: 12px;
+    }
+
+    /* Strip container padding to the bone on mobile */
+    .static-container {
+        padding: 0 6px;
+    }
+
+    .static-content {
+        padding: 20px 0;
+    }
+
+    /* Card: nearly edge-to-edge */
+    .active-contest {
+        padding: 20px 14px;
+        border-radius: 14px;
+    }
+
+    .active-contest h2 {
+        font-size: 28px;
+        line-height: 1.2;
+    }
+
+    /* Editor content: minimal padding */
+    .active-contest .editor-content,
+    .static-header .editor-content {
+        padding: 6px 0 !important;
+        font-size: 15px !important;
+    }
+
+    /* Script dialogue/character: minimal indent */
+    .active-contest .script-dialogue,
+    .static-header .script-dialogue {
+        margin-left: 3% !important;
+        margin-right: 2% !important;
+    }
+
+    .active-contest .script-character,
+    .static-header .script-character {
+        margin-left: 0 !important;
+        margin-right: 0 !important;
+    }
+
+    /* Contest list preview: reduce screenplay indents to match detail page on mobile */
+    .contest-list-editor .script-dialogue {
+        margin-left: 5% !important;
+        margin-right: 5% !important;
+    }
+
+    .contest-list-editor .script-character {
+        margin-left: 10% !important;
+        margin-right: 10% !important;
+        text-align: center !important;
+    }
+
+    .contest-list-editor .script-parenthetical {
+        margin-left: 5% !important;
+        margin-right: 5% !important;
+        text-align: center !important;
+    }
+
+    .contest-list-editor .script-scene {
+        margin-left: 0 !important;
+    }
+
+    /* Remove the gray box on mobile for a cleaner look */
+    .contest-list-editor {
+        background: none !important;
+        border: none !important;
+        padding: 0 !important;
+        font-size: 16px !important;
+        line-height: 1.7 !important;
     }
 }
+
 
 .contest-prizes span {
     display: flex;

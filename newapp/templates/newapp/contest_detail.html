@@ -5,7 +5,7 @@
 
 {% block content %}
 <main class="static-page">
-    <section class="static-header" style="text-align: center; padding: 60px 20px;">
+    <section class="static-header contest-detail-header" style="text-align: center; padding: 60px 20px 40px;">
         <div class="static-container">
             <div style="display: inline-block; padding: 5px 15px; border-radius: 20px; background: rgba(255,255,255,0.1); margin-bottom: 15px; font-size: 14px; font-weight: bold; text-transform: uppercase;">
                 {{ contest.get_status_display }}
@@ -115,6 +115,47 @@
     
     .btn-subtle:hover {
         background: rgba(255,255,255,0.1) !important;
+    }
+
+    @media (max-width: 768px) {
+        /* Give the contest detail header more room on mobile */
+        .contest-detail-header {
+            padding: 40px 8px 30px !important;
+        }
+
+        /* Reduce editor content padding so text has max width */
+        .editor-content {
+            padding: 12px 8px !important;
+            font-size: 14px !important;
+        }
+
+        /* Script dialogue: less indent on narrow screens */
+        .editor-content .script-dialogue {
+            margin-left: 5% !important;
+            margin-right: 5% !important;
+        }
+
+        .editor-content .script-character {
+            margin-left: 5% !important;
+            margin-right: 5% !important;
+        }
+
+        /* Contest prizes row stacks vertically */
+        .contest-prizes {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 10px;
+        }
+
+        /* Title font size */
+        h1[style*="font-size: 40px"] {
+            font-size: 26px !important;
+        }
+
+        /* Entries grid: single column */
+        .entries-grid {
+            grid-template-columns: 1fr !important;
+        }
     }
 </style>
 {% endblock %}

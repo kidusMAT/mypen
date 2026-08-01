@@ -25,9 +25,9 @@
                 <div class="contest-badge">Active Now</div>
                 <h2>{{ contest.title }}</h2>
                 {% if contest.contest_type == 'SCRIPT' %}
-                <div class="editor-content" style="overflow-x: auto; font-family: 'Courier Prime', 'Courier New', Courier, monospace; background: rgba(0,0,0,0.02); padding: 15px; border-radius: 8px; margin-bottom: 20px; border: 1px solid rgba(0,0,0,0.05); font-size: 15px; line-height: 1.2;">{{ contest.description|safe }}</div>
+                <div class="editor-content contest-list-editor" style="overflow-x: auto; font-family: 'Courier Prime', 'Courier New', Courier, monospace; background: rgba(0,0,0,0.02); padding: 15px; border-radius: 8px; margin-bottom: 20px; border: 1px solid rgba(0,0,0,0.05); font-size: 16px; line-height: 1.5;">{{ contest.description|safe }}</div>
                 {% else %}
-                <div class="editor-content" style="margin-bottom: 20px;">{{ contest.description|safe }}</div>
+                <div class="editor-content contest-list-editor" style="margin-bottom: 20px; font-size: 16px; line-height: 1.6;">{{ contest.description|safe }}</div>
                 {% endif %}
                 <div class="contest-prizes">
                     <span><i class="fa-solid fa-medal"></i> {{ contest.prize }}</span>
