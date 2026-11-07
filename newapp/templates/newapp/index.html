@@ -12,27 +12,27 @@
          ========================================================================= -->
     <aside class="hub-left-rail">
         <div class="hub-rail-card">
-            <div class="hub-menu-title">Feeds & Hubs</div>
+            <div class="hub-menu-title">Feeds</div>
             <ul class="hub-menu-list">
                 <li class="hub-menu-item">
                     <a href="/" class="active">
-                        <span class="item-left"><i class="fa-solid fa-house" style="color: var(--hub-gold);"></i> Home Hub</span>
+                        <span class="item-left"><i class="fa-solid fa-house" style="color: var(--hub-amber);"></i> Home</span>
                     </a>
                 </li>
                 <li class="hub-menu-item">
                     <a href="{% url 'feed' %}">
-                        <span class="item-left"><i class="fa-solid fa-wand-magic-sparkles" style="color: var(--hub-accent-blue);"></i> {% if user.is_authenticated %}For You{% else %}Trending{% endif %}</span>
+                        <span class="item-left"><i class="fa-solid fa-fire" style="color: #ef4444;"></i> {% if user.is_authenticated %}For You{% else %}Trending{% endif %}</span>
                         <span class="hub-menu-badge badge-gold">Hot</span>
                     </a>
                 </li>
                 <li class="hub-menu-item">
                     <a href="/discover/">
-                        <span class="item-left"><i class="fa-solid fa-compass" style="color: var(--hub-accent-purple);"></i> Discover</span>
+                        <span class="item-left"><i class="fa-solid fa-compass" style="color: #6366f1;"></i> Discover</span>
                     </a>
                 </li>
                 <li class="hub-menu-item">
                     <a href="{% url 'contest_list' %}">
-                        <span class="item-left"><i class="fa-solid fa-trophy" style="color: var(--hub-gold);"></i> Contests</span>
+                        <span class="item-left"><i class="fa-solid fa-trophy" style="color: var(--hub-amber);"></i> Contests</span>
                         {% if active_contests %}
                         <span class="hub-menu-badge badge-gold">{{ active_contests|length }} Live</span>
                         {% endif %}
@@ -42,50 +42,50 @@
         </div>
 
         <div class="hub-rail-card">
-            <div class="hub-menu-title">Categories</div>
+            <div class="hub-menu-title">Browse By Type</div>
             <ul class="hub-menu-list">
                 <li class="hub-menu-item">
                     <a href="/books/">
-                        <span class="item-left"><i class="fa-solid fa-book" style="color: #60a5fa;"></i> Books</span>
+                        <span class="item-left"><i class="fa-solid fa-book" style="color: #3b82f6;"></i> Books</span>
                         <span class="hub-menu-badge">{{ genre_counts.Fiction|default:0 }}</span>
                     </a>
                 </li>
                 <li class="hub-menu-item">
                     <a href="/scripts/">
-                        <span class="item-left"><i class="fa-solid fa-scroll" style="color: #c084fc;"></i> Screenplays</span>
+                        <span class="item-left"><i class="fa-solid fa-scroll" style="color: #8b5cf6;"></i> Screenplays</span>
                         <span class="hub-menu-badge">{{ genre_counts.Scripts|default:0 }}</span>
                     </a>
                 </li>
                 <li class="hub-menu-item">
                     <a href="/poems/">
-                        <span class="item-left"><i class="fa-solid fa-feather-pointed" style="color: #fbbf24;"></i> Poetry</span>
+                        <span class="item-left"><i class="fa-solid fa-feather-pointed" style="color: #f59e0b;"></i> Poetry</span>
                         <span class="hub-menu-badge">{{ genre_counts.Poetry|default:0 }}</span>
                     </a>
                 </li>
                 <li class="hub-menu-item">
                     <a href="/confessions/">
-                        <span class="item-left"><i class="fa-solid fa-user-secret" style="color: #f472b6;"></i> Confessions</span>
+                        <span class="item-left"><i class="fa-solid fa-user-secret" style="color: #ec4899;"></i> Confessions</span>
                     </a>
                 </li>
                 <li class="hub-menu-item">
                     <a href="{% url 'movie_reviews' %}">
-                        <span class="item-left"><i class="fa-solid fa-clapperboard" style="color: #34d399;"></i> Reviews</span>
+                        <span class="item-left"><i class="fa-solid fa-clapperboard" style="color: #10b981;"></i> Reviews</span>
                     </a>
                 </li>
                 <li class="hub-menu-item">
                     <a href="{% url 'authors_list' %}">
-                        <span class="item-left"><i class="fa-solid fa-users" style="color: #94a3b8;"></i> Writers</span>
+                        <span class="item-left"><i class="fa-solid fa-users" style="color: #64748b;"></i> Writers</span>
                     </a>
                 </li>
             </ul>
         </div>
 
-        <!-- Quick Start Writing CTA -->
-        <a href="/write/new/" class="btn-hub-primary" style="justify-content: center; width: 100%; padding: 13px 20px;">
-            <i class="fa-solid fa-pen-nib"></i> Start Writing Free
+        <!-- Start Writing CTA -->
+        <a href="/write/new/" class="btn-hub-primary" style="justify-content: center; width: 100%; padding: 12px 18px;">
+            <i class="fa-solid fa-pen-nib"></i> Start Writing
         </a>
 
-        <!-- Mini User Profile or Guest Callout -->
+        <!-- User Profile or Guest Callout -->
         {% if user.is_authenticated %}
         <a href="{% url 'dashboard' %}" class="hub-author-pill">
             <div class="hub-author-avatar">
@@ -93,12 +93,12 @@
             </div>
             <div class="hub-author-meta">
                 <h4>{{ user.authorprofile.pen_name|default:user.username }}</h4>
-                <p><i class="fa-solid fa-table-columns"></i> View Studio</p>
+                <p><i class="fa-solid fa-table-columns"></i> View Dashboard</p>
             </div>
         </a>
         {% else %}
-        <div class="hub-rail-card" style="text-align: center; padding: 18px 14px;">
-            <p style="font-size: 13px; color: var(--hub-text-secondary); margin-bottom: 12px;">Join thousands of authors sharing their stories worldwide.</p>
+        <div class="hub-rail-card" style="text-align: center; padding: 16px 14px;">
+            <p style="font-size: 13px; color: var(--hub-text-secondary); margin-bottom: 12px; line-height: 1.5;">Join authors sharing their creative work on Mypen.</p>
             <a href="{% url 'account_login' %}" class="btn-hub-ghost" style="width: 100%; justify-content: center;">Sign In</a>
         </div>
         {% endif %}
@@ -109,24 +109,22 @@
          ========================================================================= -->
     <main class="hub-center-feed">
 
-        <!-- Spotlight Compact Banner -->
+        <!-- Clean Spotlight Banner -->
         <section class="hub-spotlight-banner">
-            <div class="hub-spotlight-content">
-                <span class="hub-spotlight-badge">
-                    <i class="fa-solid fa-sparkles"></i> Mypen Community Hub
-                </span>
-                <h1 class="hub-spotlight-title">Write Your Story. Share Your World.</h1>
-                <p class="hub-spotlight-subtitle">
-                    A vibrant space for authors and readers. Discover serialized books, screenplays, and poetry from creators worldwide.
-                </p>
-                <div class="hub-spotlight-actions">
-                    <a href="/write/new/" class="btn-hub-primary">
-                        <i class="fa-solid fa-feather"></i> Publish a Story
-                    </a>
-                    <a href="{% url 'feed' %}" class="btn-hub-ghost">
-                        <i class="fa-solid fa-fire"></i> Trending Feed
-                    </a>
-                </div>
+            <span class="hub-spotlight-badge">
+                <i class="fa-solid fa-pen-fancy"></i> Welcome to Mypen
+            </span>
+            <h1 class="hub-spotlight-title">Write your story. Share it with the world.</h1>
+            <p class="hub-spotlight-subtitle">
+                A simple and open platform for writers and readers. Explore serialized books, formatted screenplays, and original poetry.
+            </p>
+            <div class="hub-spotlight-actions">
+                <a href="/write/new/" class="btn-hub-primary">
+                    <i class="fa-solid fa-plus"></i> Publish a Story
+                </a>
+                <a href="{% url 'feed' %}" class="btn-hub-ghost">
+                    <i class="fa-solid fa-fire"></i> Trending Feed
+                </a>
             </div>
         </section>
 
@@ -146,7 +144,7 @@
                     <i class="fa-solid fa-feather-pointed"></i> Poetry ({{ trending_poems|length }})
                 </button>
             </div>
-            <a href="/discover/" style="font-size: 13px; color: var(--hub-gold); text-decoration: none; font-weight: 600;">
+            <a href="/discover/" class="hub-view-all" style="font-weight: 600; color: var(--hub-amber);">
                 Advanced Search <i class="fa-solid fa-chevron-right" style="font-size: 10px;"></i>
             </a>
         </div>
@@ -154,10 +152,10 @@
         <!-- Featured Books Section -->
         <section class="hub-feed-section" id="section-books">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px;">
-                <h2 style="font-size: 18px; font-weight: 800; color: #fff; display: flex; align-items: center; gap: 8px;">
-                    <i class="fa-solid fa-book-bookmark" style="color: var(--hub-gold);"></i> Featured Books
+                <h2 class="hub-section-heading">
+                    <i class="fa-solid fa-book-bookmark" style="color: var(--hub-amber);"></i> Featured Books
                 </h2>
-                <a href="/books/" style="font-size: 13px; color: var(--hub-text-secondary); text-decoration: none;">View All &rarr;</a>
+                <a href="/books/" class="hub-view-all">View All &rarr;</a>
             </div>
 
             <div class="hub-stories-grid">
@@ -195,18 +193,18 @@
                     </div>
                 </article>
                 {% empty %}
-                <p style="color: var(--hub-text-dim); grid-column: 1 / -1;">No published books yet.</p>
+                <p style="color: var(--hub-text-muted); grid-column: 1 / -1; font-size: 13px;">No published books yet.</p>
                 {% endfor %}
             </div>
         </section>
 
         <!-- Trending Screenplays Section -->
-        <section class="hub-feed-section" id="section-scripts" style="margin-top: 10px;">
+        <section class="hub-feed-section" id="section-scripts">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px;">
-                <h2 style="font-size: 18px; font-weight: 800; color: #fff; display: flex; align-items: center; gap: 8px;">
-                    <i class="fa-solid fa-clapperboard" style="color: #c084fc;"></i> Trending Screenplays
+                <h2 class="hub-section-heading">
+                    <i class="fa-solid fa-clapperboard" style="color: #8b5cf6;"></i> Trending Screenplays
                 </h2>
-                <a href="/scripts/" style="font-size: 13px; color: var(--hub-text-secondary); text-decoration: none;">View All &rarr;</a>
+                <a href="/scripts/" class="hub-view-all">View All &rarr;</a>
             </div>
 
             <div class="hub-stories-grid">
@@ -216,14 +214,14 @@
                         {% if script.cover_image %}
                         <img src="{{ script.cover_image.url }}" alt="{{ script.title }}" loading="lazy">
                         {% else %}
-                        <div class="hub-card-fallback-art" style="background: linear-gradient(135deg, #241432 0%, #161226 100%); color: #c084fc;">
+                        <div class="hub-card-fallback-art">
                             <i class="fa-solid fa-scroll"></i>
                         </div>
                         {% endif %}
-                        <span class="hub-card-badge" style="color: #c084fc;">{{ script.get_script_format_display|default:"Script" }}</span>
+                        <span class="hub-card-badge">{{ script.get_script_format_display|default:"Script" }}</span>
                     </div>
                     <div class="hub-card-content">
-                        <span class="hub-card-genre" style="color: #c084fc;">{{ script.genre|default:"Screenplay" }}</span>
+                        <span class="hub-card-genre" style="color: #8b5cf6;">{{ script.genre|default:"Screenplay" }}</span>
                         <h3 class="hub-card-title">{{ script.title }}</h3>
                         <p class="hub-card-author">
                             by <a href="{% url 'profile_view' script.author.username %}" onclick="event.stopPropagation();">{{ script.author.authorprofile.pen_name|default:script.author.username }}</a>
@@ -244,18 +242,18 @@
                     </div>
                 </article>
                 {% empty %}
-                <p style="color: var(--hub-text-dim); grid-column: 1 / -1;">No published screenplays yet.</p>
+                <p style="color: var(--hub-text-muted); grid-column: 1 / -1; font-size: 13px;">No published screenplays yet.</p>
                 {% endfor %}
             </div>
         </section>
 
         <!-- Poetry Section -->
-        <section class="hub-feed-section" id="section-poems" style="margin-top: 10px;">
+        <section class="hub-feed-section" id="section-poems">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px;">
-                <h2 style="font-size: 18px; font-weight: 800; color: #fff; display: flex; align-items: center; gap: 8px;">
-                    <i class="fa-solid fa-feather-pointed" style="color: #fbbf24;"></i> Featured Poems
+                <h2 class="hub-section-heading">
+                    <i class="fa-solid fa-feather-pointed" style="color: #f59e0b;"></i> Featured Poems
                 </h2>
-                <a href="/poems/" style="font-size: 13px; color: var(--hub-text-secondary); text-decoration: none;">View All &rarr;</a>
+                <a href="/poems/" class="hub-view-all">View All &rarr;</a>
             </div>
 
             <div class="hub-stories-grid">
@@ -265,13 +263,14 @@
                         {% if poem.cover_image %}
                         <img src="{{ poem.cover_image.url }}" alt="{{ poem.title }}" loading="lazy">
                         {% else %}
-                        <div class="hub-card-fallback-art" style="background: linear-gradient(135deg, #2b2112 0%, #171512 100%); color: #fbbf24;">
+                        <div class="hub-card-fallback-art">
                             <i class="fa-solid fa-feather"></i>
                         </div>
                         {% endif %}
-                        <span class="hub-card-badge" style="color: #fbbf24;">Poem</span>
+                        <span class="hub-card-badge">Poem</span>
                     </div>
                     <div class="hub-card-content">
+                        <span class="hub-card-genre" style="color: #f59e0b;">Poetry</span>
                         <h3 class="hub-card-title">{{ poem.title }}</h3>
                         <p class="hub-card-author">
                             by <a href="{% url 'profile_view' poem.author.username %}" onclick="event.stopPropagation();">{{ poem.author.authorprofile.pen_name|default:poem.author.username }}</a>
@@ -292,7 +291,7 @@
                     </div>
                 </article>
                 {% empty %}
-                <p style="color: var(--hub-text-dim); grid-column: 1 / -1;">No published poems yet.</p>
+                <p style="color: var(--hub-text-muted); grid-column: 1 / -1; font-size: 13px;">No published poems yet.</p>
                 {% endfor %}
             </div>
         </section>
@@ -300,7 +299,7 @@
     </main>
 
     <!-- =========================================================================
-         RIGHT RAIL: Active Contests, Top Writers & Live Pulse ("Crowded" Hub)
+         RIGHT RAIL: Active Contests, Top Writers & Live Pulse
          ========================================================================= -->
     <aside class="hub-right-rail">
 
@@ -312,15 +311,15 @@
                 <span class="hub-live-badge">
                     <span class="hub-live-dot"></span> Live Contest
                 </span>
-                <span style="font-size: 11px; color: var(--hub-text-dim); text-transform: uppercase; font-weight: 600;">
+                <span style="font-size: 11px; color: var(--hub-text-muted); text-transform: uppercase; font-weight: 600;">
                     {{ contest.get_contest_type_display }}
                 </span>
             </div>
             <h3 class="hub-contest-title">{{ contest.title }}</h3>
             <div class="hub-contest-prize">
-                <i class="fa-solid fa-medal"></i> Prize: {{ contest.prize|default:"Trophy & Recognition" }}
+                <i class="fa-solid fa-trophy"></i> Prize: {{ contest.prize|default:"Trophy & Recognition" }}
             </div>
-            <p style="font-size: 12px; color: var(--hub-text-dim); margin-bottom: 14px;">
+            <p style="font-size: 12px; color: var(--hub-text-muted); margin-bottom: 12px;">
                 <i class="fa-solid fa-users"></i> {{ contest.participant_count }} entrants &bull; Ends {{ contest.end_date|date:"M d, Y" }}
             </p>
             <div class="hub-contest-actions">
@@ -338,8 +337,8 @@
         <!-- Top Writers Widget -->
         <div class="hub-writers-widget">
             <div class="hub-widget-header">
-                <h3><i class="fa-solid fa-crown"></i> Active Authors</h3>
-                <a href="{% url 'authors_list' %}" style="font-size: 12px; color: var(--hub-gold); text-decoration: none;">View All</a>
+                <h3><i class="fa-solid fa-pen-nib" style="color: var(--hub-amber);"></i> Active Writers</h3>
+                <a href="{% url 'authors_list' %}" class="hub-view-all">View All</a>
             </div>
             <div class="hub-writers-list">
                 {% for writer in top_authors %}
@@ -362,7 +361,7 @@
                     <a href="{% url 'profile_view' writer.username %}" class="hub-btn-view-author">Profile</a>
                 </div>
                 {% empty %}
-                <p style="font-size: 12px; color: var(--hub-text-dim);">No active authors yet.</p>
+                <p style="font-size: 12px; color: var(--hub-text-muted);">No active authors yet.</p>
                 {% endfor %}
             </div>
         </div>
@@ -371,9 +370,9 @@
         {% if recent_confessions %}
         {% with conf=recent_confessions.0 %}
         <div class="hub-confession-snippet">
-            <div class="hub-widget-header" style="margin-bottom: 10px;">
-                <h3 style="font-size: 13px;"><i class="fa-solid fa-mask" style="color: #f472b6;"></i> Anonymous Confession</h3>
-                <a href="/confessions/" style="font-size: 11px; color: var(--hub-text-secondary); text-decoration: none;">Read More</a>
+            <div class="hub-widget-header" style="margin-bottom: 8px;">
+                <h3 style="font-size: 13px;"><i class="fa-solid fa-user-secret" style="color: #ec4899;"></i> Anonymous Confession</h3>
+                <a href="/confessions/" class="hub-view-all" style="font-size: 11px;">More</a>
             </div>
             <p class="hub-confession-quote">
                 "{{ conf.content|truncatewords:20 }}"
