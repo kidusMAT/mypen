@@ -23,6 +23,25 @@
                 <span><i class="fa-solid fa-users" style="color: #666;"></i> {{ contest.participant_count }} Participants</span>
             </div>
 
+            {% if contest.winner %}
+            <div class="contest-winner-banner" style="margin-top: 30px; padding: 20px; background: rgba(255, 215, 0, 0.08); border: 1px solid #ffd700; border-radius: 12px; max-width: 600px; margin-left: auto; margin-right: auto;">
+                <div style="display: flex; align-items: center; justify-content: center; gap: 15px; flex-wrap: wrap;">
+                    <i class="fa-solid fa-crown" style="font-size: 28px; color: #ffd700;"></i>
+                    <div style="text-align: left;">
+                        <span style="font-size: 12px; text-transform: uppercase; color: #ffd700; font-weight: bold; letter-spacing: 1px; display: block;">Winner Announced</span>
+                        <a href="{% url 'profile_view' contest.winner.username %}" style="font-size: 18px; font-weight: bold; color: #fff; text-decoration: none;">{{ contest.winner.username }}</a>
+                        {% if contest.winning_book %}
+                        <div style="font-size: 14px; color: #ccc; margin-top: 4px;">Winning Entry: <a href="{% url 'view_book_public' contest.winning_book.id %}" style="color: #ffd700;">{{ contest.winning_book.title }}</a></div>
+                        {% elif contest.winning_script %}
+                        <div style="font-size: 14px; color: #ccc; margin-top: 4px;">Winning Entry: <a href="{% url 'read_script' contest.winning_script.id %}" style="color: #ffd700;">{{ contest.winning_script.title }}</a></div>
+                        {% elif contest.winning_poem %}
+                        <div style="font-size: 14px; color: #ccc; margin-top: 4px;">Winning Entry: <a href="{% url 'read_poem' contest.winning_poem.id %}" style="color: #ffd700;">{{ contest.winning_poem.title }}</a></div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+
             {% if contest.status == 'ACTIVE' and not user_has_joined %}
             <div style="margin-top: 30px;">
                 <a href="{% url 'join_contest' contest.id %}" class="btn-primary" style="padding: 12px 30px; font-size: 18px; text-decoration: none;">Join Contest</a>

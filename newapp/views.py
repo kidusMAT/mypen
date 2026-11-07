@@ -1,4 +1,5 @@
 from django.shortcuts import render, get_object_or_404, redirect, HttpResponse
+from django.urls import reverse
 from django.http import JsonResponse
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
@@ -67,9 +68,14 @@ def create_content(request):
             
             if contest_id:
                 try:
-                    contest = Contest.objects.get(id=contest_id)
-                    contest.entry_scripts.add(script)
-                except Contest.DoesNotExist:
+                    contest = Contest.objects.get(id=contest_id, status='ACTIVE')
+                    if contest.contest_type == 'SCRIPT':
+                        ContestParticipant.objects.get_or_create(
+                            contest=contest,
+                            user=request.user,
+                            defaults={'entry_type': 'SCRIPT', 'entry_id': script.id}
+                        )
+                except Exception:
                     pass
                     
             if script_file:
@@ -82,9 +88,14 @@ def create_content(request):
             
             if contest_id:
                 try:
-                    contest = Contest.objects.get(id=contest_id)
-                    contest.entry_poems.add(poem)
-                except Contest.DoesNotExist:
+                    contest = Contest.objects.get(id=contest_id, status='ACTIVE')
+                    if contest.contest_type == 'POEM':
+                        ContestParticipant.objects.get_or_create(
+                            contest=contest,
+                            user=request.user,
+                            defaults={'entry_type': 'POEM', 'entry_id': poem.id}
+                        )
+                except Exception:
                     pass
                     
             return redirect('write_poem', poem_id=poem.id)
@@ -111,9 +122,14 @@ def create_content(request):
         
         if contest_id:
             try:
-                contest = Contest.objects.get(id=contest_id)
-                contest.entry_books.add(book)
-            except Contest.DoesNotExist:
+                contest = Contest.objects.get(id=contest_id, status='ACTIVE')
+                if contest.contest_type == 'BOOK':
+                    ContestParticipant.objects.get_or_create(
+                        contest=contest,
+                        user=request.user,
+                        defaults={'entry_type': 'BOOK', 'entry_id': book.id}
+                    )
+            except Exception:
                 pass
         
         # Create the first Chapter
@@ -208,6 +224,30 @@ def index(request):
         total_likes=Count('likes', distinct=True),
         total_chapters=Count('chapters', filter=Q(chapters__status='PUBLISHED'), distinct=True)
     ).prefetch_related('likes', 'bookmarks').order_by('-created_at', '-id')[:8]
+
+    # Active Contests for the right rail
+    active_contests = Contest.objects.filter(status='ACTIVE').order_by('-start_date')[:3]
+
+    # Trending Scripts & Poems for the multi-category feed
+    trending_scripts = Script.objects.filter(status='PUBLISHED').annotate(
+        total_likes=Count('likes', distinct=True)
+    ).order_by('-views', '-id')[:6]
+
+    trending_poems = Poem.objects.filter(status__in=['PUBLISHED', 'FINISHED']).annotate(
+        total_likes=Count('likes', distinct=True)
+    ).order_by('-views', '-id')[:6]
+
+    # Top authors
+    top_authors = User.objects.filter(
+        Q(book__isnull=False) | Q(script__isnull=False) | Q(poem__isnull=False)
+    ).select_related('authorprofile').distinct().order_by('-date_joined')[:5]
+
+    # Recent community confessions
+    from .models import Confession
+    recent_confessions = Confession.objects.annotate(
+        total_likes=Count('likes', distinct=True),
+        total_comments=Count('comments', distinct=True)
+    ).order_by('-created_at')[:3]
     
     # Calculate statistics
     writers_count = User.objects.filter(
@@ -237,6 +277,11 @@ def index(request):
     
     context = {
         'handpicked_books': handpicked_books,
+        'active_contests': active_contests,
+        'trending_scripts': trending_scripts,
+        'trending_poems': trending_poems,
+        'top_authors': top_authors,
+        'recent_confessions': recent_confessions,
         'writers_count': writers_count,
         'stories_count': stories_count,
         'readers_count': readers_count,
@@ -1062,10 +1107,10 @@ def submit_contest_entry(request):
         data = json.loads(request.body)
         contest_id = data.get('contest_id')
         work_id = data.get('work_id')
-        work_type = data.get('work_type')
+        work_type = (data.get('work_type') or '').upper()
         
         # Check if user has phone number
-        from newapp.models import AuthorProfile
+        from newapp.models import AuthorProfile, Contest, ContestParticipant, Book, Script, Poem
         profile, created = AuthorProfile.objects.get_or_create(user=request.user)
         
         if not profile.phone_number:
@@ -1076,19 +1121,32 @@ def submit_contest_entry(request):
             }, status=400)
         
         contest = get_object_or_404(Contest, id=contest_id)
+        if contest.status != 'ACTIVE':
+            return JsonResponse({'status': 'error', 'message': 'This contest is not currently accepting entries.'}, status=400)
+
+        # Check if user already joined
+        if contest.participants.filter(user=request.user).exists():
+            return JsonResponse({'status': 'error', 'message': 'You have already joined this contest.'}, status=400)
         
+        if contest.contest_type != work_type:
+            return JsonResponse({'status': 'error', 'message': f'This contest only accepts {contest.get_contest_type_display()} entries.'}, status=400)
+
         # Verify the work belongs to the user AND is published
-        if work_type == 'Book':
+        if work_type == 'BOOK':
             work = get_object_or_404(Book, id=work_id, author=request.user, status__in=['PUBLISHED', 'FINISHED'])
-            contest.entry_books.add(work)
-        elif work_type == 'Script':
+        elif work_type == 'SCRIPT':
             work = get_object_or_404(Script, id=work_id, author=request.user, status='PUBLISHED')
-            contest.entry_scripts.add(work)
-        elif work_type == 'Poem':
-            work = get_object_or_404(Poem, id=work_id, author=request.user, status='PUBLISHED')
-            contest.entry_poems.add(work)
+        elif work_type == 'POEM':
+            work = get_object_or_404(Poem, id=work_id, author=request.user, status__in=['PUBLISHED', 'FINISHED'])
         else:
             return JsonResponse({'status': 'error', 'message': 'Invalid work type'}, status=400)
+
+        ContestParticipant.objects.create(
+            contest=contest,
+            user=request.user,
+            entry_type=work_type,
+            entry_id=work.id
+        )
             
         return JsonResponse({'status': 'success', 'message': 'Entry submitted successfully!'})
         
@@ -2181,7 +2239,7 @@ def edit_contest(request, contest_id):
     })
 def contest_list(request):
     from django.utils import timezone
-    from .models import Contest, Book, Script, Poem
+    from .models import Contest, Book, Script, Poem, ContestParticipant
     
     active_contests = Contest.objects.filter(status='ACTIVE').order_by('-start_date')
     upcoming_contests = Contest.objects.filter(status='DRAFT').order_by('start_date')
@@ -2190,10 +2248,12 @@ def contest_list(request):
     user_books = []
     user_scripts = []
     user_poems = []
+    user_joined_contest_ids = []
     if request.user.is_authenticated:
-        user_books = list(Book.objects.filter(author=request.user, status='PUBLISHED').values('id', 'title'))
+        user_books = list(Book.objects.filter(author=request.user, status__in=['PUBLISHED', 'FINISHED']).values('id', 'title'))
         user_scripts = list(Script.objects.filter(author=request.user, status='PUBLISHED').values('id', 'title'))
-        user_poems = list(Poem.objects.filter(author=request.user, status='PUBLISHED').values('id', 'title'))
+        user_poems = list(Poem.objects.filter(author=request.user, status__in=['PUBLISHED', 'FINISHED']).values('id', 'title'))
+        user_joined_contest_ids = list(ContestParticipant.objects.filter(user=request.user).values_list('contest_id', flat=True))
 
     return render(request, 'newapp/contests.html', {
         'active_contests': active_contests,
@@ -2202,6 +2262,7 @@ def contest_list(request):
         'user_books': user_books,
         'user_scripts': user_scripts,
         'user_poems': user_poems,
+        'user_joined_contest_ids': user_joined_contest_ids,
     })
 
 def contest_detail(request, contest_id):
@@ -2273,10 +2334,10 @@ def join_contest(request, contest_id):
         profile = request.user.authorprofile
         if not profile.phone_number:
             messages.warning(request, 'Please add your phone number before joining a contest.')
-            return redirect('edit_profile') + f'?next=join_contest&contest_id={contest_id}'
+            return redirect(f"{reverse('edit_profile')}?next=join_contest&contest_id={contest_id}")
     except AuthorProfile.DoesNotExist:
         messages.warning(request, 'Please complete your profile before joining a contest.')
-        return redirect('edit_profile') + f'?next=join_contest&contest_id={contest_id}'
+        return redirect(f"{reverse('edit_profile')}?next=join_contest&contest_id={contest_id}")
     
     # Check if already joined
     if contest.participants.filter(user=request.user).exists():
@@ -2284,20 +2345,24 @@ def join_contest(request, contest_id):
         return redirect('contest_detail', contest_id=contest_id)
     
     if request.method == 'POST':
-        entry_type = request.POST.get('entry_type')
+        entry_type = (request.POST.get('entry_type') or '').upper()
         entry_id = request.POST.get('entry_id')
         
         if not entry_type or not entry_id:
             messages.error(request, 'Please select an entry to submit.')
             return redirect('contest_detail', contest_id=contest_id)
         
+        if entry_type != contest.contest_type:
+            messages.error(request, f'This contest only accepts {contest.get_contest_type_display()} entries.')
+            return redirect('join_contest', contest_id=contest_id)
+        
         # Validate entry exists and belongs to user
         if entry_type == 'BOOK':
-            entry = get_object_or_404(Book, id=entry_id, author=request.user)
+            entry = get_object_or_404(Book, id=entry_id, author=request.user, status__in=['PUBLISHED', 'FINISHED'])
         elif entry_type == 'SCRIPT':
-            entry = get_object_or_404(Script, id=entry_id, author=request.user)
+            entry = get_object_or_404(Script, id=entry_id, author=request.user, status='PUBLISHED')
         elif entry_type == 'POEM':
-            entry = get_object_or_404(Poem, id=entry_id, author=request.user)
+            entry = get_object_or_404(Poem, id=entry_id, author=request.user, status__in=['PUBLISHED', 'FINISHED'])
         else:
             messages.error(request, 'Invalid entry type.')
             return redirect('contest_detail', contest_id=contest_id)
@@ -2313,10 +2378,10 @@ def join_contest(request, contest_id):
         messages.success(request, 'You have successfully joined the contest!')
         return redirect('contest_detail', contest_id=contest_id)
     
-    # Get user's published works for selection (include both PUBLISHED and FINISHED)
-    user_books = Book.objects.filter(author=request.user, status__in=['PUBLISHED', 'FINISHED'])
-    user_scripts = Script.objects.filter(author=request.user, status='PUBLISHED')
-    user_poems = Poem.objects.filter(author=request.user, status__in=['PUBLISHED', 'FINISHED'])
+    # Get user's published works matching contest type
+    user_books = Book.objects.filter(author=request.user, status__in=['PUBLISHED', 'FINISHED']) if contest.contest_type == 'BOOK' else []
+    user_scripts = Script.objects.filter(author=request.user, status='PUBLISHED') if contest.contest_type == 'SCRIPT' else []
+    user_poems = Poem.objects.filter(author=request.user, status__in=['PUBLISHED', 'FINISHED']) if contest.contest_type == 'POEM' else []
     
     return render(request, 'newapp/join_contest.html', {
         'contest': contest,

@@ -1,0 +1,135 @@
+{% extends "newapp/_base.html" %}
+{% load static %}
+
+{% block title %}Join {{ contest.title }} - Mypen{% endblock %}
+
+{% block content %}
+<main class="static-page">
+    <section class="static-header" style="text-align: center; padding: 50px 20px 30px;">
+        <div class="static-container">
+            <a href="{% url 'contest_detail' contest.id %}" style="display: inline-flex; align-items: center; gap: 8px; color: #a8a29e; text-decoration: none; font-size: 14px; margin-bottom: 20px; transition: color 0.2s;">
+                <i class="fa-solid fa-arrow-left"></i> Back to Contest
+            </a>
+            <h1 style="font-size: 36px; margin-bottom: 10px;">Join Contest</h1>
+            <p class="subtitle" style="font-size: 18px; color: #ffd700;">{{ contest.title }}</p>
+            <p style="color: #a8a29e; font-size: 14px; margin-top: 8px;">
+                Contest category: <strong>{{ contest.get_contest_type_display }}</strong> &bull; Ends {{ contest.end_date|date:"F d, Y" }}
+            </p>
+        </div>
+    </section>
+
+    <section class="static-content" style="padding: 20px 20px 60px;">
+        <div class="static-container" style="max-width: 800px; margin: 0 auto;">
+            {% if user_books or user_scripts or user_poems %}
+            <form method="post" style="display: flex; flex-direction: column; gap: 25px;">
+                {% csrf_token %}
+                <input type="hidden" name="entry_type" id="entry_type" value="{{ contest.contest_type }}">
+
+                <h2 style="font-size: 20px; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 12px; margin-bottom: 10px;">
+                    Select Your {{ contest.get_contest_type_display }} Entry
+                </h2>
+
+                <div class="works-selection-grid" style="display: flex; flex-direction: column; gap: 15px;">
+                    {% if user_books %}
+                        {% for book in user_books %}
+                        <label class="work-option" style="display: flex; align-items: center; gap: 15px; padding: 18px; background: rgba(255,255,255,0.03); border: 2px solid rgba(255,255,255,0.1); border-radius: 12px; cursor: pointer; transition: all 0.2s;">
+                            <input type="radio" name="entry_id" value="{{ book.id }}" data-type="BOOK" required style="accent-color: #ffd700; width: 18px; height: 18px;">
+                            <div style="width: 50px; height: 70px; flex-shrink: 0; border-radius: 6px; overflow: hidden; background: #222; display: flex; align-items: center; justify-content: center;">
+                                {% if book.cover_image %}
+                                <img src="{{ book.cover_image.url }}" alt="{{ book.title }}" style="width: 100%; height: 100%; object-fit: cover;">
+                                {% else %}
+                                <i class="fa-solid fa-book" style="color: #666; font-size: 20px;"></i>
+                                {% endif %}
+                            </div>
+                            <div style="flex-grow: 1;">
+                                <div style="font-weight: 600; font-size: 16px; color: #fff;">{{ book.title }}</div>
+                                <div style="font-size: 13px; color: #a8a29e; margin-top: 4px;">{{ book.description|default:"No description"|truncatewords:15 }}</div>
+                                <div style="font-size: 12px; color: #888; margin-top: 4px;">{{ book.chapters.count }} chapters &bull; Status: {{ book.get_status_display }}</div>
+                            </div>
+                        </label>
+                        {% endfor %}
+                    {% endif %}
+
+                    {% if user_scripts %}
+                        {% for script in user_scripts %}
+                        <label class="work-option" style="display: flex; align-items: center; gap: 15px; padding: 18px; background: rgba(255,255,255,0.03); border: 2px solid rgba(255,255,255,0.1); border-radius: 12px; cursor: pointer; transition: all 0.2s;">
+                            <input type="radio" name="entry_id" value="{{ script.id }}" data-type="SCRIPT" required style="accent-color: #ffd700; width: 18px; height: 18px;">
+                            <div style="width: 50px; height: 70px; flex-shrink: 0; border-radius: 6px; overflow: hidden; background: #222; display: flex; align-items: center; justify-content: center;">
+                                {% if script.cover_image %}
+                                <img src="{{ script.cover_image.url }}" alt="{{ script.title }}" style="width: 100%; height: 100%; object-fit: cover;">
+                                {% else %}
+                                <i class="fa-solid fa-scroll" style="color: #666; font-size: 20px;"></i>
+                                {% endif %}
+                            </div>
+                            <div style="flex-grow: 1;">
+                                <div style="font-weight: 600; font-size: 16px; color: #fff;">{{ script.title }}</div>
+                                <div style="font-size: 13px; color: #a8a29e; margin-top: 4px;">{{ script.description|default:"No description"|truncatewords:15 }}</div>
+                                <div style="font-size: 12px; color: #888; margin-top: 4px;">Format: {{ script.get_script_format_display }} &bull; Status: {{ script.get_status_display }}</div>
+                            </div>
+                        </label>
+                        {% endfor %}
+                    {% endif %}
+
+                    {% if user_poems %}
+                        {% for poem in user_poems %}
+                        <label class="work-option" style="display: flex; align-items: center; gap: 15px; padding: 18px; background: rgba(255,255,255,0.03); border: 2px solid rgba(255,255,255,0.1); border-radius: 12px; cursor: pointer; transition: all 0.2s;">
+                            <input type="radio" name="entry_id" value="{{ poem.id }}" data-type="POEM" required style="accent-color: #ffd700; width: 18px; height: 18px;">
+                            <div style="width: 50px; height: 70px; flex-shrink: 0; border-radius: 6px; overflow: hidden; background: #222; display: flex; align-items: center; justify-content: center;">
+                                {% if poem.cover_image %}
+                                <img src="{{ poem.cover_image.url }}" alt="{{ poem.title }}" style="width: 100%; height: 100%; object-fit: cover;">
+                                {% else %}
+                                <i class="fa-solid fa-feather-pointed" style="color: #666; font-size: 20px;"></i>
+                                {% endif %}
+                            </div>
+                            <div style="flex-grow: 1;">
+                                <div style="font-weight: 600; font-size: 16px; color: #fff;">{{ poem.title }}</div>
+                                <div style="font-size: 13px; color: #a8a29e; margin-top: 4px;">{{ poem.description|default:"No description"|truncatewords:15 }}</div>
+                                <div style="font-size: 12px; color: #888; margin-top: 4px;">Status: {{ poem.get_status_display }}</div>
+                            </div>
+                        </label>
+                        {% endfor %}
+                    {% endif %}
+                </div>
+
+                <div style="margin-top: 20px; display: flex; gap: 15px; align-items: center;">
+                    <button type="submit" class="btn-primary" style="padding: 14px 32px; font-size: 16px; border: none; cursor: pointer;">
+                        <i class="fa-solid fa-paper-plane" style="margin-right: 8px;"></i> Submit Entry
+                    </button>
+                    <a href="{% url 'contest_detail' contest.id %}" style="color: #a8a29e; text-decoration: none; font-size: 15px;">Cancel</a>
+                </div>
+            </form>
+            {% else %}
+            <div class="empty-state" style="padding: 60px 20px; text-align: center; background: rgba(255,255,255,0.02); border-radius: 20px; border: 1px dashed rgba(255,255,255,0.1);">
+                <i class="fa-solid fa-pen-fancy" style="font-size: 48px; color: #ffd700; margin-bottom: 20px;"></i>
+                <h3 style="font-size: 20px; margin-bottom: 10px;">No published {{ contest.get_contest_type_display|lower }}s found</h3>
+                <p style="color: #888; max-width: 500px; margin: 0 auto 25px;">You need to publish at least one {{ contest.get_contest_type_display|lower }} to enter this contest.</p>
+                <a href="/write/new/?contest_id={{ contest.id }}&type={{ contest.contest_type|lower }}" class="btn-primary" style="text-decoration: none; display: inline-block;">
+                    <i class="fa-solid fa-plus" style="margin-right: 8px;"></i> Create New {{ contest.get_contest_type_display }}
+                </a>
+            </div>
+            {% endif %}
+        </div>
+    </section>
+</main>
+
+<style>
+    .work-option:hover {
+        background: rgba(255,255,255,0.06) !important;
+        border-color: rgba(255,215,0,0.5) !important;
+    }
+    .work-option:has(input:checked) {
+        background: rgba(255,215,0,0.05) !important;
+        border-color: #ffd700 !important;
+    }
+</style>
+
+<script>
+document.querySelectorAll('.work-option input[type="radio"]').forEach(function(radio) {
+    radio.addEventListener('change', function() {
+        if (this.dataset.type) {
+            document.getElementById('entry_type').value = this.dataset.type;
+        }
+    });
+});
+</script>
+{% endblock %}

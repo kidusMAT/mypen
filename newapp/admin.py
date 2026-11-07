@@ -23,17 +23,31 @@ class ContestAdminForm(forms.ModelForm):
 @admin.register(Contest)
 class ContestAdmin(admin.ModelAdmin):
     form = ContestAdminForm
-    list_display = ('title', 'contest_type', 'status', 'participant_count', 'start_date', 'end_date', 'winner')
+    list_display = ('title', 'contest_type', 'status', 'participant_count', 'start_date', 'end_date', 'winner', 'winner_phone')
     list_filter = ('status', 'contest_type', 'created_at')
-    search_fields = ('title', 'description')
-    readonly_fields = ('participant_count', 'created_at')
+    search_fields = ('title', 'description', 'winner__username')
+    readonly_fields = ('participant_count', 'created_at', 'winner_phone')
+
+    def winner_phone(self, obj):
+        if obj.winner:
+            return getattr(getattr(obj.winner, 'authorprofile', None), 'phone_number', None) or '-'
+        return '-'
+    winner_phone.short_description = 'Winner Phone'
 
 @admin.register(ContestParticipant)
 class ContestParticipantAdmin(admin.ModelAdmin):
-    list_display = ('contest', 'user', 'entry_type', 'joined_at')
+    list_display = ('contest', 'user', 'user_phone', 'user_email', 'entry_type', 'joined_at')
     list_filter = ('contest', 'entry_type', 'joined_at')
-    search_fields = ('user__username', 'contest__title')
+    search_fields = ('user__username', 'contest__title', 'user__authorprofile__phone_number')
     readonly_fields = ('joined_at',)
+
+    def user_phone(self, obj):
+        return getattr(getattr(obj.user, 'authorprofile', None), 'phone_number', None) or '-'
+    user_phone.short_description = 'Phone Number'
+
+    def user_email(self, obj):
+        return obj.user.email or '-'
+    user_email.short_description = 'Email' 
 
 @admin.register(Script)
 class ScriptAdmin(admin.ModelAdmin):
