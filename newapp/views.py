@@ -1077,18 +1077,35 @@ def submit_contest_entry(request):
         
         contest = get_object_or_404(Contest, id=contest_id)
         
+        # Check contest is active
+        if contest.status != 'ACTIVE':
+            return JsonResponse({'status': 'error', 'message': 'This contest is not currently accepting entries.'}, status=400)
+        
+        # Check if already joined
+        if contest.participants.filter(user=request.user).exists():
+            return JsonResponse({'status': 'error', 'message': 'You have already joined this contest.'}, status=400)
+        
+        # Map work_type to entry_type
+        type_map = {'Book': 'BOOK', 'Script': 'SCRIPT', 'Poem': 'POEM'}
+        entry_type = type_map.get(work_type)
+        if not entry_type:
+            return JsonResponse({'status': 'error', 'message': 'Invalid work type'}, status=400)
+        
         # Verify the work belongs to the user AND is published
         if work_type == 'Book':
             work = get_object_or_404(Book, id=work_id, author=request.user, status__in=['PUBLISHED', 'FINISHED'])
-            contest.entry_books.add(work)
         elif work_type == 'Script':
             work = get_object_or_404(Script, id=work_id, author=request.user, status='PUBLISHED')
-            contest.entry_scripts.add(work)
         elif work_type == 'Poem':
-            work = get_object_or_404(Poem, id=work_id, author=request.user, status='PUBLISHED')
-            contest.entry_poems.add(work)
-        else:
-            return JsonResponse({'status': 'error', 'message': 'Invalid work type'}, status=400)
+            work = get_object_or_404(Poem, id=work_id, author=request.user, status__in=['PUBLISHED', 'FINISHED'])
+        
+        # Create participant entry (uses ContestParticipant model)
+        ContestParticipant.objects.create(
+            contest=contest,
+            user=request.user,
+            entry_type=entry_type,
+            entry_id=work.id
+        )
             
         return JsonResponse({'status': 'success', 'message': 'Entry submitted successfully!'})
         
@@ -2191,9 +2208,9 @@ def contest_list(request):
     user_scripts = []
     user_poems = []
     if request.user.is_authenticated:
-        user_books = list(Book.objects.filter(author=request.user, status='PUBLISHED').values('id', 'title'))
+        user_books = list(Book.objects.filter(author=request.user, status__in=['PUBLISHED', 'FINISHED']).values('id', 'title'))
         user_scripts = list(Script.objects.filter(author=request.user, status='PUBLISHED').values('id', 'title'))
-        user_poems = list(Poem.objects.filter(author=request.user, status='PUBLISHED').values('id', 'title'))
+        user_poems = list(Poem.objects.filter(author=request.user, status__in=['PUBLISHED', 'FINISHED']).values('id', 'title'))
 
     return render(request, 'newapp/contests.html', {
         'active_contests': active_contests,
@@ -2214,11 +2231,12 @@ def contest_detail(request, contest_id):
         try:
             if participant.entry_type == 'BOOK':
                 entry = Book.objects.get(id=participant.entry_id)
-                # Get first published chapter for reading
+                # Get first published chapter for reading, fall back to book page
                 first_chapter = entry.chapters.filter(status='PUBLISHED').first()
-                entry_url = None
                 if first_chapter:
                     entry_url = f'/chapter/{first_chapter.id}/read/'
+                else:
+                    entry_url = f'/book/{entry.id}/view/'
             elif participant.entry_type == 'SCRIPT':
                 entry = Script.objects.get(id=participant.entry_id)
                 entry_url = f'/script/read/{entry.id}/'
@@ -2273,10 +2291,10 @@ def join_contest(request, contest_id):
         profile = request.user.authorprofile
         if not profile.phone_number:
             messages.warning(request, 'Please add your phone number before joining a contest.')
-            return redirect('edit_profile') + f'?next=join_contest&contest_id={contest_id}'
+            return redirect(f'/profile/edit/me/?next=/contests/{contest_id}/join/')
     except AuthorProfile.DoesNotExist:
         messages.warning(request, 'Please complete your profile before joining a contest.')
-        return redirect('edit_profile') + f'?next=join_contest&contest_id={contest_id}'
+        return redirect(f'/profile/edit/me/?next=/contests/{contest_id}/join/')
     
     # Check if already joined
     if contest.participants.filter(user=request.user).exists():

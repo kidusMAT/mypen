@@ -78,6 +78,24 @@
                     {% if contest.winner.authorprofile.bio %}
                     <p class="bio">{{ contest.winner.authorprofile.bio|truncatewords:20 }}</p>
                     {% endif %}
+
+                    {% if user.is_staff and contest.winner.authorprofile.phone_number %}
+                    <div class="staff-prize-contact" style="margin: 14px 0; padding: 12px 16px; background: rgba(212, 140, 17, 0.08); border: 1px solid rgba(212, 140, 17, 0.3); border-radius: 10px;">
+                        <div style="font-size: 12px; font-weight: 700; color: #D48C11; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px; display: flex; align-items: center; gap: 6px;">
+                            <i class="fa-solid fa-gift"></i> Prize Delivery Contact (Staff Only)
+                        </div>
+                        <div style="font-size: 14px; color: #1f2937; display: flex; flex-wrap: wrap; align-items: center; gap: 10px;">
+                            <span><strong>Phone:</strong></span>
+                            <a href="tel:{{ contest.winner.authorprofile.phone_number }}" style="color: #D48C11; font-weight: 700; text-decoration: none;">
+                                <i class="fa-solid fa-phone"></i> {{ contest.winner.authorprofile.phone_number }}
+                            </a>
+                            {% if contest.prize %}
+                            <span style="color: #6b7280; font-size: 13px;">• Prize: {{ contest.prize }}</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% endif %}
+
                     <a href="{% url 'profile_view' contest.winner.username %}" class="view-profile-btn">View Profile</a>
                 </div>
             </div>
@@ -124,6 +142,11 @@
                     <div class="participant-details">
                         <h3>{{ entry.participant.user.username }}</h3>
                         <span class="entry-type">{{ entry.entry_type }}</span>
+                        {% if user.is_staff and entry.participant.user.authorprofile.phone_number %}
+                        <div style="font-size: 12px; color: #D48C11; font-weight: 600; margin-top: 4px;">
+                            <i class="fa-solid fa-phone"></i> {{ entry.participant.user.authorprofile.phone_number }}
+                        </div>
+                        {% endif %}
                     </div>
                 </div>
                 

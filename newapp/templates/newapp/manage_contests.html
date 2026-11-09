@@ -35,6 +35,16 @@
                         <tr style="border-bottom: 1px solid #eee; transition: background 0.2s;">
                             <td style="padding: 15px 20px; color: #111; font-weight: 500;">
                                 <a href="{% url 'contest_detail' contest.id %}" style="color: inherit; text-decoration: none;">{{ contest.title }}</a>
+                                {% if contest.winner %}
+                                <div style="margin-top: 4px; font-size: 12px; color: #16a34a; font-weight: 600; display: flex; align-items: center; gap: 6px;">
+                                    <i class="fa-solid fa-crown" style="color: #eab308;"></i> Winner: {{ contest.winner.username }}
+                                    {% if contest.winner.authorprofile.phone_number %}
+                                    <a href="tel:{{ contest.winner.authorprofile.phone_number }}" style="color: #D48C11; font-weight: 600; text-decoration: none; margin-left: 4px;" title="Call/Send prize">
+                                        📞 {{ contest.winner.authorprofile.phone_number }}
+                                    </a>
+                                    {% endif %}
+                                </div>
+                                {% endif %}
                             </td>
                             <td style="padding: 15px 20px;">
                                 {% if contest.status == 'ACTIVE' %}

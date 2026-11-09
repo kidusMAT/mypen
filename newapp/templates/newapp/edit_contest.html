@@ -120,6 +120,15 @@
                                         {% if entry.entry %}
                                         <span class="entry-title">{{ entry.entry.title }}</span>
                                         {% endif %}
+                                        {% if entry.participant.user.authorprofile.phone_number %}
+                                        <span class="participant-phone" style="display: flex; align-items: center; gap: 5px; font-size: 13px; color: #D48C11; font-weight: 600; margin-top: 4px;">
+                                            <i class="fa-solid fa-phone" style="font-size: 11px;"></i> {{ entry.participant.user.authorprofile.phone_number }}
+                                        </span>
+                                        {% else %}
+                                        <span class="participant-phone" style="display: flex; align-items: center; gap: 5px; font-size: 12px; color: #999; margin-top: 4px;">
+                                            <i class="fa-solid fa-phone-slash" style="font-size: 11px;"></i> No phone number
+                                        </span>
+                                        {% endif %}
                                     </div>
                                 </div>
                             </label>

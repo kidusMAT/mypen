@@ -152,8 +152,8 @@
     <!-- Phone Number Modal -->
     <div id="phone-modal" class="modal-overlay" style="display: none;">
         <div class="modal-content">
-            <h2>Phone Number Required</h2>
-            <p>Please provide your phone number to enter contests.</p>
+            <h2><i class="fa-solid fa-phone" style="color: #D48C11;"></i> Phone Number Required</h2>
+            <p style="color: #4b5563; font-size: 14px; line-height: 1.5; margin-top: 8px;">Please provide your phone number so contest organizers can contact you and transfer your prize (e.g., via Telebirr, CBE, or call) if your entry wins.</p>
 
             <div style="margin-top: 20px; text-align: left;">
                 <label style="display: block; margin-bottom: 8px;">Phone Number:</label>
@@ -260,7 +260,7 @@
                     // Hide section on success
                     document.getElementById(`entry-section-${contestId}`).style.display = 'none';
                 } else {
-                    if (data.phone_required) {
+                    if (data.phone_required || data.require_phone) {
                         openPhoneModal();
                     } else {
                         if (typeof showToast === 'function') showToast(data.message, 'error');
