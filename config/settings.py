@@ -141,6 +141,8 @@ STATICFILES_DIRS = [
 ]
 # Use hashed manifest storage only when the manifest exists (production / after collectstatic).
 # Plain storage keeps local dev working without running collectstatic first.
+# WHITENOISE_MANIFEST_STRICT = False ensures missing static assets never crash the production site.
+WHITENOISE_MANIFEST_STRICT = False
 _manifest_path = BASE_DIR / 'staticfiles' / 'staticfiles.json'
 _use_manifest_static = bool(os.getenv('VERCEL') or _manifest_path.exists())
 STORAGES = {

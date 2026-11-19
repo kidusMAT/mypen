@@ -101,9 +101,15 @@
 
                     {% if contest.winning_book %}
                     <div class="winner-info">
-                        <img src="{% if contest.winning_book.cover_image %}{{ contest.winning_book.cover_image.url }}{% else %}{% static 'images/default_cover.jpg' %}{% endif %}"
+                        {% if contest.winning_book.cover_image %}
+                        <img src="{{ contest.winning_book.cover_image.url }}"
                             alt="Cover"
                             style="width: 50px; height: 75px; object-fit: cover; border-radius: 4px; float: left; margin-right: 10px;">
+                        {% else %}
+                        <div style="width: 50px; height: 75px; background: #333; border-radius: 4px; float: left; margin-right: 10px; display: flex; align-items: center; justify-content: center;">
+                            <i class="fa-solid fa-book" style="color: #fff;"></i>
+                        </div>
+                        {% endif %}
                         <div>
                             <h4 style="margin: 0; font-size: 16px;">{{ contest.winning_book.title }}</h4>
                             <p style="margin: 5px 0 0; font-size: 14px; color: #666;">by

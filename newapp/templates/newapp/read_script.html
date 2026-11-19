@@ -835,12 +835,52 @@
     let totalPages = 1;
     const rawContent = document.getElementById('script-raw-content').innerHTML;
 
+    function convertRawScriptContent(raw) {
+        if (!raw) return '';
+        const decoder = document.createElement('textarea');
+        decoder.innerHTML = raw;
+        const decoded = decoder.value.trim();
+
+        if ((decoded.startsWith('[') && decoded.endsWith(']')) || (decoded.startsWith('{') && decoded.endsWith('}'))) {
+            try {
+                let parsed = JSON.parse(decoded);
+                if (!Array.isArray(parsed) && parsed.content) parsed = parsed.content;
+                if (Array.isArray(parsed) && parsed.length > 0) {
+                    let html = '';
+                    parsed.forEach(item => {
+                        const type = (item.type || 'action').toLowerCase();
+                        const text = (item.text || '').trim();
+                        if (!text) return;
+                        if (type === 'scene') {
+                            html += `<div class="script-scene">${text}</div>`;
+                        } else if (type === 'character') {
+                            html += `<div class="script-character">${text}</div>`;
+                        } else if (type === 'dialogue') {
+                            html += `<div class="script-dialogue">${text}</div>`;
+                        } else if (type === 'parenthetical') {
+                            html += `<div class="script-parenthetical">${text}</div>`;
+                        } else if (type === 'transition') {
+                            html += `<div class="script-transition">${text}</div>`;
+                        } else {
+                            html += `<div class="script-left">${text}</div>`;
+                        }
+                    });
+                    return html;
+                }
+            } catch (e) {
+                console.warn("Script JSON parsing fell back to HTML:", e);
+            }
+        }
+        return raw;
+    }
+
     function paginate() {
         const container = document.getElementById('pages-container');
         container.innerHTML = '';
 
         const temp = document.createElement('div');
-        temp.innerHTML = rawContent.replace(/&nbsp;/g, ' ').replace(/\u00A0/g, ' ');
+        const processed = convertRawScriptContent(rawContent);
+        temp.innerHTML = processed.replace(/&nbsp;/g, ' ').replace(/\u00A0/g, ' ');
         
         // Remove saved "PAGE BREAK" dividers from the writer so they don't break reading flow
         temp.querySelectorAll('.page-divider').forEach(d => d.remove());
