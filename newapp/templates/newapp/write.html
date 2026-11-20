@@ -232,6 +232,72 @@
     </section>
 
     <script>
+        function decodeScriptContentIfJSON() {
+            const editor = document.getElementById('editor-script');
+            if (!editor) return;
+
+            const raw = (editor.innerHTML || '').trim();
+            if (!raw) return;
+
+            const decoder = document.createElement('textarea');
+            decoder.innerHTML = raw;
+            const decoded = decoder.value.trim();
+
+            let textToParse = '';
+            if ((decoded.startsWith('[') && decoded.endsWith(']')) || (decoded.startsWith('{') && decoded.endsWith('}'))) {
+                textToParse = decoded;
+            } else {
+                const textContent = (editor.textContent || '').trim();
+                if ((textContent.startsWith('[') && textContent.endsWith(']')) || (textContent.startsWith('{') && textContent.endsWith('}'))) {
+                    textToParse = textContent;
+                }
+            }
+
+            if (textToParse) {
+                try {
+                    let parsed = JSON.parse(textToParse);
+                    if (!Array.isArray(parsed) && parsed.content) parsed = parsed.content;
+                    if (Array.isArray(parsed) && parsed.length > 0) {
+                        let html = '';
+                        parsed.forEach(item => {
+                            const type = (item.type || 'action').toLowerCase();
+                            const text = (item.text || '').trim();
+                            if (!text) return;
+                            const escDiv = document.createElement('div');
+                            escDiv.textContent = text;
+                            const escText = escDiv.innerHTML;
+
+                            if (type === 'scene') {
+                                html += `<div class="script-scene">${escText}</div>`;
+                            } else if (type === 'character') {
+                                html += `<div class="script-character">${escText}</div>`;
+                            } else if (type === 'dialogue') {
+                                html += `<div class="script-dialogue">${escText}</div>`;
+                            } else if (type === 'parenthetical') {
+                                html += `<div class="script-parenthetical">${escText}</div>`;
+                            } else if (type === 'transition') {
+                                html += `<div class="script-transition">${escText}</div>`;
+                            } else {
+                                html += `<div class="script-left">${escText}</div>`;
+                            }
+                        });
+                        if (html) {
+                            editor.innerHTML = html;
+                            const hidden = document.getElementById('hidden-script');
+                            if (hidden) {
+                                hidden.value = html;
+                            }
+                        }
+                    }
+                } catch (e) {
+                    console.warn("Could not parse screenplay JSON in editor:", e);
+                }
+            }
+        }
+        // Run immediately since #editor-script is already in the DOM above
+        decodeScriptContentIfJSON();
+        document.addEventListener('DOMContentLoaded', decodeScriptContentIfJSON);
+
         function insertTab() {
             const editor = document.getElementById('editor-script');
             if (editor && typeof handleScriptTab === 'function') {
@@ -409,7 +475,7 @@
             const urlParams = new URLSearchParams(window.location.search);
             const typeParam = urlParams.get('type');
             const genre = "{% if chapter and chapter.book %}{{ chapter.book.genre }}{% endif %}".toLowerCase();
-            const isEditingScript = "{{ script|yesno:'true,false' }}" === "true";
+            const isEditingScript = "{{ script|yesno:'true,false' }}" === "true" || "{{ episode|yesno:'true,false' }}" === "true";
             const isEditingPoem = "{{ poem|yesno:'true,false' }}" === "true";
 
             if (typeParam === 'poem' || typeParam === 'script') {
