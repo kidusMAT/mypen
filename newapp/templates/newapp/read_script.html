@@ -841,37 +841,87 @@
         decoder.innerHTML = raw;
         const decoded = decoder.value.trim();
 
+        const buildHtml = (items) => {
+            let html = '';
+            items.forEach(item => {
+                const type = (item.type || 'action').toLowerCase();
+                const text = (item.text || '').trim();
+                if (!text) return;
+                const escDiv = document.createElement('div');
+                escDiv.textContent = text;
+                const escText = escDiv.innerHTML;
+                if (type === 'scene') {
+                    html += `<div class="script-scene">${escText}</div>`;
+                } else if (type === 'character') {
+                    html += `<div class="script-character">${escText}</div>`;
+                } else if (type === 'dialogue') {
+                    html += `<div class="script-dialogue">${escText}</div>`;
+                } else if (type === 'parenthetical') {
+                    html += `<div class="script-parenthetical">${escText}</div>`;
+                } else if (type === 'transition') {
+                    html += `<div class="script-transition">${escText}</div>`;
+                } else {
+                    html += `<div class="script-left">${escText}</div>`;
+                }
+            });
+            return html;
+        };
+
+        // 1. JSON format
         if ((decoded.startsWith('[') && decoded.endsWith(']')) || (decoded.startsWith('{') && decoded.endsWith('}'))) {
             try {
                 let parsed = JSON.parse(decoded);
                 if (!Array.isArray(parsed) && parsed.content) parsed = parsed.content;
                 if (Array.isArray(parsed) && parsed.length > 0) {
-                    let html = '';
-                    parsed.forEach(item => {
-                        const type = (item.type || 'action').toLowerCase();
-                        const text = (item.text || '').trim();
-                        if (!text) return;
-                        if (type === 'scene') {
-                            html += `<div class="script-scene">${text}</div>`;
-                        } else if (type === 'character') {
-                            html += `<div class="script-character">${text}</div>`;
-                        } else if (type === 'dialogue') {
-                            html += `<div class="script-dialogue">${text}</div>`;
-                        } else if (type === 'parenthetical') {
-                            html += `<div class="script-parenthetical">${text}</div>`;
-                        } else if (type === 'transition') {
-                            html += `<div class="script-transition">${text}</div>`;
-                        } else {
-                            html += `<div class="script-left">${text}</div>`;
-                        }
-                    });
-                    return html;
+                    return buildHtml(parsed);
                 }
             } catch (e) {
-                console.warn("Script JSON parsing fell back to HTML:", e);
+                console.warn("Script JSON parsing fell back:", e);
             }
         }
-        return raw;
+
+        // 2. HTML with .sc-line-* or .script-* classes
+        const tempCheck = document.createElement('div');
+        tempCheck.innerHTML = raw;
+        if (tempCheck.querySelector('.sc-line-scene, .sc-line-action, .sc-line-character, .sc-line-dialogue, .sc-line-parenthetical, .sc-line-transition')) {
+            tempCheck.querySelectorAll('.sc-line-scene').forEach(el => { el.classList.remove('sc-line-scene'); el.classList.add('script-scene'); });
+            tempCheck.querySelectorAll('.sc-line-action').forEach(el => { el.classList.remove('sc-line-action'); el.classList.add('script-left'); });
+            tempCheck.querySelectorAll('.sc-line-character').forEach(el => { el.classList.remove('sc-line-character'); el.classList.add('script-character'); });
+            tempCheck.querySelectorAll('.sc-line-dialogue').forEach(el => { el.classList.remove('sc-line-dialogue'); el.classList.add('script-dialogue'); });
+            tempCheck.querySelectorAll('.sc-line-parenthetical').forEach(el => { el.classList.remove('sc-line-parenthetical'); el.classList.add('script-parenthetical'); });
+            tempCheck.querySelectorAll('.sc-line-transition').forEach(el => { el.classList.remove('sc-line-transition'); el.classList.add('script-transition'); });
+            return tempCheck.innerHTML;
+        }
+        if (tempCheck.querySelector('.script-scene, .script-left, .script-character, .script-dialogue, .script-parenthetical, .script-transition')) {
+            return raw;
+        }
+
+        // 3. Plain text / tabbed screenplay lines / generic <p>/<br>
+        const plainSource = raw
+            .replace(/<\/(?:div|p|li|h[1-6])>/gi, '\n')
+            .replace(/<br\s*\/?>/gi, '\n')
+            .replace(/<[^>]+>/g, '');
+        decoder.innerHTML = plainSource;
+        const lines = decoder.value.split('\n');
+        const sceneRe = /^(?:(?:EXT|INT|EXT\/INT|INT\/EXT|I\/E)\b|መቼት|ክፍል\s*\d+)/i;
+        const transRe = /(?:TO:|FADE IN:|FADE OUT\.|CUT TO:)$/i;
+        let prevType = null;
+        const items = [];
+        lines.forEach(line => {
+            const trimmed = line.trim();
+            if (!trimmed) { prevType = null; return; }
+            let type = 'action';
+            if (line.startsWith('\t\t\t')) type = 'transition';
+            else if (line.startsWith('\t\t')) type = (trimmed.startsWith('(') && trimmed.endsWith(')')) ? 'parenthetical' : 'character';
+            else if (line.startsWith('\t')) type = 'dialogue';
+            else if (sceneRe.test(trimmed)) type = 'scene';
+            else if (transRe.test(trimmed)) type = 'transition';
+            else if (trimmed.startsWith('(') && trimmed.endsWith(')')) type = 'parenthetical';
+            else if (prevType === 'character' || prevType === 'parenthetical') type = 'dialogue';
+            items.push({ type, text: trimmed });
+            prevType = type;
+        });
+        return items.length > 0 ? buildHtml(items) : raw;
     }
 
     function paginate() {

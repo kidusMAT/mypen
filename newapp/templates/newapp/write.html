@@ -234,15 +234,43 @@
     <script>
         function decodeScriptContentIfJSON() {
             const editor = document.getElementById('editor-script');
-            if (!editor) return;
+            if (!editor || editor.dataset.decoded === '1') return;
 
             const raw = (editor.innerHTML || '').trim();
             if (!raw) return;
+
+            const buildScriptHtml = (items) => {
+                let html = '';
+                items.forEach(item => {
+                    const type = (item.type || 'action').toLowerCase();
+                    const text = (item.text || '').trim();
+                    if (!text) return;
+                    const escDiv = document.createElement('div');
+                    escDiv.textContent = text;
+                    const escText = escDiv.innerHTML;
+                    if (type === 'scene') html += `<div class="script-scene">${escText}</div>`;
+                    else if (type === 'character') html += `<div class="script-character">${escText}</div>`;
+                    else if (type === 'dialogue') html += `<div class="script-dialogue">${escText}</div>`;
+                    else if (type === 'parenthetical') html += `<div class="script-parenthetical">${escText}</div>`;
+                    else if (type === 'transition') html += `<div class="script-transition">${escText}</div>`;
+                    else html += `<div class="script-left">${escText}</div>`;
+                });
+                return html;
+            };
+
+            const applyHtml = (html) => {
+                if (!html) return;
+                editor.innerHTML = html;
+                editor.dataset.decoded = '1';
+                const hidden = document.getElementById('hidden-script');
+                if (hidden) hidden.value = html;
+            };
 
             const decoder = document.createElement('textarea');
             decoder.innerHTML = raw;
             const decoded = decoder.value.trim();
 
+            // 1. JSON format
             let textToParse = '';
             if ((decoded.startsWith('[') && decoded.endsWith(']')) || (decoded.startsWith('{') && decoded.endsWith('}'))) {
                 textToParse = decoded;
@@ -258,40 +286,61 @@
                     let parsed = JSON.parse(textToParse);
                     if (!Array.isArray(parsed) && parsed.content) parsed = parsed.content;
                     if (Array.isArray(parsed) && parsed.length > 0) {
-                        let html = '';
-                        parsed.forEach(item => {
-                            const type = (item.type || 'action').toLowerCase();
-                            const text = (item.text || '').trim();
-                            if (!text) return;
-                            const escDiv = document.createElement('div');
-                            escDiv.textContent = text;
-                            const escText = escDiv.innerHTML;
-
-                            if (type === 'scene') {
-                                html += `<div class="script-scene">${escText}</div>`;
-                            } else if (type === 'character') {
-                                html += `<div class="script-character">${escText}</div>`;
-                            } else if (type === 'dialogue') {
-                                html += `<div class="script-dialogue">${escText}</div>`;
-                            } else if (type === 'parenthetical') {
-                                html += `<div class="script-parenthetical">${escText}</div>`;
-                            } else if (type === 'transition') {
-                                html += `<div class="script-transition">${escText}</div>`;
-                            } else {
-                                html += `<div class="script-left">${escText}</div>`;
-                            }
-                        });
-                        if (html) {
-                            editor.innerHTML = html;
-                            const hidden = document.getElementById('hidden-script');
-                            if (hidden) {
-                                hidden.value = html;
-                            }
-                        }
+                        applyHtml(buildScriptHtml(parsed));
+                        return;
                     }
                 } catch (e) {
                     console.warn("Could not parse screenplay JSON in editor:", e);
                 }
+            }
+
+            // 2. HTML with .sc-line-* classes -> normalize to .script-*
+            if (editor.querySelector('.sc-line-scene, .sc-line-action, .sc-line-character, .sc-line-dialogue, .sc-line-parenthetical, .sc-line-transition')) {
+                editor.querySelectorAll('.sc-line-scene').forEach(el => { el.classList.remove('sc-line-scene'); el.classList.add('script-scene'); });
+                editor.querySelectorAll('.sc-line-action').forEach(el => { el.classList.remove('sc-line-action'); el.classList.add('script-left'); });
+                editor.querySelectorAll('.sc-line-character').forEach(el => { el.classList.remove('sc-line-character'); el.classList.add('script-character'); });
+                editor.querySelectorAll('.sc-line-dialogue').forEach(el => { el.classList.remove('sc-line-dialogue'); el.classList.add('script-dialogue'); });
+                editor.querySelectorAll('.sc-line-parenthetical').forEach(el => { el.classList.remove('sc-line-parenthetical'); el.classList.add('script-parenthetical'); });
+                editor.querySelectorAll('.sc-line-transition').forEach(el => { el.classList.remove('sc-line-transition'); el.classList.add('script-transition'); });
+                editor.dataset.decoded = '1';
+                const hidden = document.getElementById('hidden-script');
+                if (hidden) hidden.value = editor.innerHTML;
+                return;
+            }
+
+            // Already formatted with .script-* classes
+            if (editor.querySelector('.script-scene, .script-left, .script-character, .script-dialogue, .script-parenthetical, .script-transition')) {
+                editor.dataset.decoded = '1';
+                return;
+            }
+
+            // 3. Plain text / tabbed screenplay lines / generic <p>/<br>
+            const plainSource = raw
+                .replace(/<\/(?:div|p|li|h[1-6])>/gi, '\n')
+                .replace(/<br\s*\/?>/gi, '\n')
+                .replace(/<[^>]+>/g, '');
+            decoder.innerHTML = plainSource;
+            const lines = decoder.value.split('\n');
+            const sceneRe = /^(?:(?:EXT|INT|EXT\/INT|INT\/EXT|I\/E)\b|መቼት|ክፍል\s*\d+)/i;
+            const transRe = /(?:TO:|FADE IN:|FADE OUT\.|CUT TO:)$/i;
+            let prevType = null;
+            const items = [];
+            lines.forEach(line => {
+                const trimmed = line.trim();
+                if (!trimmed) { prevType = null; return; }
+                let type = 'action';
+                if (line.startsWith('\t\t\t')) type = 'transition';
+                else if (line.startsWith('\t\t')) type = (trimmed.startsWith('(') && trimmed.endsWith(')')) ? 'parenthetical' : 'character';
+                else if (line.startsWith('\t')) type = 'dialogue';
+                else if (sceneRe.test(trimmed)) type = 'scene';
+                else if (transRe.test(trimmed)) type = 'transition';
+                else if (trimmed.startsWith('(') && trimmed.endsWith(')')) type = 'parenthetical';
+                else if (prevType === 'character' || prevType === 'parenthetical') type = 'dialogue';
+                items.push({ type, text: trimmed });
+                prevType = type;
+            });
+            if (items.length > 0) {
+                applyHtml(buildScriptHtml(items));
             }
         }
         // Run immediately since #editor-script is already in the DOM above
